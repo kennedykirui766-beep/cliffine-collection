@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analytics - Cliffine Collection Admin</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { DEFAULT: '#5423E7', dark: '#3B0D5D', light: '#7C3AED', 50: '#F5F3FF' },
+                        accent: { DEFAULT: '#D4AF37', dark: '#B8960C', light: '#F5D76E' },
+                        slate: { 850: '#1A1F2C', 900: '#0F121A' }
+                    },
+                    fontFamily: { sans: ['DM Sans', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'DM Sans', sans-serif; background-color: #F3F4F6; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #5423E7; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3B0D5D; }
+        .sidebar { transition: transform 0.3s ease-in-out; }
+        .nav-link.active { background: linear-gradient(90deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0) 100%); border-left: 4px solid #D4AF37; color: #D4AF37; }
+        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="flex h-screen overflow-hidden bg-slate-100">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar fixed z-20 h-full w-64 flex flex-col bg-primary text-white overflow-y-auto lg:translate-x-0 -translate-x-full">
+            <div class="flex items-center justify-between h-20 px-6 border-b border-white/10">
+                <a href="dashboard.html" class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                        <span class="font-bold text-primary text-lg">CC</span>
+                    </div>
+                    <span class="font-bold text-lg tracking-wide">Cliffine Admin</span>
+                </a>
+                <button id="closeSidebarBtn" class="lg:hidden text-white hover:text-accent">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <nav class="flex-1 px-4 py-6 space-y-1">
+                <a href="dashboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    Dashboard
+                </a>
+                <a href="products.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    Products
+                </a>
+                <a href="orders.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    Orders
+                </a>
+                <a href="payments.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    Payments
+                </a>
+                
+                <!-- Reports Active -->
+                <a href="reports_analytics.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    Reports
+                </a>
+            </nav>
+        </aside>
+
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-10 lg:hidden hidden" onclick="toggleSidebar()"></div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden lg:ml-64">
+            
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm z-10 sticky top-0 border-b border-slate-200">
+                <div class="flex items-center justify-between h-16 px-6">
+                    <div class="flex items-center gap-4">
+                        <button id="openSidebarBtn" class="lg:hidden text-slate-600 hover:text-primary" onclick="toggleSidebar()">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                        <h1 class="text-xl font-bold text-slate-800 hidden sm:block">Reports & Analytics</h1>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                         <div class="hidden sm:flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
+                            <button class="px-3 py-1.5 text-sm font-medium rounded-md text-slate-500 hover:bg-white hover:shadow-sm">Today</button>
+                            <button class="px-3 py-1.5 text-sm font-medium rounded-md bg-white shadow-sm text-primary font-semibold">Month</button>
+                            <button class="px-3 py-1.5 text-sm font-medium rounded-md text-slate-500 hover:bg-white hover:shadow-sm">Year</button>
+                        </div>
+                        <button class="inline-flex items-center gap-2 px-4 py-2 bg-accent text-slate-900 font-semibold rounded-lg hover:bg-accent-dark transition-colors text-sm shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6">
+                
+                <!-- Sales Overview Metrics -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-medium">Total Revenue</p>
+                                <h3 class="text-2xl font-bold text-slate-800 mt-1">KES 1.2M</h3>
+                                <p class="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                                    12.5% vs last month
+                                </p>
+                            </div>
+                            <div class="p-3 bg-primary/10 rounded-lg">
+                                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-medium">Total Orders</p>
+                                <h3 class="text-2xl font-bold text-slate-800 mt-1">1,240</h3>
+                                <p class="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                                    8.2% vs last month
+                                </p>
+                            </div>
+                            <div class="p-3 bg-accent/10 rounded-lg">
+                                <svg class="w-6 h-6 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-medium">Products Sold</p>
+                                <h3 class="text-2xl font-bold text-slate-800 mt-1">3,450</h3>
+                                <p class="text-xs text-slate-400 mt-1">Units this month</p>
+                            </div>
+                            <div class="p-3 bg-green-50 rounded-lg">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-primary to-primary-light rounded-xl p-5 shadow-sm text-white">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs text-white/70 uppercase font-medium">Avg. Order Value</p>
+                                <h3 class="text-2xl font-bold mt-1">KES 4,120</h3>
+                                <p class="text-xs text-white/60 mt-1">Per transaction</p>
+                            </div>
+                            <div class="p-3 bg-white/20 rounded-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <!-- Main Sales Chart -->
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-slate-800">Sales Trend</h3>
+                            <select class="text-sm border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-primary/50 outline-none bg-slate-50">
+                                <option>Last 7 Days</option>
+                                <option selected>Last 30 Days</option>
+                                <option>Last 90 Days</option>
+                            </select>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Payment Methods Chart -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Payment Methods</h3>
+                        <div class="h-64">
+                            <canvas id="paymentChart"></canvas>
+                        </div>
+                        <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+                            <div>
+                                <p class="text-lg font-bold text-slate-800">80%</p>
+                                <p class="text-xs text-slate-500">M-Pesa</p>
+                            </div>
+                            <div>
+                                <p class="text-lg font-bold text-slate-800">15%</p>
+                                <p class="text-xs text-slate-500">Card</p>
+                            </div>
+                            <div>
+                                <p class="text-lg font-bold text-slate-800">5%</p>
+                                <p class="text-xs text-slate-500">Cash</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Selling & Low Stock Tables -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Top Selling -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-slate-800">Top Selling Products</h3>
+                            <a href="#" class="text-primary text-sm font-medium hover:underline">View All</a>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                                    <tr>
+                                        <th class="p-3 text-left">Product</th>
+                                        <th class="p-3 text-center">Sold</th>
+                                        <th class="p-3 text-right">Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3">
+                                            <div class="flex items-center gap-2">
+                                                <img src="https://placehold.co/40x40/5423E7/FFFFFF?text=TV" class="w-9 h-9 rounded object-cover">
+                                                <span class="font-medium text-slate-700">43" Smart TV</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-3 text-center font-semibold text-slate-600">120</td>
+                                        <td class="p-3 text-right font-bold text-slate-800">KES 3.9M</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3">
+                                            <div class="flex items-center gap-2">
+                                                <img src="https://placehold.co/40x40/D4AF37/000000?text=Bag" class="w-9 h-9 rounded object-cover">
+                                                <span class="font-medium text-slate-700">Leather Handbag</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-3 text-center font-semibold text-slate-600">85</td>
+                                        <td class="p-3 text-right font-bold text-slate-800">KES 714K</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3">
+                                            <div class="flex items-center gap-2">
+                                                <img src="https://placehold.co/40x40/7C3AED/FFFFFF?text=Shoe" class="w-9 h-9 rounded object-cover">
+                                                <span class="font-medium text-slate-700">Men's Sneakers</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-3 text-center font-semibold text-slate-600">62</td>
+                                        <td class="p-3 text-right font-bold text-slate-800">KES 372K</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock -->
+                    <div class="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
+                        <div class="p-6 border-b border-red-100 bg-red-50 flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-red-800">Low Stock Alerts</h3>
+                            <span class="w-6 h-6 bg-red-200 text-red-700 rounded-full text-xs font-bold flex items-center justify-center">5</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                                    <tr>
+                                        <th class="p-3 text-left">Product</th>
+                                        <th class="p-3 text-center">Stock</th>
+                                        <th class="p-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr class="hover:bg-red-50/30">
+                                        <td class="p-3 font-medium text-slate-700">Bluetooth Speaker</td>
+                                        <td class="p-3 text-center text-red-600 font-bold">3 left</td>
+                                        <td class="p-3 text-right"><a href="#" class="text-primary font-medium hover:underline">Restock</a></td>
+                                    </tr>
+                                    <tr class="hover:bg-red-50/30">
+                                        <td class="p-3 font-medium text-slate-700">Wall Clock (Gold)</td>
+                                        <td class="p-3 text-center text-amber-600 font-bold">5 left</td>
+                                        <td class="p-3 text-right"><a href="#" class="text-primary font-medium hover:underline">Restock</a></td>
+                                    </tr>
+                                    <tr class="hover:bg-red-50/30">
+                                        <td class="p-3 font-medium text-slate-700">TV Stand 32"</td>
+                                        <td class="p-3 text-center text-red-600 font-bold">2 left</td>
+                                        <td class="p-3 text-right"><a href="#" class="text-primary font-medium hover:underline">Restock</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Analytics & Other Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Order Status Breakdown -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Order Status</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Completed</span>
+                                    <span class="font-semibold text-slate-800">1,100 (89%)</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width: 89%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Processing</span>
+                                    <span class="font-semibold text-slate-800">90 (7%)</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width: 7%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Cancelled</span>
+                                    <span class="font-semibold text-slate-800">50 (4%)</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-red-400 h-2 rounded-full" style="width: 4%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Analytics -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Customer Stats</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                <span class="text-slate-600">Total Customers</span>
+                                <span class="font-bold text-slate-800">1,240</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                <span class="text-slate-600">New (This Month)</span>
+                                <span class="font-bold text-green-700">+85</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-primary/5 rounded-lg">
+                                <span class="text-slate-600">Returning</span>
+                                <span class="font-bold text-primary">450</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chama & Coupons -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                            <h3 class="text-md font-bold text-slate-800 mb-3">Chama Analytics</h3>
+                            <div class="grid grid-cols-2 gap-3 text-center">
+                                <div class="bg-slate-50 p-3 rounded-lg">
+                                    <p class="text-xl font-bold text-slate-800">12</p>
+                                    <p class="text-xs text-slate-500">Active Chamas</p>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-lg">
+                                    <p class="text-xl font-bold text-slate-800">120</p>
+                                    <p class="text-xs text-slate-500">Members</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                            <h3 class="text-md font-bold text-slate-800 mb-3">Coupon Stats</h3>
+                            <div class="text-sm space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Usage</span>
+                                    <span class="font-medium text-slate-700">450 times</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Total Saved</span>
+                                    <span class="font-bold text-accent-dark">KES 82,000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const openBtn = document.getElementById('openSidebarBtn');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        
+        openBtn.addEventListener('click', toggleSidebar);
+        closeBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // Chart.js Initialization
+        const ctxSales = document.getElementById('salesChart');
+        if (ctxSales) {
+            new Chart(ctxSales, {
+                type: 'line',
+                data: {
+                    labels: ['1 Oct', '5 Oct', '10 Oct', '15 Oct', '20 Oct', '25 Oct', '30 Oct'],
+                    datasets: [{
+                        label: 'Revenue (KES)',
+                        data: [30000, 45000, 42000, 85000, 62000, 95000, 120000],
+                        borderColor: '#5423E7',
+                        backgroundColor: 'rgba(84, 35, 231, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        const ctxPayment = document.getElementById('paymentChart');
+        if (ctxPayment) {
+            new Chart(ctxPayment, {
+                type: 'doughnut',
+                data: {
+                    labels: ['M-Pesa', 'Card', 'Cash'],
+                    datasets: [{
+                        data: [80, 15, 5],
+                        backgroundColor: ['#16A34A', '#5423E7', '#D4AF37'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+            });
+        }
+    </script>
+</body>
+</html>

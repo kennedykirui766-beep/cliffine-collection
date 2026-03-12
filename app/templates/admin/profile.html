@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Cliffine Collection Admin</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { DEFAULT: '#5423E7', dark: '#3B0D5D', light: '#7C3AED', 50: '#F5F3FF' },
+                        accent: { DEFAULT: '#D4AF37', dark: '#B8960C', light: '#F5D76E' },
+                        slate: { 850: '#1A1F2C', 900: '#0F121A' }
+                    },
+                    fontFamily: { sans: ['DM Sans', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'DM Sans', sans-serif; background-color: #F3F4F6; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #5423E7; border-radius: 3px; }
+        .sidebar { transition: transform 0.3s ease-in-out; }
+        .nav-link.active { background: linear-gradient(90deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0) 100%); border-left: 4px solid #D4AF37; color: #D4AF37; }
+        
+        /* Toggle Switch */
+        .toggle-checkbox:checked { right: 0; border-color: #5423E7; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #5423E7; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="flex h-screen overflow-hidden bg-slate-100">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar fixed z-20 h-full w-64 flex flex-col bg-primary text-white overflow-y-auto lg:translate-x-0 -translate-x-full">
+            <div class="flex items-center justify-between h-20 px-6 border-b border-white/10">
+                <a href="dashboard.html" class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                        <span class="font-bold text-primary text-lg">CC</span>
+                    </div>
+                    <span class="font-bold text-lg tracking-wide">Cliffine Admin</span>
+                </a>
+                <button id="closeSidebarBtn" class="lg:hidden text-white hover:text-accent">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <nav class="flex-1 px-4 py-6 space-y-1">
+                <a href="dashboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    Dashboard
+                </a>
+                <a href="products.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    Products
+                </a>
+                <a href="orders.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    Orders
+                </a>
+                <a href="users.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Users
+                </a>
+                <a href="settings.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Settings
+                </a>
+                
+                <!-- Profile Active -->
+                <a href="profile.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Profile
+                </a>
+            </nav>
+        </aside>
+
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-10 lg:hidden hidden" onclick="toggleSidebar()"></div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden lg:ml-64">
+            
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm z-10 sticky top-0 border-b border-slate-200">
+                <div class="flex items-center justify-between h-16 px-6">
+                    <div class="flex items-center gap-4">
+                        <button id="openSidebarBtn" class="lg:hidden text-slate-600 hover:text-primary" onclick="toggleSidebar()">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                        <h1 class="text-xl font-bold text-slate-800 hidden sm:block">My Profile</h1>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                         <button class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm">
+                            Cancel
+                        </button>
+                         <button class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Left Column: Profile Card -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <!-- Profile Picture Card -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div class="h-32 bg-gradient-to-r from-primary to-primary-light"></div>
+                            <div class="relative px-6 pb-6">
+                                <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
+                                    <div class="relative">
+                                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=5423E7&color=fff&size=128" class="w-24 h-24 rounded-full border-4 border-white shadow-md" alt="Profile">
+                                        <button class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow border border-slate-100 hover:bg-slate-50">
+                                            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="pt-16 text-center">
+                                    <h3 class="text-xl font-bold text-slate-800">Admin User</h3>
+                                    <p class="text-sm text-slate-500">admin@cliffine.co.ke</p>
+                                    <span class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                        Administrator
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Card -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                            <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Recent Activity
+                            </h4>
+                            <ul class="space-y-4 text-sm">
+                                <li class="flex gap-3">
+                                    <div class="w-2 h-2 mt-2 rounded-full bg-green-500"></div>
+                                    <div>
+                                        <p class="text-slate-700">Logged in from <span class="font-medium">Nairobi, KE</span></p>
+                                        <p class="text-xs text-slate-400">Today, 10:30 AM</p>
+                                    </div>
+                                </li>
+                                <li class="flex gap-3">
+                                    <div class="w-2 h-2 mt-2 rounded-full bg-blue-500"></div>
+                                    <div>
+                                        <p class="text-slate-700">Updated <span class="font-medium">Product #123</span></p>
+                                        <p class="text-xs text-slate-400">Yesterday, 02:15 PM</p>
+                                    </div>
+                                </li>
+                                <li class="flex gap-3">
+                                    <div class="w-2 h-2 mt-2 rounded-full bg-amber-500"></div>
+                                    <div>
+                                        <p class="text-slate-700">Changed password</p>
+                                        <p class="text-xs text-slate-400">Oct 20, 2026</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Forms -->
+                    <div class="lg:col-span-2 space-y-6">
+                        
+                        <!-- Personal Information -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div class="p-6 border-b border-slate-100">
+                                <h3 class="text-lg font-bold text-slate-800">Personal Information</h3>
+                                <p class="text-sm text-slate-500">Update your personal details here.</p>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                                        <input type="text" value="Admin User" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                                        <input type="text" value="admin_user" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                                        <input type="email" value="admin@cliffine.co.ke" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                                        <input type="text" value="+254 700 000 000" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Settings -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div class="p-6 border-b border-slate-100">
+                                <h3 class="text-lg font-bold text-slate-800">Security Settings</h3>
+                                <p class="text-sm text-slate-500">Ensure your account is secure.</p>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
+                                        <input type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                                        <input type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                                        <input type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg mt-2">
+                                    <div>
+                                        <h4 class="font-semibold text-slate-800 text-sm">Two-Factor Authentication</h4>
+                                        <p class="text-xs text-slate-500">Add an extra layer of security to your account.</p>
+                                    </div>
+                                    <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                        <input type="checkbox" checked name="toggle" id="2fa_toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
+                                        <label for="2fa_toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferences -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div class="p-6 border-b border-slate-100">
+                                <h3 class="text-lg font-bold text-slate-800">Preferences</h3>
+                                <p class="text-sm text-slate-500">Customize your admin experience.</p>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Language</label>
+                                        <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
+                                            <option selected>English (US)</option>
+                                            <option>Swahili</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Timezone</label>
+                                        <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
+                                            <option selected>Africa/Nairobi (EAT)</option>
+                                            <option>UTC</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-2">Notification Preferences</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" checked class="rounded text-primary focus:ring-primary">
+                                            <span class="text-sm text-slate-600">Email Notifications</span>
+                                        </label>
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                                            <span class="text-sm text-slate-600">SMS Notifications</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Danger Zone -->
+                        <div class="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
+                            <div class="p-6 border-b border-red-100 bg-red-50">
+                                <h3 class="text-lg font-bold text-red-800">Danger Zone</h3>
+                                <p class="text-sm text-red-600">Irreversible and destructive actions.</p>
+                            </div>
+                            <div class="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Delete Account</h4>
+                                    <p class="text-sm text-slate-500">Once deleted, your account cannot be recovered.</p>
+                                </div>
+                                <button class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-sm whitespace-nowrap">
+                                    Delete My Account
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const openBtn = document.getElementById('openSidebarBtn');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        
+        openBtn.addEventListener('click', toggleSidebar);
+        closeBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+    </script>
+</body>
+</html>
