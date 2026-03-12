@@ -13,7 +13,7 @@ def create_app():
     login_manager.init_app(app)
 
     # Register admin blueprint
-    from app.admin import admin_bp
-    app.register_blueprint(admin_bp, url_prefix='/admin')
+    from app.admin.routes import admin_bp
+    app.register_blueprint(admin_bp)
 
     return app
