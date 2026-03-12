@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}My Wishlist - Cliffine Collection{% endblock %}
+
+{% block content %}
+
+<!-- 2. Breadcrumb Navigation -->
+<div class="bg-sand dark:bg-gray-800 py-4 border-b border-gray-100 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex items-center space-x-2 text-sm text-muted dark:text-gray-400">
+            <a href="/" class="hover:text-accent transition-colors">Home</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="font-medium text-charcoal dark:text-white">Wishlist</span>
+        </nav>
+    </div>
+</div>
+
+<!-- 1. Page Title / Header -->
+<section class="py-8 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="font-display text-3xl lg:text-4xl font-bold text-primary dark:text-white">My Wishlist</h1>
+                <p class="text-muted dark:text-gray-400 mt-1">Products you love and want to save for later</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="px-4 py-2 bg-sand dark:bg-gray-800 rounded-full text-sm font-medium text-charcoal dark:text-white">
+                    4 Items
+                </span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="py-8 lg:py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- 7. Sorting Options -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <p class="text-muted dark:text-gray-400 text-sm">Showing <span class="font-medium text-charcoal dark:text-white">4</span> products</p>
+            
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <select class="w-full sm:w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-accent text-muted dark:text-gray-300">
+                    <option>Sort by: Newest</option>
+                    <option>Price: Low to High</option>
+                    <option>Price: High to Low</option>
+                    <option>Product Name</option>
+                </select>
+            </div>
+        </div>
+
+        {# Simulating a filled wishlist state. In Flask wrap with if wishlist_items #}
+        <div class="lg:grid lg:grid-cols-12 lg:gap-12">
+            
+            <!-- Left Column: Wishlist Items Grid -->
+            <div class="lg:col-span-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    
+                    <!-- Wishlist Item 1 -->
+                    <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
+                        <div class="relative">
+                            <img src="https://placehold.co/600x400/581C87/FFFFFF?text=Smart+TV" alt="43 Smart TV" class="w-full h-48 object-cover">
+                            <div class="absolute top-3 right-3">
+                                <button class="p-2 bg-white dark:bg-gray-900 rounded-full shadow-md text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Remove from Wishlist">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            <div class="absolute top-3 left-3 flex flex-col gap-1">
+                                <span class="px-2 py-1 bg-green-500 text-white text-xs font-bold rounded">In Stock</span>
+                                <span class="px-2 py-1 bg-accent text-white text-xs font-bold rounded">Lipa Pole Pole</span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col">
+                            <p class="text-xs text-muted dark:text-gray-400 mb-1">Electronics</p>
+                            <h3 class="font-bold text-charcoal dark:text-white mb-2">43" Smart Android TV</h3>
+                            <p class="text-sm text-muted dark:text-gray-300 line-clamp-2 mb-4">Full HD display, built-in WiFi and Netflix support.</p>
+                            
+                            <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-xl font-bold text-primary dark:text-accent">KES 32,500</span>
+                                </div>
+                                <button class="w-full py-2.5 bg-accent text-white font-medium rounded-lg hover:bg-accent-dark transition-colors flex items-center justify-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    Move to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wishlist Item 2 -->
+                    <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
+                        <div class="relative">
+                            <img src="https://placehold.co/600x400/3B0D5D/D4AF37?text=Leather+Bag" alt="Leather Bag" class="w-full h-48 object-cover">
+                            <div class="absolute top-3 right-3">
+                                <button class="p-2 bg-white dark:bg-gray-900 rounded-full shadow-md text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Remove from Wishlist">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            <div class="absolute top-3 left-3 flex flex-col gap-1">
+                                <span class="px-2 py-1 bg-primary text-white text-xs font-bold rounded">Chama</span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col">
+                            <p class="text-xs text-muted dark:text-gray-400 mb-1">Handbags</p>
+                            <h3 class="font-bold text-charcoal dark:text-white mb-2">Genuine Leather Handbag</h3>
+                            <p class="text-sm text-muted dark:text-gray-300 line-clamp-2 mb-4">Elegant design, suitable for all occasions.</p>
+                            
+                            <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-xl font-bold text-primary dark:text-accent">KES 4,200</span>
+                                </div>
+                                <button class="w-full py-2.5 bg-accent text-white font-medium rounded-lg hover:bg-accent-dark transition-colors flex items-center justify-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    Move to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wishlist Item 3 (Sold Out Example) -->
+                    <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col opacity-75">
+                        <div class="relative">
+                            <img src="https://placehold.co/600x400/581C87/FFFFFF?text=Men+Shoes" alt="Men Shoes" class="w-full h-48 object-cover">
+                            <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                <span class="bg-white text-charcoal px-4 py-1 rounded-full font-bold text-sm shadow">Sold Out</span>
+                            </div>
+                            <div class="absolute top-3 right-3">
+                                <button class="p-2 bg-white dark:bg-gray-900 rounded-full shadow-md text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Remove from Wishlist">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col">
+                            <p class="text-xs text-muted dark:text-gray-400 mb-1">Men's Shoes</p>
+                            <h3 class="font-bold text-charcoal dark:text-white mb-2">Classic Oxford Shoes</h3>
+                            <p class="text-sm text-muted dark:text-gray-300 line-clamp-2 mb-4">Limited edition leather shoes.</p>
+                            
+                            <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-xl font-bold text-primary dark:text-accent">KES 5,500</span>
+                                </div>
+                                <button disabled class="w-full py-2.5 bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 font-medium rounded-lg cursor-not-allowed flex items-center justify-center gap-2">
+                                    Notify Me
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wishlist Item 4 -->
+                    <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
+                        <div class="relative">
+                            <img src="https://placehold.co/600x400/3B0D5D/D4AF37?text=Wall+Clock" alt="Wall Clock" class="w-full h-48 object-cover">
+                            <div class="absolute top-3 right-3">
+                                <button class="p-2 bg-white dark:bg-gray-900 rounded-full shadow-md text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Remove from Wishlist">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            <div class="absolute top-3 left-3">
+                                <span class="px-2 py-1 bg-green-500 text-white text-xs font-bold rounded">In Stock</span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col">
+                            <p class="text-xs text-muted dark:text-gray-400 mb-1">Household</p>
+                            <h3 class="font-bold text-charcoal dark:text-white mb-2">Modern Wall Clock</h3>
+                            <p class="text-sm text-muted dark:text-gray-300 line-clamp-2 mb-4">Silent mechanism, perfect for bedrooms.</p>
+                            
+                            <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-xl font-bold text-primary dark:text-accent">KES 1,800</span>
+                                </div>
+                                <button class="w-full py-2.5 bg-accent text-white font-medium rounded-lg hover:bg-accent-dark transition-colors flex items-center justify-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    Move to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Column: Sidebar Summary -->
+            <div class="lg:col-span-4 mt-12 lg:mt-0">
+                <div class="sticky top-24 space-y-6">
+                    <!-- Summary Card -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-display text-xl font-bold text-charcoal dark:text-white mb-4">Wishlist Summary</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-muted dark:text-gray-300">Total Items</span>
+                                <span class="font-medium text-charcoal dark:text-white">4</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted dark:text-gray-300">Available Items</span>
+                                <span class="font-medium text-green-600">3</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted dark:text-gray-300">Out of Stock</span>
+                                <span class="font-medium text-red-500">1</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 space-y-3">
+                            <a href="/cart" class="w-full py-3 bg-primary text-white font-bold rounded-lg text-center hover:bg-primary-dark transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                View Shopping Cart
+                            </a>
+                            <a href="/products" class="w-full py-3 bg-sand dark:bg-gray-700 text-charcoal dark:text-white font-bold rounded-lg text-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                Continue Shopping
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- CTA Card -->
+                    <div class="bg-accent/10 border border-accent/30 p-6 rounded-xl">
+                        <h3 class="font-bold text-primary dark:text-white mb-2">Want to pay in installments?</h3>
+                        <p class="text-sm text-muted dark:text-gray-300 mb-4">Many of our items are available for Chamas or Lipa Pole Pole. Check product badges for details.</p>
+                        <a href="/chamas" class="text-accent font-semibold hover:underline text-sm">Learn More &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Empty Wishlist Message (Hidden by default) -->
+        <!-- 
+        <div class="text-center py-16">
+            <svg class="w-24 h-24 mx-auto text-gray-300 dark:text-gray-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white mb-2">Your wishlist is empty</h2>
+            <p class="text-muted dark:text-gray-400 mb-6">Start saving items you love by clicking the heart icon on products.</p>
+            <a href="/products" class="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-bold rounded-full shadow-lg hover:bg-accent-dark transition-colors">
+                Browse Products
+            </a>
+        </div>
+        -->
+
+    </div>
+</section>
+
+{% endblock %}

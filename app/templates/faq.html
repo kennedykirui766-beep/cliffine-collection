@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+
+{% block title %}Frequently Asked Questions - Cliffine Collection{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb Navigation -->
+<nav class="bg-slate-50 py-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="{% url 'home' %}" class="text-slate-500 hover:text-[#5423E7] transition-colors duration-300">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Home
+                </a>
+            </li>
+            <li class="text-slate-400">/</li>
+            <li class="text-[#5423E7] font-medium">FAQ</li>
+        </ol>
+    </div>
+</nav>
+
+<!-- Page Header -->
+<section class="bg-gradient-to-br from-[#5423E7] to-[#6333f0] py-12 lg:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mb-3">
+            Frequently Asked Questions
+        </h1>
+        <p class="text-white/80 text-lg max-w-2xl mx-auto">
+            Find answers to common questions about shopping at Cliffine Collection.
+        </p>
+    </div>
+</section>
+
+<!-- Search Section -->
+<section class="bg-white py-8 border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative">
+            <input 
+                type="text" 
+                id="faqSearch" 
+                onkeyup="filterFAQs()" 
+                placeholder="Search a question... e.g. 'How do I pay?'"
+                class="w-full pl-12 pr-5 py-4 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none text-lg shadow-sm"
+            >
+            <svg class="w-6 h-6 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="py-12 lg:py-16 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row gap-12">
+            
+            <!-- Sidebar Categories -->
+            <aside class="lg:w-1/4 hidden lg:block">
+                <div class="sticky top-32 space-y-2">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 px-3">Categories</h3>
+                    <a href="#orders-shopping" class="block px-4 py-3 rounded-xl text-slate-700 font-medium hover:bg-[#5423E7] hover:text-white transition-colors">
+                        Orders & Shopping
+                    </a>
+                    <a href="#payments" class="block px-4 py-3 rounded-xl text-slate-700 font-medium hover:bg-[#5423E7] hover:text-white transition-colors">
+                        Payments
+                    </a>
+                    <a href="#lipa-pole-pole" class="block px-4 py-3 rounded-xl text-slate-700 font-medium hover:bg-[#5423E7] hover:text-white transition-colors">
+                        Lipa Pole Pole
+                    </a>
+                    <a href="#chamas" class="block px-4 py-3 rounded-xl text-slate-700 font-medium hover:bg-[#5423E7] hover:text-white transition-colors">
+                        Chamas
+                    </a>
+                    <a href="#delivery" class="block px-4 py-3 rounded-xl text-slate-700 font-medium hover:bg-[#5423E7] hover:text-white transition-colors">
+                        Delivery
+                    </a>
+                </div>
+            </aside>
+
+            <!-- FAQ Accordion List -->
+            <div class="lg:w-3/4 space-y-8" id="faqContainer">
+                
+                <!-- 1. Orders & Shopping -->
+                <div id="orders-shopping" class="faq-category scroll-mt-32">
+                    <h2 class="text-2xl font-bold text-[#5423E7] mb-4 flex items-center gap-3">
+                        <span class="w-10 h-10 bg-[#5423E7]/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        </span>
+                        Orders & Shopping
+                    </h2>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+                        
+                        <!-- Item 1 -->
+                        <div class="faq-item border-b border-slate-100">
+                            <button onclick="toggleAccordion(this)" class="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span class="font-semibold text-slate-800">How do I place an order?</span>
+                                <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-300 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="hidden px-6 pb-5 text-slate-600 answer-content">
+                                <p>Customers can browse products, add them to the cart, and proceed to checkout. You can also place orders directly via WhatsApp or by contacting us through our official lines.</p>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="faq-item">
+                            <button onclick="toggleAccordion(this)" class="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span class="font-semibold text-slate-800">Do you sell original products?</span>
+                                <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-300 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="hidden px-6 pb-5 text-slate-600 answer-content">
+                                <p>Yes, Cliffine Collection sells quality household items, electronics, shoes, and handbags. We ensure all our products meet quality standards before listing them for sale.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 2. Payments -->
+                <div id="payments" class="faq-category scroll-mt-32">
+                    <h2 class="text-2xl font-bold text-[#5423E7] mb-4 flex items-center gap-3">
+                        <span class="w-10 h-10 bg-[#5423E7]/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        </span>
+                        Payments
+                    </h2>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+                        
+                        <!-- Item 1 -->
+                        <div class="faq-item border-b border-slate-100">
+                            <button onclick="toggleAccordion(this)" class="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span class="font-semibold text-slate-800">How do I pay for items?</span>
+                                <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-300 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="hidden px-6 pb-5 text-slate-600 answer-content">
+                                <p>Payments are made via M-Pesa Paybill:</p>
+                                <div class="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                    <p>Paybill: <span class="font-bold text-amber-500 text-lg">714888</span></p>
+                                    <p>Account: <span class="font-bold text-slate-800">196856</span></p>
+                                    <p>Name: Cliphine Chepkoech</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="faq-item">
+                            <button onclick="toggleAccordion(this)" class="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span class="font-semibold text-slate-800">What payment method is used for Chamas?</span>
+                                <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-300 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="hidden px-6 pb-5 text-slate-600 answer-content">
+                                <p>Chama payments should be sent to the designated Chama account:</p>
+                                <div class="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                    <p>Paybill: <span class="font-bold text-amber-500 text-lg">522522</span></p>
+                                    <p>Account: <span class="font-bold text-slate-800">6339086</span></p>
+                                    <p>Name: Cliffine Collections</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 3. Lipa Pole Pole -->
+                <div id="lipa-pole-pole" class="faq-category scroll-mt-32">
+                    <h2 class="text-2xl font-bold text-[#5423E7] mb-4 flex items-center gap-3">
+                        <span class="w-10 h-10 bg-[#5423E7]/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </span>
+                        Lipa Pole Pole
+                    </h2>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+                        
+                        <!-- Item 1 -->
+                        <div class="faq-item border-b border-slate-100">
+                            <button onclick="toggleAccordion(this)" class="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span class="font-semibold text-slate-800">Do you offer Lipa Pole Pole?</span>
+                                <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-300 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="hidden px-6 pb-5 text-slate-600 answer-content">
+                                <p>Yes! Customers can pay for items in affordable monthly installments. This allows you to get the product you need now and pay comfortably over time.</p>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="faq-item">
+                            <button onclick="toggleAccordion(this)" class="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span class="font-semibold text-slate-800">Where do I pay for Lipa Pole Pole?</span>
+                                <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-300 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="hidden px-6 pb-5 text-slate-600 answer-content">
+                                <p>Lipa Pole Pole payments are made via Buy Goods Till:</p>
+                                <div class="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                    <p>Till Number: <span class="font-bold text-amber-500 text-lg">4106106</span></p>
+                                    <p>Name: Cliphine Chepkoech</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 4. Chamas -->
+                <div id="chamas" class="faq-category scroll-mt-32">
+                    <h2 class="text-2xl font-bold text-[#5423E7] mb-4 flex items-center gap-3">
+                        <span class="w-10 h-10 bg-[#5423E7]/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </span>
+                        Chamas
+                    </h2>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+                        
+                        <!-- Item 1 -->
+                        <div class="faq-item border-b border-slate-100">
+                            <button onclick="toggleAccordion(this)" class="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span class="font-semibold text-slate-800">What is a product chama?</span>
+                                <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-300 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="hidden px-6 pb-5 text-slate-600 answer-content">
+                                <p>A product chama is a group of customers who contribute money together to buy a product. It helps members afford items by pooling resources.</p>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="faq-item">
+                            <button onclick="toggleAccordion(this)" class="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span class="font-semibold text-slate-800">What is the minimum contribution?</span>
+                                <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-300 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="hidden px-6 pb-5 text-slate-600 answer-content">
+                                <p>Cash chamas start from as low as <span class="font-bold text-slate-800">Ksh 50</span>. This makes it easy for everyone to join and save towards their desired products.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 5. Delivery -->
+                <div id="delivery" class="faq-category scroll-mt-32">
+                    <h2 class="text-2xl font-bold text-[#5423E7] mb-4 flex items-center gap-3">
+                        <span class="w-10 h-10 bg-[#5423E7]/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </span>
+                        Delivery
+                    </h2>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+                        
+                        <!-- Item 1 -->
+                        <div class="faq-item border-b border-slate-100">
+                            <button onclick="toggleAccordion(this)" class="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span class="font-semibold text-slate-800">Do you deliver outside your location?</span>
+                                <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-300 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="hidden px-6 pb-5 text-slate-600 answer-content">
+                                <p>Yes, deliveries are done countrywide at a fee. We partner with trusted courier services to ensure your items arrive safely.</p>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="faq-item">
+                            <button onclick="toggleAccordion(this)" class="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                <span class="font-semibold text-slate-800">Do you have a pickup point?</span>
+                                <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-300 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="hidden px-6 pb-5 text-slate-600 answer-content">
+                                <p>Yes, there is a pickup point in Nairobi for parcel dispatch. We also have physical locations in <strong>Kericho</strong> and <strong>Bomet</strong>.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- No Results Message -->
+                <div id="noResults" class="hidden text-center py-12">
+                    <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-slate-700 mb-1">No questions found</h3>
+                    <p class="text-slate-500">Try a different search term or contact us directly.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Support Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="bg-slate-50 rounded-3xl p-8 lg:p-12 border border-slate-200">
+            <div class="w-16 h-16 bg-[#5423E7]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">Still have questions?</h2>
+            <p class="text-slate-500 mb-6">
+                Can't find the answer you're looking for? Please reach out to our friendly team.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="{% url 'contact' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#5423E7] text-white rounded-xl font-semibold hover:bg-[#6333f0] transition-all duration-300 shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Contact Us
+                </a>
+                <a href="https://wa.me/2547XXXXXXXX" target="_blank" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-all duration-300 shadow-lg">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    WhatsApp Us
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-16 bg-gradient-to-br from-[#5423E7] to-[#6333f0]">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-2xl lg:text-3xl font-bold text-white mb-4">Ready to Shop?</h2>
+        <p class="text-white/80 mb-8">Explore our latest collection or join a Chama today.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{% url 'products' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#5423E7] rounded-xl font-semibold hover:bg-slate-100 transition-all duration-300 shadow-lg hover:-translate-y-1">
+                Shop Now
+            </a>
+            <a href="{% url 'chama' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-amber-400 text-slate-900 rounded-xl font-semibold hover:bg-amber-500 transition-all duration-300 shadow-lg hover:-translate-y-1">
+                Join a Chama
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Accordion Toggle
+    function toggleAccordion(button) {
+        const content = button.nextElementSibling;
+        const icon = button.querySelector('.icon');
+        
+        // Close all other open items (optional behavior)
+        // Uncomment below if you want only one item open at a time
+        /*
+        const allItems = document.querySelectorAll('.faq-item');
+        allItems.forEach(item => {
+            const btn = item.querySelector('button');
+            const cnt = btn.nextElementSibling;
+            const ic = btn.querySelector('.icon');
+            if (btn !== button) {
+                cnt.classList.add('hidden');
+                ic.classList.remove('rotate-180');
+            }
+        });
+        */
+
+        // Toggle current item
+        content.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    }
+
+    // Search/Filter FAQs
+    function filterFAQs() {
+        const input = document.getElementById('faqSearch');
+        const filter = input.value.toLowerCase();
+        const container = document.getElementById('faqContainer');
+        const categories = container.getElementsByClassName('faq-category');
+        let hasResults = false;
+
+        for (let i = 0; i < categories.length; i++) {
+            const items = categories[i].getElementsByClassName('faq-item');
+            let categoryHasMatch = false;
+
+            for (let j = 0; j < items.length; j++) {
+                const button = items[j].querySelector('button');
+                const answer = items[j].querySelector('.answer-content');
+                const txtValue = button.textContent + " " + answer.textContent;
+
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    items[j].style.display = "";
+                    categoryHasMatch = true;
+                    hasResults = true;
+                } else {
+                    items[j].style.display = "none";
+                }
+            }
+
+            // Hide category header if no items match
+            categories[i].style.display = categoryHasMatch ? "" : "none";
+        }
+
+        // Handle "No Results" message
+        const noResults = document.getElementById('noResults');
+        if (hasResults) {
+            noResults.classList.add('hidden');
+        } else {
+            noResults.classList.remove('hidden');
+        }
+    }
+</script>
+{% endblock %}

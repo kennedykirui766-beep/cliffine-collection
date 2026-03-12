@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Cliffine Collection{% endblock %}
+
+{% block content %}
+<!-- 1. Hero Section -->
+<section class="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+    <!-- Background Image Placeholder -->
+    <div class="absolute inset-0 z-0">
+        <img src="https://placehold.co/1920x1080/581C87/FFFFFF?text=Cliffine+Collection" alt="Background" class="w-full h-full object-cover opacity-20 dark:opacity-10">
+        <div class="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-white/40 dark:from-gray-900 dark:via-gray-900/90 dark:to-transparent"></div>
+    </div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <span class="inline-block px-4 py-1.5 bg-primary/10 dark:bg-accent/20 text-primary dark:text-accent rounded-full text-sm font-semibold mb-6 tracking-wide uppercase">
+            Quality Living, Affordable Prices
+        </span>
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-7xl font-bold text-primary dark:text-white leading-tight mb-6">
+            Welcome to <br>
+            <span class="text-accent">Cliffine Collection</span>
+        </h1>
+        <p class="max-w-2xl mx-auto text-lg sm:text-xl text-muted dark:text-gray-300 mb-10">
+            Your trusted destination for Quality Household Items, Electronics, Men's Shoes, Ladies Handbags, and more. Delivery countrywide.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/products" class="px-8 py-4 bg-accent text-white font-bold rounded-full shadow-lg hover:bg-accent-dark transform hover:scale-105 transition-all duration-300">
+                Shop Now
+            </a>
+            <a href="#chama-section" class="px-8 py-4 bg-primary text-white font-bold rounded-full shadow-lg hover:bg-primary-dark transform hover:scale-105 transition-all duration-300">
+                Join a Chama
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 2. Quick Business Info Bar -->
+<section class="bg-primary dark:bg-gray-800 py-8 border-t border-b border-accent/20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div class="flex flex-col items-center gap-2 text-white">
+                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-accent">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                </div>
+                <p class="font-semibold text-sm sm:text-base">Kericho & Bomet</p>
+                <p class="text-xs text-gray-300">Main Branches</p>
+            </div>
+            <div class="flex flex-col items-center gap-2 text-white">
+                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-accent">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </div>
+                <p class="font-semibold text-sm sm:text-base">Nairobi Pickup</p>
+                <p class="text-xs text-gray-300">Convenient Location</p>
+            </div>
+            <div class="flex flex-col items-center gap-2 text-white">
+                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-accent">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                </div>
+                <p class="font-semibold text-sm sm:text-base">Countrywide</p>
+                <p class="text-xs text-gray-300">Fast Delivery</p>
+            </div>
+            <div class="flex flex-col items-center gap-2 text-white">
+                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-accent">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+                <p class="font-semibold text-sm sm:text-base">Secure Pay</p>
+                <p class="text-xs text-gray-300">Trusted Methods</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3. Product Categories Section -->
+<section class="py-16 lg:py-24 bg-white dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="font-display text-3xl sm:text-4xl font-bold text-primary dark:text-white mb-4">Shop By Category</h2>
+            <div class="w-24 h-1 bg-accent mx-auto rounded-full"></div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
+            <!-- Category 1: TV Stands -->
+            <a href="/categories/tv-stands" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
+                <img src="https://placehold.co/400x400/581C87/FFFFFF?text=TV+Stands" alt="TV Stands" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
+                    <h3 class="text-white font-bold text-lg">TV Stands</h3>
+                    <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
+                </div>
+            </a>
+
+            <!-- Category 2: Electronics -->
+            <a href="/categories/electronics" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
+                <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Electronics" alt="Electronics" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
+                    <h3 class="text-white font-bold text-lg">Electronics</h3>
+                    <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
+                </div>
+            </a>
+
+            <!-- Category 3: Men's Shoes -->
+            <a href="/categories/mens-shoes" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
+                <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Mens+Shoes" alt="Men's Shoes" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
+                    <h3 class="text-white font-bold text-lg">Men's Shoes</h3>
+                    <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
+                </div>
+            </a>
+
+            <!-- Category 4: Ladies Handbags -->
+            <a href="/categories/handbags" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
+                <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Handbags" alt="Handbags" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
+                    <h3 class="text-white font-bold text-lg">Ladies Handbags</h3>
+                    <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
+                </div>
+            </a>
+
+            <!-- Category 5: Household -->
+            <a href="/categories/household" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square col-span-2 md:col-span-1">
+                <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Household" alt="Household" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
+                    <h3 class="text-white font-bold text-lg">Household Items</h3>
+                    <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 4. Featured Products Section -->
+<section class="py-16 lg:py-24 bg-sand dark:bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-end mb-12">
+            <div>
+                <h2 class="font-display text-3xl sm:text-4xl font-bold text-primary dark:text-white mb-2">Featured Products</h2>
+                <p class="text-muted dark:text-gray-300">Handpicked items just for you</p>
+            </div>
+            <a href="/products" class="hidden sm:flex items-center gap-2 text-accent font-semibold hover:gap-3 transition-all">
+                View All <span>&rarr;</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <!-- Product Loop Placeholder -->
+            {% for i in range(1, 5) %}
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden group">
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Product+{{i}}" alt="Product {{i}}" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute top-2 right-2">
+                        <button class="p-2 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-accent hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-semibold text-charcoal dark:text-white truncate">Premium Product Item {{i}}</h3>
+                    <p class="text-muted text-sm dark:text-gray-400 mb-3">Category Name</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-lg font-bold text-primary dark:text-accent">KES 2,500</span>
+                        <button class="p-2 bg-primary text-white rounded-lg hover:bg-accent transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-8 text-center sm:hidden">
+            <a href="/products" class="inline-block px-6 py-3 border border-accent text-accent rounded-full font-semibold">
+                View All Products
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 5. Chama Services Section -->
+<section id="chama-section" class="py-16 lg:py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-full h-full opacity-5">
+        <div class="absolute top-10 left-10 w-40 h-40 bg-accent rounded-full filter blur-3xl"></div>
+        <div class="absolute bottom-10 right-10 w-60 h-60 bg-primary rounded-full filter blur-3xl"></div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <span class="inline-block px-3 py-1 bg-accent/10 text-accent rounded-full text-sm font-semibold mb-4">Invest & Own</span>
+                <h2 class="font-display text-3xl sm:text-4xl font-bold text-primary dark:text-white mb-6">Join Our Item Chamas</h2>
+                <p class="text-muted dark:text-gray-300 mb-6 text-lg">
+                    Get your dream electronics, furniture, or household items through our trusted Chama system. Pay in manageable installments and own quality products without breaking the bank.
+                </p>
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="text-charcoal dark:text-white">Chamas available for TVs, Decoders, Furniture & more</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="text-charcoal dark:text-white">Affordable weekly or monthly contributions</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="text-charcoal dark:text-white">Secure & transparent process</span>
+                    </li>
+                </ul>
+                <a href="/chamas" class="inline-block px-8 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-colors shadow-lg">
+                    Register for a Chama
+                </a>
+            </div>
+            <div class="relative">
+                <img src="https://placehold.co/600x600/581C87/FFFFFF?text=Chama+Items" alt="Chama Items" class="rounded-2xl shadow-2xl w-full">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 6. Lipa Pole Pole Section -->
+<section class="py-16 lg:py-24 bg-primary dark:bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="font-display text-3xl sm:text-4xl font-bold text-white mb-4">Lipa Pole Pole Available</h2>
+            <p class="text-gray-300 max-w-2xl mx-auto">Get items now and pay slowly at your own pace. We understand that quality sometimes needs flexibility.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Step 1 -->
+            <div class="bg-white/5 backdrop-blur p-6 rounded-xl border border-white/10 text-center">
+                <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary">1</div>
+                <h3 class="text-white font-bold text-xl mb-2">Select Item</h3>
+                <p class="text-gray-400">Choose from our range of electronics or household items available for Lipa Pole Pole.</p>
+            </div>
+            <!-- Step 2 -->
+            <div class="bg-white/5 backdrop-blur p-6 rounded-xl border border-white/10 text-center">
+                <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary">2</div>
+                <h3 class="text-white font-bold text-xl mb-2">Agree on Terms</h3>
+                <p class="text-gray-400">Set up a comfortable payment plan that works for your budget.</p>
+            </div>
+            <!-- Step 3 -->
+            <div class="bg-white/5 backdrop-blur p-6 rounded-xl border border-white/10 text-center">
+                <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary">3</div>
+                <h3 class="text-white font-bold text-xl mb-2">Take It Home</h3>
+                <p class="text-gray-400">Pay a small deposit and take your item home. Complete payments gradually.</p>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center">
+            <p class="text-accent font-semibold mb-4">Available on:</p>
+            <div class="flex flex-wrap justify-center gap-4 text-white font-medium">
+                <span class="bg-white/10 px-4 py-2 rounded-lg">Smart TVs</span>
+                <span class="bg-white/10 px-4 py-2 rounded-lg">Home Theaters</span>
+                <span class="bg-white/10 px-4 py-2 rounded-lg">Decoders</span>
+                <span class="bg-white/10 px-4 py-2 rounded-lg">Furniture</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 7. Payment Methods Section -->
+<section class="py-16 lg:py-24 bg-white dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="font-display text-3xl sm:text-4xl font-bold text-primary dark:text-white mb-4">How to Pay</h2>
+            <p class="text-muted dark:text-gray-300">Safe, secure, and convenient M-Pesa payments</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+            <!-- Shop Payments -->
+            <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl shadow-sm border-t-4 border-accent">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-white font-bold">S</div>
+                    <h3 class="text-xl font-bold text-primary dark:text-white">Shop Payments</h3>
+                </div>
+                <div class="space-y-2 text-muted dark:text-gray-300">
+                    <p>Paybill: <span class="font-mono text-charcoal dark:text-white font-bold">714888</span></p>
+                    <p>Account: <span class="font-mono text-charcoal dark:text-white font-bold">196856</span></p>
+                    <p>Name: Cliphine Chepkoech</p>
+                </div>
+            </div>
+
+            <!-- Chama Payments -->
+            <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl shadow-sm border-t-4 border-primary">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 bg-accent rounded-lg flex items-center justify-center text-white font-bold">C</div>
+                    <h3 class="text-xl font-bold text-primary dark:text-white">Chama Payments</h3>
+                </div>
+                <div class="space-y-2 text-muted dark:text-gray-300">
+                    <p>Paybill: <span class="font-mono text-charcoal dark:text-white font-bold">522522</span></p>
+                    <p>Account: <span class="font-mono text-charcoal dark:text-white font-bold">6339086</span></p>
+                    <p>Use for Chama contributions</p>
+                </div>
+            </div>
+
+            <!-- Lipa Pole Pole -->
+            <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl shadow-sm border-t-4 border-green-500">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold">L</div>
+                    <h3 class="text-xl font-bold text-primary dark:text-white">Lipa Pole Pole</h3>
+                </div>
+                <div class="space-y-2 text-muted dark:text-gray-300">
+                    <p>Buy Goods Till: <span class="font-mono text-charcoal dark:text-white font-bold">4106106</span></p>
+                    <p>Pay your installments easily</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 8. Delivery Information -->
+<section class="bg-sand dark:bg-gray-800 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg border-l-4 border-accent">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-primary dark:text-white">Delivery Countrywide</h3>
+                    <p class="text-muted dark:text-gray-300">Nairobi pickup available. Delivery fee applies based on location.</p>
+                </div>
+            </div>
+            <a href="/delivery" class="px-6 py-2 border border-primary dark:border-accent text-primary dark:text-accent rounded-full font-semibold hover:bg-primary hover:text-white transition-colors">
+                Check Rates
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 9. Customer Call-To-Action -->
+<section class="py-20 relative overflow-hidden">
+    <div class="absolute inset-0 bg-primary"></div>
+    <div class="absolute inset-0 bg-[url('https://placehold.co/1920x600/581C87/FFFFFF?text=')] opacity-10"></div>
+    
+    <div class="relative z-10 max-w-4xl mx-auto text-center px-4">
+        <h2 class="font-display text-3xl sm:text-5xl font-bold text-white mb-6">Start Shopping Today</h2>
+        <p class="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
+            Browse our collection of quality products. Join a Chama. Buy on Lipa Pole Pole. Your journey to quality living starts here.
+        </p>
+        <a href="/products" class="inline-block px-10 py-4 bg-accent text-white font-bold text-lg rounded-full shadow-xl hover:bg-accent-dark transform hover:scale-105 transition-all">
+            Browse Products
+        </a>
+    </div>
+</section>
+
+<!-- 10. Testimonials -->
+<section class="py-16 lg:py-24 bg-white dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="font-display text-3xl sm:text-4xl font-bold text-primary dark:text-white mb-4">What Our Customers Say</h2>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl">
+                <div class="flex items-center gap-1 text-accent mb-3">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </div>
+                <p class="text-muted dark:text-gray-300 mb-4 italic">"Great service and fast delivery. Got my TV stand in perfect condition. Will definitely buy again!"</p>
+                <p class="font-bold text-charcoal dark:text-white">- Mary W.</p>
+            </div>
+
+            <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl">
+                <div class="flex items-center gap-1 text-accent mb-3">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </div>
+                <p class="text-muted dark:text-gray-300 mb-4 italic">"I joined a chama and got my handbag after just 3 months. Very transparent and trustworthy."</p>
+                <p class="font-bold text-charcoal dark:text-white">- John K.</p>
+            </div>
+
+            <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl">
+                <div class="flex items-center gap-1 text-accent mb-3">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </div>
+                <p class="text-muted dark:text-gray-300 mb-4 italic">"Very good prices for electronics. The Lipa Pole Pole option helped me buy a home theater system easily."</p>
+                <p class="font-bold text-charcoal dark:text-white">- Susan N.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 11. Contact / Social Section -->
+<section class="py-16 bg-sand dark:bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="font-display text-3xl sm:text-4xl font-bold text-primary dark:text-white mb-4">Have Questions?</h2>
+        <p class="text-muted dark:text-gray-300 mb-8 max-w-xl mx-auto">Contact Cliffine Collection today. We are here to help you find exactly what you need.</p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <a href="https://wa.me/254700000000" class="flex items-center justify-center gap-2 px-8 py-3 bg-green-500 text-white font-bold rounded-full shadow-lg hover:bg-green-600 transition-colors">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Chat on WhatsApp
+            </a>
+            <a href="/contact" class="px-8 py-3 bg-primary text-white font-bold rounded-full shadow-lg hover:bg-primary-dark transition-colors">
+                Contact Form
+            </a>
+        </div>
+        
+        <div class="flex justify-center gap-4">
+             <a href="#" class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow hover:text-accent transition-colors text-primary dark:text-white">
+                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+             </a>
+             <a href="#" class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow hover:text-accent transition-colors text-primary dark:text-white">
+                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+             </a>
+        </div>
+    </div>
+</section>
+<!-- 12. Newsletter -->
+<section class="py-12 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h3 class="font-display text-2xl font-bold text-primary dark:text-white mb-3">Get Updates & Promotions</h3>
+        <p class="text-muted dark:text-gray-300 mb-6">Subscribe to receive updates on new arrivals, Chama openings, and special offers.</p>
+        
+        <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <input type="email" name="email" placeholder="Enter your email address" required class="flex-1 px-4 py-3 rounded-full border border-gray-200 dark:border-gray-700 bg-sand dark:bg-gray-800 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+            <button type="submit" class="px-6 py-3 bg-accent text-white font-bold rounded-full hover:bg-accent-dark transition-colors">
+                Subscribe
+            </button>
+        </form>
+    </div>
+</section>
+
+{% endblock %}

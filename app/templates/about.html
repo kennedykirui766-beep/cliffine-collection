@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us - Cliffine Collection{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb Navigation -->
+<nav class="bg-slate-50 py-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="{% url 'home' %}" class="text-slate-500 hover:text-[#5423E7] transition-colors duration-300">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Home
+                </a>
+            </li>
+            <li class="text-slate-400">/</li>
+            <li class="text-[#5423E7] font-medium">About Us</li>
+        </ol>
+    </div>
+</nav>
+
+<!-- Page Header -->
+<section class="bg-gradient-to-br from-[#5423E7] to-[#6333f0] py-12 lg:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mb-4">
+            About Cliffine Collection
+        </h1>
+        <p class="text-white/80 text-lg max-w-3xl mx-auto">
+            A trusted shop offering quality household items, electronics, shoes, and handbags at affordable prices with flexible payment options.
+        </p>
+    </div>
+</section>
+
+<!-- Business Introduction -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <h2 class="text-3xl font-bold text-slate-900 mb-6">Who We Are</h2>
+                <p class="text-slate-600 mb-4 leading-relaxed">
+                    <span class="text-[#5423E7] font-semibold">Cliffine Collection</span> is your one-stop shop for quality and affordable products. We are dedicated to providing a seamless shopping experience with flexible payment solutions that work for you.
+                </p>
+                <p class="text-slate-600 mb-6 leading-relaxed">
+                    We offer a wide variety of products to meet your household and personal needs. Our inventory includes:
+                </p>
+                <ul class="grid grid-cols-2 gap-3 text-slate-700">
+                    <li class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        TV Stands
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Electronics
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Men's Shoes
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Ladies Handbags
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Household Items
+                    </li>
+                </ul>
+            </div>
+            <div class="relative">
+                <div class="aspect-w-4 aspect-h-3 rounded-2xl overflow-hidden shadow-2xl">
+                    <!-- Placeholder for Shop Image -->
+                    <img src="https://placehold.co/800x600/5423E7/FFFFFF?text=Cliffine+Collection" alt="Cliffine Collection Shop" class="w-full h-full object-cover">
+                </div>
+                <div class="absolute -bottom-6 -left-6 w-48 h-48 bg-amber-400 rounded-2xl -z-10 hidden lg:block"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Business Locations -->
+<section class="py-16 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-slate-900 mb-3">Our Locations</h2>
+            <p class="text-slate-500">Find us in these locations or arrange for delivery.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Kericho -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200/50 text-center hover:shadow-lg transition-shadow">
+                <div class="w-14 h-14 bg-[#5423E7]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-7 h-7 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">Kericho</h3>
+                <p class="text-slate-500 text-sm">Main Branch</p>
+            </div>
+            <!-- Bomet -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200/50 text-center hover:shadow-lg transition-shadow">
+                <div class="w-14 h-14 bg-[#5423E7]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-7 h-7 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">Bomet</h3>
+                <p class="text-slate-500 text-sm">Physical Store</p>
+            </div>
+            <!-- Nairobi -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200/50 text-center hover:shadow-lg transition-shadow">
+                <div class="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">Nairobi</h3>
+                <p class="text-slate-500 text-sm">Parcel Dispatch & Pickup Point</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services & Payment Info -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-12">
+            
+            <!-- Services Offered -->
+            <div>
+                <h2 class="text-3xl font-bold text-slate-900 mb-8">Our Services</h2>
+                <div class="space-y-6">
+                    <!-- Chamas -->
+                    <div class="flex gap-4 p-6 bg-slate-50 rounded-2xl border-l-4 border-[#5423E7]">
+                        <div class="flex-shrink-0">
+                            <svg class="w-8 h-8 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Product Chamas</h3>
+                            <p class="text-slate-600 text-sm mt-1">Join a chama for specific products posted and save together as a group.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Lipa Pole Pole -->
+                    <div class="flex gap-4 p-6 bg-slate-50 rounded-2xl border-l-4 border-green-500">
+                        <div class="flex-shrink-0">
+                            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Lipa Pole Pole</h3>
+                            <p class="text-slate-600 text-sm mt-1">Buy items now and pay comfortably in installments over time.</p>
+                        </div>
+                    </div>
+
+                    <!-- Cash Chamas -->
+                    <div class="flex gap-4 p-6 bg-slate-50 rounded-2xl border-l-4 border-amber-400">
+                        <div class="flex-shrink-0">
+                            <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Cash Chamas</h3>
+                            <p class="text-slate-600 text-sm mt-1">Flexible cash chamas available starting from as low as <strong>KSh 50</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div>
+                <h2 class="text-3xl font-bold text-slate-900 mb-8">Payment Methods</h2>
+                <div class="space-y-4">
+                    <!-- Shop Payments -->
+                    <div class="p-6 bg-slate-900 rounded-2xl text-white">
+                        <p class="text-sm text-slate-400 mb-2">Shop Payments</p>
+                        <p class="text-3xl font-bold text-amber-400 tracking-wider mb-3">Paybill: 714888</p>
+                        <p class="text-sm">Account: <span className="font-semibold">196856</span></p>
+                        <p class="text-xs text-slate-400 mt-1">Name: Cliphine Chepkoech</p>
+                    </div>
+
+                    <!-- Chama Payments -->
+                    <div class="p-6 border-2 border-[#5423E7] rounded-2xl bg-[#5423E7]/5">
+                        <p class="text-sm text-slate-500 mb-2 font-medium">Chama Payments</p>
+                        <p class="text-3xl font-bold text-[#5423E7] tracking-wider mb-3">Paybill: 522522</p>
+                        <p class="text-sm text-slate-700">Account: <span className="font-semibold">6339086</span></p>
+                        <p class="text-xs text-slate-500 mt-1">Name: Cliffine Collections</p>
+                    </div>
+
+                    <!-- Lipa Pole Pole -->
+                    <div class="p-6 border border-slate-200 rounded-2xl bg-white shadow-sm">
+                        <p class="text-sm text-slate-500 mb-2 font-medium">Lipa Pole Pole & Cash Chamas</p>
+                        <p class="text-3xl font-bold text-slate-900 tracking-wider mb-3">Till: 4106106</p>
+                        <p class="text-xs text-slate-500 mt-1">Name: Cliphine Chepkoech</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Delivery Information -->
+<section class="py-12 bg-slate-50 border-y border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                    <svg class="w-7 h-7 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Countrywide Delivery</h3>
+                    <p class="text-slate-500">We deliver to all parts of Kenya at a reasonable fee.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                    <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Nairobi Pickup</h3>
+                    <p class="text-slate-500">Convenient pickup point available in Nairobi.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mission & Vision -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-gradient-to-br from-[#5423E7] to-[#6333f0] p-8 rounded-3xl text-white">
+                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <h3 class="text-2xl font-bold mb-3">Our Mission</h3>
+                <p class="text-white/80">To provide affordable, quality products and flexible payment options to customers across Kenya, ensuring everyone can access the items they need.</p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 p-8 rounded-3xl">
+                <div class="w-12 h-12 bg-[#5423E7]/10 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900 mb-3">Our Vision</h3>
+                <p class="text-slate-600">To become the most trusted and accessible online shopping platform in Kenya, known for integrity, quality, and customer satisfaction.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="py-16 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-slate-900 mb-3">Why Choose Cliffine Collection?</h2>
+            <p class="text-slate-500">We are dedicated to serving you better.</p>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-white shadow-sm rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                    <svg class="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h3 class="font-bold text-slate-900 mb-2">Affordable Prices</h3>
+                <p class="text-sm text-slate-500">Quality products that fit your budget.</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-white shadow-sm rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                    <svg class="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                <h3 class="font-bold text-slate-900 mb-2">Flexible Payments</h3>
+                <p class="text-sm text-slate-500">Lipa Pole Pole & Chama options.</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-white shadow-sm rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                    <svg class="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                </div>
+                <h3 class="font-bold text-slate-900 mb-2">Trusted System</h3>
+                <p class="text-sm text-slate-500">Transparent Chamas & deliveries.</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-white shadow-sm rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                    <svg class="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                </div>
+                <h3 class="font-bold text-slate-900 mb-2">Wide Variety</h3>
+                <p class="text-sm text-slate-500">Household, electronics & fashion.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-16 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-4">Ready to Start Shopping?</h2>
+        <p class="text-slate-500 mb-8">Explore our wide range of products and flexible payment options today.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{% url 'products' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#5423E7] text-white rounded-xl font-semibold hover:bg-[#6333f0] transition-all duration-300 shadow-lg hover:-translate-y-1">
+                Shop Products
+            </a>
+            <a href="{% url 'chama' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-amber-400 text-slate-900 rounded-xl font-semibold hover:bg-amber-500 transition-all duration-300 shadow-lg hover:-translate-y-1">
+                Join a Chama
+            </a>
+            <a href="{% url 'contact' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
+                Contact Us
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Special Offers - Cliffine Collection{% endblock %}
+
+{% block content %}
+
+<!-- 2. Breadcrumb Navigation -->
+<div class="bg-sand dark:bg-gray-800 py-4 border-b border-gray-100 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex items-center space-x-2 text-sm text-muted dark:text-gray-400">
+            <a href="/" class="hover:text-accent transition-colors">Home</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="font-medium text-charcoal dark:text-white">Special Offers</span>
+        </nav>
+    </div>
+</div>
+
+<!-- 3. Hero / Banner Section -->
+<section class="relative bg-primary dark:bg-gray-900 overflow-hidden">
+    <div class="absolute inset-0 opacity-20">
+        <img src="https://placehold.co/1920x600/581C87/FFFFFF?text=Sale+Background" alt="Sale" class="w-full h-full object-cover">
+    </div>
+    <!-- Decorative circles -->
+    <div class="absolute top-0 right-0 w-96 h-96 bg-accent rounded-full filter blur-3xl opacity-20 -mr-48 -mt-48"></div>
+    
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 text-center">
+        <span class="inline-block px-4 py-1.5 bg-accent text-white text-xs font-bold rounded-full mb-4 uppercase tracking-widest shadow-lg">Limited Time Only</span>
+        <h1 class="font-display text-4xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+            Massive Discounts <br>
+            <span class="text-accent">Up to 50% OFF</span>
+        </h1>
+        <p class="text-lg text-gray-200 mb-8 max-w-2xl mx-auto">
+            Upgrade your home with quality electronics, furniture, and fashion at unbeatable prices. Offers valid while stocks last.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#offers-grid" class="px-8 py-4 bg-accent text-white font-bold rounded-full shadow-xl hover:bg-accent-dark transform hover:scale-105 transition-all">
+                Shop Deals
+            </a>
+            <a href="/chamas" class="px-8 py-4 bg-white/10 text-white font-bold rounded-full border border-white/20 hover:bg-white/20 transition-colors">
+                Join a Chama & Save
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section id="offers-grid" class="py-12 bg-sand dark:bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- 5. Filter / Sorting Options -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+                <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white">Current Promotions</h2>
+                <p class="text-sm text-muted dark:text-gray-400">Found 8 active deals</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-2">
+                <button class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-full shadow-sm">All Deals</button>
+                <button class="px-4 py-2 bg-white dark:bg-gray-700 text-charcoal dark:text-white text-sm font-medium rounded-full border border-gray-200 dark:border-gray-600 hover:border-accent transition-colors">Electronics</button>
+                <button class="px-4 py-2 bg-white dark:bg-gray-700 text-charcoal dark:text-white text-sm font-medium rounded-full border border-gray-200 dark:border-gray-600 hover:border-accent transition-colors">Fashion</button>
+                <button class="px-4 py-2 bg-white dark:bg-gray-700 text-charcoal dark:text-white text-sm font-medium rounded-full border border-gray-200 dark:border-gray-600 hover:border-accent transition-colors">Household</button>
+            </div>
+            
+            <select class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-accent text-charcoal dark:text-white">
+                <option>Sort by: Highest Discount</option>
+                <option>Sort by: Expiring Soon</option>
+                <option>Sort by: Newest</option>
+            </select>
+        </div>
+
+        <!-- 4. Offers / Promotions Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            
+            <!-- Offer Card 1 -->
+            <div class="group bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden flex flex-col relative">
+                <!-- Discount Badge -->
+                <div class="absolute top-4 left-4 z-10">
+                    <span class="px-3 py-1.5 bg-accent text-white text-xs font-bold rounded-full shadow-lg">20% OFF</span>
+                </div>
+                
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/600x400/581C87/FFFFFF?text=Smart+TV" alt="Smart TV" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                        <p class="text-white text-xs font-medium flex items-center gap-1">
+                            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Ends in 3 Days
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="p-5 flex-1 flex flex-col">
+                    <p class="text-xs text-muted dark:text-gray-400 mb-1">Electronics</p>
+                    <h3 class="font-bold text-charcoal dark:text-white mb-2">43" Smart Android TV</h3>
+                    
+                    <div class="flex items-end gap-2 mb-3">
+                        <span class="text-xl font-bold text-primary dark:text-accent">KES 28,000</span>
+                        <span class="text-sm text-muted line-through">KES 35,000</span>
+                    </div>
+                    
+                    <p class="text-xs text-muted dark:text-gray-400 mb-4">Save KES 7,000 on this ultra-HD Smart TV.</p>
+                    
+                    <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+                        <button class="flex-1 py-2 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent-dark transition-colors">Add to Cart</button>
+                        <button class="p-2 border border-gray-200 dark:border-gray-600 rounded-lg text-muted hover:text-accent hover:border-accent transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offer Card 2 -->
+            <div class="group bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden flex flex-col relative">
+                <div class="absolute top-4 left-4 z-10">
+                    <span class="px-3 py-1.5 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">HOT DEAL</span>
+                </div>
+                
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/600x400/3B0D5D/D4AF37?text=Handbag" alt="Handbag" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+                
+                <div class="p-5 flex-1 flex flex-col">
+                    <p class="text-xs text-muted dark:text-gray-400 mb-1">Fashion</p>
+                    <h3 class="font-bold text-charcoal dark:text-white mb-2">Leather Handbag Duo</h3>
+                    
+                    <div class="flex items-end gap-2 mb-3">
+                        <span class="text-xl font-bold text-primary dark:text-accent">KES 6,500</span>
+                        <span class="text-sm text-muted line-through">KES 9,000</span>
+                    </div>
+                    
+                    <p class="text-xs text-muted dark:text-gray-400 mb-4">Buy 2, Get discount. Premium leather.</p>
+                    
+                    <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+                        <button class="flex-1 py-2 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent-dark transition-colors">Add to Cart</button>
+                        <button class="p-2 border border-gray-200 dark:border-gray-600 rounded-lg text-muted hover:text-accent hover:border-accent transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offer Card 3 -->
+            <div class="group bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden flex flex-col relative">
+                <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                    <span class="px-3 py-1.5 bg-accent text-white text-xs font-bold rounded-full shadow-lg">15% OFF</span>
+                    <span class="px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg">Lipa Pole Pole</span>
+                </div>
+                
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/600x400/581C87/FFFFFF?text=Home+Theater" alt="Home Theater" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+                
+                <div class="p-5 flex-1 flex flex-col">
+                    <p class="text-xs text-muted dark:text-gray-400 mb-1">Electronics</p>
+                    <h3 class="font-bold text-charcoal dark:text-white mb-2">Home Theater System</h3>
+                    
+                    <div class="flex items-end gap-2 mb-3">
+                        <span class="text-xl font-bold text-primary dark:text-accent">KES 10,500</span>
+                        <span class="text-sm text-muted line-through">KES 12,500</span>
+                    </div>
+                    
+                    <p class="text-xs text-muted dark:text-gray-400 mb-4">High quality sound system with Bluetooth.</p>
+                    
+                    <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+                        <button class="flex-1 py-2 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent-dark transition-colors">Add to Cart</button>
+                        <button class="p-2 border border-gray-200 dark:border-gray-600 rounded-lg text-muted hover:text-accent hover:border-accent transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offer Card 4 -->
+            <div class="group bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden flex flex-col relative">
+                <div class="absolute top-4 left-4 z-10">
+                    <span class="px-3 py-1.5 bg-accent text-white text-xs font-bold rounded-full shadow-lg">30% OFF</span>
+                </div>
+                
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/600x400/3B0D5D/D4AF37?text=Shoes" alt="Shoes" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+                
+                <div class="p-5 flex-1 flex flex-col">
+                    <p class="text-xs text-muted dark:text-gray-400 mb-1">Men's Shoes</p>
+                    <h3 class="font-bold text-charcoal dark:text-white mb-2">Classic Leather Oxfords</h3>
+                    
+                    <div class="flex items-end gap-2 mb-3">
+                        <span class="text-xl font-bold text-primary dark:text-accent">KES 2,800</span>
+                        <span class="text-sm text-muted line-through">KES 4,000</span>
+                    </div>
+                    
+                    <p class="text-xs text-muted dark:text-gray-400 mb-4">Limited stock available. Grab yours.</p>
+                    
+                    <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+                        <button class="flex-1 py-2 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent-dark transition-colors">Add to Cart</button>
+                        <button class="p-2 border border-gray-200 dark:border-gray-600 rounded-lg text-muted hover:text-accent hover:border-accent transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offer Card 5 -->
+            <div class="group bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden flex flex-col relative">
+                <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                    <span class="px-3 py-1.5 bg-accent text-white text-xs font-bold rounded-full shadow-lg">50% OFF</span>
+                    <span class="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-full shadow-lg">Chama Deal</span>
+                </div>
+                
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/600x400/581C87/FFFFFF?text=TV+Stand" alt="TV Stand" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+                
+                <div class="p-5 flex-1 flex flex-col">
+                    <p class="text-xs text-muted dark:text-gray-400 mb-1">Furniture</p>
+                    <h3 class="font-bold text-charcoal dark:text-white mb-2">Modern TV Stand</h3>
+                    
+                    <div class="flex items-end gap-2 mb-3">
+                        <span class="text-xl font-bold text-primary dark:text-accent">KES 4,000</span>
+                        <span class="text-sm text-muted line-through">KES 8,000</span>
+                    </div>
+                    
+                    <p class="text-xs text-muted dark:text-gray-400 mb-4">Clearance sale. Spacious & durable.</p>
+                    
+                    <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+                        <button class="flex-1 py-2 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent-dark transition-colors">Add to Cart</button>
+                        <button class="p-2 border border-gray-200 dark:border-gray-600 rounded-lg text-muted hover:text-accent hover:border-accent transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offer Card 6 -->
+            <div class="group bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden flex flex-col relative">
+                <div class="absolute top-4 left-4 z-10">
+                    <span class="px-3 py-1.5 bg-accent text-white text-xs font-bold rounded-full shadow-lg">25% OFF</span>
+                </div>
+                
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/600x400/3B0D5D/D4AF37?text=Carpet" alt="Carpet" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+                
+                <div class="p-5 flex-1 flex flex-col">
+                    <p class="text-xs text-muted dark:text-gray-400 mb-1">Household</p>
+                    <h3 class="font-bold text-charcoal dark:text-white mb-2">Persian Style Carpet</h3>
+                    
+                    <div class="flex items-end gap-2 mb-3">
+                        <span class="text-xl font-bold text-primary dark:text-accent">KES 2,200</span>
+                        <span class="text-sm text-muted line-through">KES 3,000</span>
+                    </div>
+                    
+                    <p class="text-xs text-muted dark:text-gray-400 mb-4">Soft texture. Perfect for living room.</p>
+                    
+                    <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+                        <button class="flex-1 py-2 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent-dark transition-colors">Add to Cart</button>
+                        <button class="p-2 border border-gray-200 dark:border-gray-600 rounded-lg text-muted hover:text-accent hover:border-accent transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</section>
+
+<!-- 7. Empty Offers Message (Hidden by default) -->
+<!--
+<section class="py-16">
+    <div class="text-center max-w-md mx-auto">
+        <svg class="w-24 h-24 mx-auto text-gray-300 dark:text-gray-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 14l6-6m-5 .5a.5.5 0 11-1 0 .5.5 0 011 0zm6.5 6.5a.5.5 0 11-1 0 .5.5 0 011 0zM13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9l-5-7z"/></svg>
+        <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white mb-2">No Current Promotions</h2>
+        <p class="text-muted dark:text-gray-400 mb-6">Sorry, there are no active offers right now. Check back soon for amazing deals!</p>
+        <a href="/products" class="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-bold rounded-full shadow-lg hover:bg-accent-dark transition-colors">
+            Browse All Products
+        </a>
+    </div>
+</section>
+-->
+
+<!-- 6. Call-to-Action Section -->
+<section class="py-16 bg-white dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Lipa Pole Pole -->
+            <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-8 border border-green-200 dark:border-green-800 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <h3 class="font-display text-xl font-bold text-charcoal dark:text-white mb-2">Can't Pay All at Once?</h3>
+                    <p class="text-muted dark:text-gray-300 mb-4 text-sm">Take advantage of our Lipa Pole Pole option for any product. Pay comfortably in installments.</p>
+                    <a href="/lipa-pole-pole" class="text-green-700 dark:text-green-300 font-bold hover:underline">Learn More &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Join Chama -->
+            <div class="bg-accent/10 rounded-xl p-8 border border-accent/30 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+                <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+                <div>
+                    <h3 class="font-display text-xl font-bold text-charcoal dark:text-white mb-2">Save More with Chamas</h3>
+                    <p class="text-muted dark:text-gray-300 mb-4 text-sm">Join our item Chamas and own premium products through affordable monthly contributions.</p>
+                    <a href="/chamas" class="text-accent font-bold hover:underline">Join a Chama &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Us - Cliffine Collection{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb Navigation -->
+<nav class="bg-slate-50 py-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="{% url 'home' %}" class="text-slate-500 hover:text-[#5423E7] transition-colors duration-300">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Home
+                </a>
+            </li>
+            <li class="text-slate-400">/</li>
+            <li class="text-[#5423E7] font-medium">Contact Us</li>
+        </ol>
+    </div>
+</nav>
+
+<!-- Page Header -->
+<section class="bg-gradient-to-br from-[#5423E7] to-[#6333f0] py-12 lg:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mb-3">
+            Contact Us
+        </h1>
+        <p class="text-white/80 text-lg max-w-2xl mx-auto">
+            We would love to hear from you. Send us a message or reach us using the details below.
+        </p>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="py-12 lg:py-16 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-12">
+            
+            <!-- Left Column: Contact Form -->
+            <div class="bg-white rounded-3xl p-8 shadow-xl border border-slate-200/50 order-2 lg:order-1">
+                <h2 class="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h2>
+                <form action="{% url 'contact' %}" method="POST" class="space-y-5">
+                    {% csrf_token %}
+                    
+                    <div class="grid sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                            <input type="text" name="name" required placeholder="John Doe" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                            <input type="tel" name="phone" required placeholder="+254 7XX XXX XXX" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                        <input type="email" name="email" required placeholder="you@example.com" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Inquiry Type</label>
+                        <select name="subject" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all bg-white">
+                            <option value="general">General Inquiry</option>
+                            <option value="product">Product Inquiry</option>
+                            <option value="chama">Chama Inquiry</option>
+                            <option value="lipa_pole_pole">Lipa Pole Pole Inquiry</option>
+                            <option value="delivery">Delivery Question</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Message</label>
+                        <textarea name="message" rows="5" required placeholder="Write your message here..." class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all resize-none"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-amber-400 text-slate-900 py-4 rounded-xl font-bold hover:bg-amber-500 transition-all duration-300 hover:-translate-y-1 shadow-lg flex items-center justify-center gap-2">
+                        Send Message
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Column: Info & Payment -->
+            <div class="space-y-8 order-1 lg:order-2">
+                
+                <!-- Contact Info Card -->
+                <div class="bg-white rounded-3xl p-8 shadow-lg border border-slate-200/50">
+                    <h3 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Contact Information
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Business Name</h4>
+                            <p class="text-slate-900 font-medium text-lg">Cliffine Collection</p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Locations</h4>
+                            <ul class="space-y-2 text-slate-700">
+                                <li class="flex items-start gap-2">
+                                    <svg class="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    <span><strong>Kericho</strong> (Main Branch)</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <svg class="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    <span><strong>Bomet</strong></span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <svg class="w-5 h-5 text-amber-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"></path></svg>
+                                    <span><strong>Nairobi</strong> (Parcel Dispatch/Pickup)</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Delivery</h4>
+                            <p class="text-slate-700 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Countrywide delivery available (Fee applies)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Hours -->
+                <div class="bg-white rounded-3xl p-8 shadow-lg border border-slate-200/50">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Business Hours
+                    </h3>
+                    <ul class="space-y-2 text-slate-700">
+                        <li class="flex justify-between">
+                            <span>Monday – Friday</span>
+                            <span class="font-semibold">8:00 AM – 6:00 PM</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <span>Saturday</span>
+                            <span class="font-semibold">9:00 AM – 4:00 PM</span>
+                        </li>
+                        <li class="flex justify-between text-slate-400">
+                            <span>Sunday</span>
+                            <span class="font-semibold">Closed</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Social Links -->
+                <div class="flex gap-4">
+                     <a href="https://wa.me/2547XXXXXXXX" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-4 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors shadow-lg">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        WhatsApp
+                    </a>
+                    <a href="#" class="flex-1 flex items-center justify-center gap-2 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        Facebook
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Payment Information Section -->
+<section class="py-12 lg:py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+            <h2 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-3">Payment Information</h2>
+            <p class="text-slate-500">Use the details below to make payments for orders or Chamas.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Shop Payments -->
+            <div class="bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
+                <div class="w-16 h-16 bg-[#5423E7]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-4">Shop Payments</h3>
+                <div class="space-y-2">
+                    <p class="text-sm text-slate-500">Paybill Number</p>
+                    <p class="text-3xl font-bold text-amber-500 tracking-wider">714888</p>
+                    <div class="border-t border-slate-200 my-4 pt-4">
+                        <p class="text-sm text-slate-500">Account Number</p>
+                        <p class="text-xl font-semibold text-slate-800">196856</p>
+                    </div>
+                    <p class="text-sm text-slate-400 mt-2">Name: Cliphine Chepkoech</p>
+                </div>
+            </div>
+
+            <!-- Chama Payments -->
+            <div class="bg-gradient-to-br from-[#5423E7] to-[#6333f0] rounded-3xl p-8 text-center shadow-xl text-white transform scale-105 hover:scale-110 transition-transform duration-500 z-10">
+                <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-4">Chama Payments</h3>
+                <div class="space-y-2">
+                    <p class="text-sm text-white/70">Paybill Number</p>
+                    <p class="text-3xl font-bold text-amber-400 tracking-wider">522522</p>
+                    <div class="border-t border-white/20 my-4 pt-4">
+                        <p class="text-sm text-white/70">Account Number</p>
+                        <p class="text-xl font-semibold text-white">6339086</p>
+                    </div>
+                    <p class="text-sm text-white/60 mt-2">Name: Cliffine Collections</p>
+                </div>
+            </div>
+
+            <!-- Lipa Pole Pole / Cash -->
+            <div class="bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
+                <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-4">Lipa Pole Pole & Cash Chamas</h3>
+                <div class="space-y-2">
+                    <p class="text-sm text-slate-500">Buy Goods Till</p>
+                    <p class="text-3xl font-bold text-amber-500 tracking-wider">4106106</p>
+                    <div class="border-t border-slate-200 my-4 pt-4">
+                        <p class="text-sm text-slate-500">Payment Type</p>
+                        <p class="text-sm font-semibold text-slate-800 mt-1">Direct to Till</p>
+                    </div>
+                    <p class="text-sm text-slate-400 mt-2">Name: Cliphine Chepkoech</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Map Section -->
+<section class="bg-slate-50 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-slate-900">Find Us</h2>
+            <p class="text-slate-500">Locations in Kericho, Bomet, and Nairobi</p>
+        </div>
+        <div class="rounded-3xl overflow-hidden shadow-xl h-96 bg-slate-200 border border-slate-200">
+            <!-- Replace src with actual Google Maps embed URL -->
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127584.5034!2d35.264!3d-0.369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x18297df0!2sKericho%2C%20Kenya!5e0!3m2!1sen!2s!4v1620000000000!5m2!1sen!2s" 
+                width="100%" 
+                height="100%" 
+                style="border:0;" 
+                allowfullscreen="" 
+                loading="lazy">
+            </iframe>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-16 bg-white">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-4">Ready to Shop?</h2>
+        <p class="text-slate-500 mb-8">Explore our latest collection or join a Chama today to save more.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{% url 'products' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#5423E7] text-white rounded-xl font-semibold hover:bg-[#6333f0] transition-all duration-300 shadow-lg hover:-translate-y-1">
+                Shop Products
+            </a>
+            <a href="{% url 'chama' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-amber-400 text-slate-900 rounded-xl font-semibold hover:bg-amber-500 transition-all duration-300 shadow-lg hover:-translate-y-1">
+                Join a Chama
+            </a>
+            <a href="{% url 'faq' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
+                Read FAQs
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Floating WhatsApp Button (Mobile Friendly) -->
+<a href="https://wa.me/2547XXXXXXXX" target="_blank" class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-2xl hover:bg-green-600 transition-all duration-300 hover:scale-110 z-50 flex items-center gap-2 group">
+    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span class="hidden group-hover:inline font-semibold whitespace-nowrap">Chat with us</span>
+</a>
+
+{% endblock %}

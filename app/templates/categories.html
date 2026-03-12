@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Product Categories - Cliffine Collection{% endblock %}
+
+{% block content %}
+
+<!-- 2. Breadcrumb Navigation -->
+<div class="bg-sand dark:bg-gray-800 py-4 border-b border-gray-100 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex items-center space-x-2 text-sm text-muted dark:text-gray-400">
+            <a href="/" class="hover:text-accent transition-colors">Home</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="font-medium text-charcoal dark:text-white">Categories</span>
+        </nav>
+    </div>
+</div>
+
+<!-- 1. Page Title / Header -->
+<section class="py-8 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="font-display text-4xl lg:text-5xl font-bold text-primary dark:text-white mb-3">Product Categories</h1>
+        <p class="text-muted dark:text-gray-400 max-w-2xl mx-auto">Browse our wide selection of quality items by category. Find exactly what you need.</p>
+    </div>
+</section>
+
+<!-- 4. Featured Category Banner -->
+<section class="py-8 lg:py-12 bg-white dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative rounded-2xl overflow-hidden shadow-xl bg-primary dark:bg-gray-800">
+            <div class="absolute inset-0 opacity-20">
+                <img src="https://placehold.co/1400x600/581C87/FFFFFF?text=Electronics+Bg" alt="Electronics Banner" class="w-full h-full object-cover">
+            </div>
+            <div class="relative grid md:grid-cols-2 gap-8 items-center p-8 lg:p-12">
+                <div class="text-center md:text-left">
+                    <span class="inline-block px-3 py-1 bg-accent text-white text-xs font-bold rounded-full mb-4 uppercase tracking-wider">Featured Category</span>
+                    <h2 class="font-display text-3xl lg:text-4xl font-bold text-white mb-4">Electronics</h2>
+                    <p class="text-gray-200 mb-6 text-lg">Latest Smart TVs, Home Theaters, and Decoders. Experience entertainment in 4K.</p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                        <a href="/categories/electronics" class="px-8 py-3 bg-accent text-white font-bold rounded-lg shadow-lg hover:bg-accent-dark transition-colors">
+                            Shop Electronics
+                        </a>
+                        <a href="/lipa-pole-pole" class="px-8 py-3 bg-white/10 text-white font-bold rounded-lg border border-white/20 hover:bg-white/20 transition-colors">
+                            Lipa Pole Pole Options
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <img src="https://placehold.co/500x400/FFFFFF/581C87?text=Smart+TVs" alt="Electronics" class="rounded-xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3. List of Categories Grid -->
+<section class="py-12 bg-sand dark:bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+            <h2 class="font-display text-2xl lg:text-3xl font-bold text-charcoal dark:text-white">Shop By Category</h2>
+            <div class="w-16 h-1 bg-accent mx-auto mt-3 rounded-full"></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Category 1: TV Stands -->
+            <a href="/categories/tv-stands" class="group relative bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <div class="aspect-[4/3] overflow-hidden">
+                    <img src="https://placehold.co/600x450/581C87/FFFFFF?text=TV+Stands" alt="TV Stands" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-display text-xl font-bold text-charcoal dark:text-white group-hover:text-accent transition-colors">TV Stands</h3>
+                        <span class="text-xs bg-sand dark:bg-gray-700 px-2 py-1 rounded-full text-muted dark:text-gray-300">12 Items</span>
+                    </div>
+                    <p class="text-sm text-muted dark:text-gray-400 mb-4">Modern and durable stands for all TV sizes.</p>
+                    <span class="text-accent font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                        View Products <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </a>
+
+            <!-- Category 2: Men's Shoes -->
+            <a href="/categories/mens-shoes" class="group relative bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <div class="aspect-[4/3] overflow-hidden relative">
+                    <img src="https://placehold.co/600x450/3B0D5D/D4AF37?text=Men+Shoes" alt="Men Shoes" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <!-- Badge -->
+                    <div class="absolute top-3 left-3">
+                        <span class="px-2 py-1 bg-accent text-white text-xs font-bold rounded">New Arrivals</span>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-display text-xl font-bold text-charcoal dark:text-white group-hover:text-accent transition-colors">Men's Shoes</h3>
+                        <span class="text-xs bg-sand dark:bg-gray-700 px-2 py-1 rounded-full text-muted dark:text-gray-300">24 Items</span>
+                    </div>
+                    <p class="text-sm text-muted dark:text-gray-400 mb-4">Official and casual shoes for the modern man.</p>
+                    <span class="text-accent font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                        View Products <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </a>
+
+            <!-- Category 3: Ladies Handbags -->
+            <a href="/categories/handbags" class="group relative bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <div class="aspect-[4/3] overflow-hidden relative">
+                    <img src="https://placehold.co/600x450/581C87/FFFFFF?text=Handbags" alt="Handbags" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <!-- Badge -->
+                    <div class="absolute top-3 left-3">
+                        <span class="px-2 py-1 bg-primary text-white text-xs font-bold rounded">Popular</span>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-display text-xl font-bold text-charcoal dark:text-white group-hover:text-accent transition-colors">Ladies Handbags</h3>
+                        <span class="text-xs bg-sand dark:bg-gray-700 px-2 py-1 rounded-full text-muted dark:text-gray-300">18 Items</span>
+                    </div>
+                    <p class="text-sm text-muted dark:text-gray-400 mb-4">Elegant handbags for all occasions.</p>
+                    <span class="text-accent font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                        View Products <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </a>
+
+            <!-- Category 4: Household Items -->
+            <a href="/categories/household" class="group relative bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <div class="aspect-[4/3] overflow-hidden">
+                    <img src="https://placehold.co/600x450/3B0D5D/D4AF37?text=Household" alt="Household" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-display text-xl font-bold text-charcoal dark:text-white group-hover:text-accent transition-colors">Household Items</h3>
+                        <span class="text-xs bg-sand dark:bg-gray-700 px-2 py-1 rounded-full text-muted dark:text-gray-300">30 Items</span>
+                    </div>
+                    <p class="text-sm text-muted dark:text-gray-400 mb-4">Carpets, clocks, utensils, and home decor.</p>
+                    <span class="text-accent font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                        View Products <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </a>
+
+            <!-- Category 5: Electronics (Repeat for grid consistency) -->
+            <a href="/categories/electronics" class="group relative bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <div class="aspect-[4/3] overflow-hidden relative">
+                    <img src="https://placehold.co/600x450/581C87/FFFFFF?text=Electronics" alt="Electronics" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute top-3 left-3">
+                        <span class="px-2 py-1 bg-green-500 text-white text-xs font-bold rounded">Lipa Pole Pole</span>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-display text-xl font-bold text-charcoal dark:text-white group-hover:text-accent transition-colors">Electronics</h3>
+                        <span class="text-xs bg-sand dark:bg-gray-700 px-2 py-1 rounded-full text-muted dark:text-gray-300">15 Items</span>
+                    </div>
+                    <p class="text-sm text-muted dark:text-gray-400 mb-4">TVs, Radios, Decoders and Sound systems.</p>
+                    <span class="text-accent font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                        View Products <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </a>
+
+        </div>
+    </div>
+</section>
+
+<!-- 5. Category Product Grid (Simulated View of a Selected Category) -->
+<section class="py-12 bg-white dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Section Header -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-gray-100 dark:border-gray-700 pb-6">
+            <div class="mb-4 md:mb-0">
+                <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white">Trending in Electronics</h2>
+                <p class="text-sm text-muted dark:text-gray-400">Top picks from our Electronics category</p>
+            </div>
+
+            <!-- 6. Sorting / Filtering Options -->
+            <div class="flex items-center gap-3">
+                <select class="bg-sand dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-accent text-muted dark:text-gray-300">
+                    <option>Sort by: Newest</option>
+                    <option>Price: Low to High</option>
+                    <option>Price: High to Low</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            
+            <!-- Product 1 -->
+            <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Home+Theater" alt="Home Theater" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                    <button class="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full shadow hover:bg-accent hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-charcoal dark:text-white mb-1">Home Theater System</h3>
+                    <p class="text-primary dark:text-accent font-bold text-lg">KES 12,500</p>
+                    <button class="mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product 2 -->
+            <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Android+TV" alt="Android TV" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-charcoal dark:text-white mb-1">43" Android TV</h3>
+                    <p class="text-primary dark:text-accent font-bold text-lg">KES 32,500</p>
+                    <button class="mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product 3 -->
+            <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Decoder" alt="Decoder" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-charcoal dark:text-white mb-1">Digital Decoder</h3>
+                    <p class="text-primary dark:text-accent font-bold text-lg">KES 3,800</p>
+                    <button class="mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product 4 -->
+            <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
+                <div class="relative overflow-hidden">
+                    <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Sound+Bar" alt="Sound Bar" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-charcoal dark:text-white mb-1">Bluetooth Sound Bar</h3>
+                    <p class="text-primary dark:text-accent font-bold text-lg">KES 6,500</p>
+                    <button class="mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+
+        </div>
+        
+        <div class="text-center mt-8">
+            <a href="/categories/electronics" class="inline-flex items-center gap-2 text-accent font-semibold hover:underline">
+                View All Electronics <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 8. Call to Action -->
+<section class="py-16 bg-primary dark:bg-gray-900">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="font-display text-3xl lg:text-4xl font-bold text-white mb-4">Can't Find What You're Looking For?</h2>
+        <p class="text-gray-300 mb-8 text-lg">
+            We are constantly updating our stock. Contact us directly for custom orders or join a Chama to get your desired item.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/contact" class="px-8 py-3 bg-accent text-white font-bold rounded-full shadow-lg hover:bg-accent-dark transition-colors">
+                Contact Us
+            </a>
+            <a href="/chamas" class="px-8 py-3 bg-white text-primary font-bold rounded-full shadow-lg hover:bg-gray-100 transition-colors">
+                Join a Chama
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

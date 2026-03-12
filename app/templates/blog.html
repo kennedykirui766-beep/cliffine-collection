@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}Blog - Cliffine Collection{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb Navigation -->
+<nav class="bg-slate-50 py-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="{{ url_for('home') }}" class="text-slate-500 hover:text-[#5423E7] transition-colors duration-300">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Home
+                </a>
+            </li>
+            <li class="text-slate-400">/</li>
+            <li class="text-[#5423E7] font-medium">Blog</li>
+        </ol>
+    </div>
+</nav>
+
+<!-- Page Header -->
+<section class="bg-gradient-to-br from-[#5423E7] to-[#6333f0] py-12 lg:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mb-3">
+            Cliffine Collection Blog
+        </h1>
+        <p class="text-white/80 text-lg max-w-2xl mx-auto">
+            Tips, updates, and shopping guides from Cliffine Collection.
+        </p>
+    </div>
+</section>
+
+<!-- Main Content Area -->
+<section class="py-12 lg:py-16 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row gap-12">
+            
+            <!-- Left Column: Posts -->
+            <div class="w-full lg:w-2/3">
+                
+                {% if featured_post %}
+                <!-- Featured Blog Post -->
+                <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200/50 mb-12 group">
+                    <div class="grid md:grid-cols-2">
+                        <div class="relative h-64 md:h-auto overflow-hidden">
+                            <img 
+                                src="{{ featured_post.image.url }}" 
+                                alt="{{ featured_post.title }}"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            >
+                            <div class="absolute top-4 left-4">
+                                <span class="px-4 py-1.5 bg-amber-400 text-slate-900 text-xs font-bold uppercase tracking-wider rounded-full shadow-lg">
+                                    Featured
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-8 flex flex-col justify-center">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="px-3 py-1 bg-[#5423E7]/10 text-[#5423E7] rounded-full text-xs font-semibold">
+                                    {{ featured_post.category.name }}
+                                </span>
+                                <span class="text-slate-400 text-sm">{{ featured_post.published_date.strftime("%B %d, %Y") }}</span>
+                            </div>
+                            <h2 class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-[#5423E7] transition-colors">
+                                <a href="{{ url_for('blog_detail', slug=featured_post.slug) }}">{{ featured_post.title }}</a>
+                            </h2>
+                            <p class="text-slate-500 mb-4 line-clamp-3">{{ featured_post.excerpt }}</p>
+                            <div class="flex items-center justify-between mt-auto">
+                                <div class="flex items-center gap-2">
+                                    <img src="{{ featured_post.author.avatar.url }}" alt="{{ featured_post.author.name }}" class="w-8 h-8 rounded-full object-cover">
+                                    <span class="text-sm font-medium text-slate-700">{{ featured_post.author.name }}</span>
+                                </div>
+                                <a href="{% url 'blog_detail' featured_post.slug %}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-400 text-slate-900 rounded-xl font-semibold text-sm hover:bg-amber-500 transition-all duration-300 shadow-md">
+                                    Read More
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Blog Posts Grid -->
+                <div class="grid md:grid-cols-2 gap-8">
+                    {% for post in posts %}
+                    <!-- Blog Post Card -->
+                    <article class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-200/50 group flex flex-col">
+                        <div class="relative h-48 overflow-hidden">
+                            <img 
+                                src="{{ post.image.url }}" 
+                                alt="{{ post.title }}"
+                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            >
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                        <div class="p-6 flex-1 flex flex-col">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="text-xs font-semibold text-[#5423E7] uppercase tracking-wider">{{ post.category.name }}</span>
+                                <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                <span class="text-xs text-slate-400">{{ post.published_date|date:"M d, Y" }}</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-[#5423E7] transition-colors">
+                                <a href="{% url 'blog_detail' post.slug %}">{{ post.title }}</a>
+                            </h3>
+                            <p class="text-sm text-slate-500 mb-4 line-clamp-3 flex-1">{{ post.excerpt }}</p>
+                            
+                            <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+                                <div class="flex items-center gap-2">
+                                    <img src="{{ post.author.avatar.url }}" alt="{{ post.author.name }}" class="w-6 h-6 rounded-full object-cover">
+                                    <span class="text-xs font-medium text-slate-600">{{ post.author.name }}</span>
+                                </div>
+                                <a href="{% url 'blog_detail' post.slug %}" class="text-amber-500 font-semibold text-sm hover:text-amber-600 flex items-center gap-1 group/link">
+                                    Read More
+                                    <svg class="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                    {% empty %}
+                    <div class="col-span-2 text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-200/50">
+                        <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-slate-700 mb-2">No posts found</h3>
+                        <p class="text-slate-500">Check back later for exciting updates and articles.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav class="mt-12 flex justify-center items-center gap-2">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="p-3 rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-[#5423E7] hover:text-[#5423E7] transition-colors shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </a>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <span class="w-12 h-12 flex items-center justify-center rounded-xl bg-[#5423E7] text-white font-semibold shadow-lg">
+                            {{ num }}
+                        </span>
+                        {% elif num > page_obj.number|add:'-2' and num < page_obj.number|add:'2' %}
+                        <a href="?page={{ num }}" class="w-12 h-12 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-[#5423E7] hover:text-[#5423E7] transition-colors font-medium shadow-sm">
+                            {{ num }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="p-3 rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-[#5423E7] hover:text-[#5423E7] transition-colors shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                    {% endif %}
+                </nav>
+                {% endif %}
+            </div>
+
+            <!-- Right Column: Sidebar -->
+            <aside class="w-full lg:w-1/3 space-y-8">
+                <!-- Search Widget -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/50">
+                    <h4 class="text-lg font-bold text-[#5423E7] mb-4">Search Blog</h4>
+                    <form action="{% url 'blog' %}" method="GET">
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                name="q" 
+                                placeholder="Search articles..."
+                                class="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none text-sm"
+                            >
+                            <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#5423E7]">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Categories Widget -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/50">
+                    <h4 class="text-lg font-bold text-[#5423E7] mb-4">Categories</h4>
+                    <ul class="space-y-2">
+                        {% for category in categories %}
+                        <li>
+                            <a href="{% url 'blog_category' category.slug %}" class="flex items-center justify-between p-3 rounded-xl text-slate-600 hover:bg-[#5423E7]/5 hover:text-[#5423E7] transition-colors group">
+                                <span class="font-medium">{{ category.name }}</span>
+                                <span class="text-xs bg-slate-100 group-hover:bg-white text-slate-500 group-hover:text-[#5423E7] px-2 py-1 rounded-full transition-colors">
+                                    {{ category.count }}
+                                </span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Popular Posts Widget -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/50">
+                    <h4 class="text-lg font-bold text-[#5423E7] mb-4">Popular Posts</h4>
+                    <div class="space-y-4">
+                        {% for post in popular_posts %}
+                        <a href="{% url 'blog_detail' post.slug %}" class="flex gap-4 group">
+                            <div class="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100">
+                                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="flex-1">
+                                <h5 class="text-sm font-semibold text-slate-800 line-clamp-2 group-hover:text-[#5423E7] transition-colors">{{ post.title }}</h5>
+                                <p class="text-xs text-slate-400 mt-1">{{ post.published_date|date:"M d, Y" }}</p>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Tags Widget -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/50">
+                    <h4 class="text-lg font-bold text-[#5423E7] mb-4">Tags</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="#" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-full text-sm hover:bg-amber-400 hover:text-slate-900 transition-colors">Handbags</a>
+                        <a href="#" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-full text-sm hover:bg-amber-400 hover:text-slate-900 transition-colors">Lipa Pole Pole</a>
+                        <a href="#" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-full text-sm hover:bg-amber-400 hover:text-slate-900 transition-colors">Chama</a>
+                        <a href="#" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-full text-sm hover:bg-amber-400 hover:text-slate-900 transition-colors">Electronics</a>
+                        <a href="#" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-full text-sm hover:bg-amber-400 hover:text-slate-900 transition-colors">Tips</a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-gradient-to-br from-[#5423E7] to-[#6333f0] rounded-3xl p-8 lg:p-12 text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+            
+            <div class="relative z-10">
+                <h3 class="text-2xl lg:text-3xl font-bold text-white mb-3">
+                    Get the latest updates
+                </h3>
+                <p class="text-white/80 mb-6 max-w-lg mx-auto">
+                    Subscribe to our newsletter and never miss new arrivals, shopping tips, or exclusive offers.
+                </p>
+                <form class="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
+                    <input 
+                        type="email" 
+                        placeholder="Enter your email address"
+                        class="flex-1 px-5 py-4 rounded-xl bg-white/90 backdrop-blur-sm text-slate-900 placeholder-slate-400 focus:ring-4 focus:ring-white/30 focus:outline-none"
+                    >
+                    <button type="submit" class="px-8 py-4 bg-amber-400 text-slate-900 rounded-xl font-bold hover:bg-amber-300 transition-all duration-300 hover:-translate-y-1 shadow-lg flex items-center justify-center gap-2">
+                        Subscribe
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="py-16 lg:py-20 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+            <h2 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-3">Ready to Shop?</h2>
+            <p class="text-slate-500">Explore our collection or join a Chama today.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{% url 'products' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#5423E7] text-white rounded-xl font-semibold hover:bg-[#6333f0] transition-all duration-300 shadow-lg hover:-translate-y-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                </svg>
+                Shop Now
+            </a>
+            <a href="{% url 'chama' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-amber-400 text-slate-900 rounded-xl font-semibold hover:bg-amber-500 transition-all duration-300 shadow-lg hover:-translate-y-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                Join a Chama
+            </a>
+            <a href="{% url 'lipa_pole_pole' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#5423E7] border-2 border-[#5423E7] rounded-xl font-semibold hover:bg-[#5423E7] hover:text-white transition-all duration-300 hover:-translate-y-1">
+                Lipa Pole Pole
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

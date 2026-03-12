@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+
+{% block title %}Products - Cliffine Collection{% endblock %}
+
+{% block content %}
+
+<!-- 1. Page Title / Header -->
+<section class="bg-sand dark:bg-gray-800 py-8 lg:py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="font-display text-4xl lg:text-5xl font-bold text-primary dark:text-white mb-3">Our Products</h1>
+            <p class="text-muted dark:text-gray-300 max-w-2xl mx-auto">
+                Browse electronics, TV stands, handbags, shoes and household items from Cliffine Collection. Quality guaranteed.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content Area -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    <div class="flex flex-col lg:flex-row gap-8">
+        
+        <!-- Sidebar Filters (Desktop) -->
+        <aside class="hidden lg:block w-64 flex-shrink-0">
+            <div class="sticky top-24 space-y-8">
+                <!-- Search -->
+                <div>
+                    <h3 class="text-sm font-bold text-charcoal dark:text-white uppercase tracking-wider mb-4">Search</h3>
+                    <div class="relative">
+                        <input type="text" id="search-input" placeholder="Search products..." class="w-full pl-4 pr-10 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent focus:border-transparent transition">
+                        <button class="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div>
+                    <h3 class="text-sm font-bold text-charcoal dark:text-white uppercase tracking-wider mb-4">Categories</h3>
+                    <div class="space-y-2">
+                        <a href="/products" class="block w-full text-left px-4 py-2.5 rounded-lg bg-primary text-white font-medium">All Products</a>
+                        <a href="/categories/electronics" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition">Electronics</a>
+                        <a href="/categories/tv-stands" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition">TV Stands</a>
+                        <a href="/categories/mens-shoes" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition">Men's Shoes</a>
+                        <a href="/categories/handbags" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition">Ladies Handbags</a>
+                        <a href="/categories/household" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition">Household Items</a>
+                    </div>
+                </div>
+
+                <!-- Payment Filter -->
+                <div>
+                    <h3 class="text-sm font-bold text-charcoal dark:text-white uppercase tracking-wider mb-4">Payment Options</h3>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 accent-accent rounded">
+                            <span class="text-muted dark:text-gray-300">Lipa Pole Pole</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 accent-accent rounded">
+                            <span class="text-muted dark:text-gray-300">Chama Available</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Product Grid Area -->
+        <main class="flex-1">
+            <!-- Mobile Controls: Filter & Sort -->
+            <div class="lg:hidden mb-6 space-y-4">
+                <!-- Mobile Search -->
+                <div class="relative">
+                    <input type="text" placeholder="Search products..." class="w-full pl-4 pr-10 py-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent">
+                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-muted">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </button>
+                </div>
+                
+                <!-- Mobile Categories Horizontal Scroll -->
+                <div class="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                    <button class="flex-shrink-0 px-4 py-2 bg-primary text-white rounded-full text-sm font-medium">All</button>
+                    <button class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300">Electronics</button>
+                    <button class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300">TV Stands</button>
+                    <button class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300">Shoes</button>
+                    <button class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300">Handbags</button>
+                </div>
+
+                <!-- Sort Dropdown -->
+                <div class="flex justify-between items-center">
+                    <p class="text-sm text-muted">Showing 12 results</p>
+                    <select class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-accent">
+                        <option>Sort by: Newest</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                        <option>Most Popular</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Desktop Sort Bar -->
+            <div class="hidden lg:flex justify-between items-center mb-8 border-b border-gray-100 dark:border-gray-700 pb-4">
+                <p class="text-muted dark:text-gray-300">Showing <span class="font-bold text-charcoal dark:text-white">12</span> results</p>
+                <div class="flex items-center gap-4">
+                    <select class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-accent text-muted">
+                        <option>Sort by: Default</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                        <option>Newest First</option>
+                        <option>Most Popular</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 5. Product Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                
+                <!-- Product Card 1 -->
+                <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+                    <div class="relative overflow-hidden">
+                        <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Smart+TV" alt="32 Inch Smart TV" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        <!-- Badges -->
+                        <div class="absolute top-2 left-2 flex flex-col gap-1">
+                            <span class="px-2 py-1 bg-accent text-white text-xs font-bold rounded">New</span>
+                            <span class="px-2 py-1 bg-primary text-white text-xs font-bold rounded">Lipa Pole Pole</span>
+                        </div>
+                        <!-- Quick Actions -->
+                        <div class="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                            <button onclick="openQuickView('32 Inch Smart TV', 'KES 18,500', 'High definition smart TV with built-in WiFi and streaming apps. Perfect for your living room.')" class="p-2 bg-white rounded-full shadow hover:bg-accent hover:text-white transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </button>
+                            <button class="p-2 bg-white rounded-full shadow hover:bg-red-500 hover:text-white transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <p class="text-xs text-muted dark:text-gray-400 mb-1">Electronics</p>
+                        <h3 class="font-bold text-charcoal dark:text-white mb-1">32 Inch Smart TV</h3>
+                        <p class="text-sm text-muted dark:text-gray-400 mb-3 line-clamp-2">High definition smart TV with built-in WiFi.</p>
+                        <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-lg font-bold text-primary dark:text-accent">KES 18,500</span>
+                                <span class="text-xs text-green-600 font-medium">In Stock</span>
+                            </div>
+                            <button class="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors text-sm flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 2 -->
+                <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+                    <div class="relative overflow-hidden">
+                        <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=TV+Stand" alt="Modern TV Stand" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-2 left-2">
+                            <span class="px-2 py-1 bg-primary text-white text-xs font-bold rounded">Chama</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <p class="text-xs text-muted dark:text-gray-400 mb-1">TV Stands</p>
+                        <h3 class="font-bold text-charcoal dark:text-white mb-1">Modern TV Stand</h3>
+                        <p class="text-sm text-muted dark:text-gray-400 mb-3 line-clamp-2">Spacious wooden TV stand with shelves.</p>
+                        <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-lg font-bold text-primary dark:text-accent">KES 7,500</span>
+                                <span class="text-xs text-green-600 font-medium">In Stock</span>
+                            </div>
+                            <button class="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors text-sm flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 3 -->
+                <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+                    <div class="relative overflow-hidden">
+                        <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Leather+Bag" alt="Leather Handbag" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-2 left-2">
+                            <span class="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded">Popular</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <p class="text-xs text-muted dark:text-gray-400 mb-1">Handbags</p>
+                        <h3 class="font-bold text-charcoal dark:text-white mb-1">Leather Handbag</h3>
+                        <p class="text-sm text-muted dark:text-gray-400 mb-3 line-clamp-2">Genuine leather, elegant design.</p>
+                        <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-lg font-bold text-primary dark:text-accent">KES 4,200</span>
+                                <span class="text-xs text-green-600 font-medium">In Stock</span>
+                            </div>
+                            <button class="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors text-sm flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 4 -->
+                <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+                    <div class="relative overflow-hidden">
+                        <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Men+Shoes" alt="Men's Official Shoes" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-2 left-2">
+                            <span class="px-2 py-1 bg-green-500 text-white text-xs font-bold rounded">-20%</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <p class="text-xs text-muted dark:text-gray-400 mb-1">Men's Shoes</p>
+                        <h3 class="font-bold text-charcoal dark:text-white mb-1">Men's Official Shoes</h3>
+                        <p class="text-sm text-muted dark:text-gray-400 mb-3 line-clamp-2">Comfortable office wear, leather finish.</p>
+                        <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <span class="text-lg font-bold text-primary dark:text-accent">KES 3,200</span>
+                                    <span class="text-xs text-muted line-through ml-1">KES 4,000</span>
+                                </div>
+                                <span class="text-xs text-green-600 font-medium">In Stock</span>
+                            </div>
+                            <button class="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors text-sm flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 5 (Sold Out Example) -->
+                <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col opacity-75">
+                    <div class="relative overflow-hidden">
+                        <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Home+Theater" alt="Home Theater System" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <span class="px-4 py-2 bg-white text-charcoal font-bold rounded-lg shadow">Sold Out</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <p class="text-xs text-muted dark:text-gray-400 mb-1">Electronics</p>
+                        <h3 class="font-bold text-charcoal dark:text-white mb-1">Home Theater System</h3>
+                        <p class="text-sm text-muted dark:text-gray-400 mb-3 line-clamp-2">Powerful surround sound system.</p>
+                        <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-lg font-bold text-primary dark:text-accent">KES 12,000</span>
+                                <span class="text-xs text-red-500 font-medium">Out of Stock</span>
+                            </div>
+                            <button disabled class="w-full py-2.5 bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2">
+                                Notify Me
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 6 -->
+                <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+                    <div class="relative overflow-hidden">
+                        <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Wall+Clock" alt="Decorative Wall Clock" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <p class="text-xs text-muted dark:text-gray-400 mb-1">Household</p>
+                        <h3 class="font-bold text-charcoal dark:text-white mb-1">Decorative Wall Clock</h3>
+                        <p class="text-sm text-muted dark:text-gray-400 mb-3 line-clamp-2">Modern design, silent mechanism.</p>
+                        <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-lg font-bold text-primary dark:text-accent">KES 1,800</span>
+                                <span class="text-xs text-green-600 font-medium">In Stock</span>
+                            </div>
+                            <button class="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors text-sm flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 7 -->
+                <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+                    <div class="relative overflow-hidden">
+                        <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Decoder" alt="Digital Decoder" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-2 left-2">
+                            <span class="px-2 py-1 bg-accent text-white text-xs font-bold rounded">Lipa Pole Pole</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <p class="text-xs text-muted dark:text-gray-400 mb-1">Electronics</p>
+                        <h3 class="font-bold text-charcoal dark:text-white mb-1">Digital Decoder</h3>
+                        <p class="text-sm text-muted dark:text-gray-400 mb-3 line-clamp-2">Free to air decoder, easy installation.</p>
+                        <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-lg font-bold text-primary dark:text-accent">KES 3,500</span>
+                                <span class="text-xs text-green-600 font-medium">In Stock</span>
+                            </div>
+                            <button class="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors text-sm flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 8 -->
+                <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+                    <div class="relative overflow-hidden">
+                        <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Carpet" alt="Living Room Carpet" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <p class="text-xs text-muted dark:text-gray-400 mb-1">Household</p>
+                        <h3 class="font-bold text-charcoal dark:text-white mb-1">Living Room Carpet</h3>
+                        <p class="text-sm text-muted dark:text-gray-400 mb-3 line-clamp-2">Soft texture, available in multiple colors.</p>
+                        <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-lg font-bold text-primary dark:text-accent">KES 2,500</span>
+                                <span class="text-xs text-green-600 font-medium">In Stock</span>
+                            </div>
+                            <button class="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors text-sm flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Pagination -->
+            <div class="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-muted dark:text-gray-400">Showing 1 to 8 of 45 results</p>
+                <div class="flex items-center gap-1">
+                    <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold text-sm">1</button>
+                    <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 text-sm">2</button>
+                    <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 text-sm">3</button>
+                    <span class="px-2 text-muted">...</span>
+                    <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 text-sm">6</button>
+                    <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- 11. Delivery Notice -->
+<section class="bg-sand dark:bg-gray-800 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm border-l-4 border-accent">
+            <div class="flex items-center gap-3">
+                <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                <div>
+                    <h3 class="font-bold text-charcoal dark:text-white">Delivery Information</h3>
+                    <p class="text-sm text-muted dark:text-gray-400">We deliver countrywide. Nairobi pickup point available.</p>
+                </div>
+            </div>
+            <a href="/delivery" class="text-accent font-semibold hover:underline text-sm">View Delivery Rates &rarr;</a>
+        </div>
+    </div>
+</section>
+
+<!-- 12. Call To Action Section -->
+<section class="py-16 bg-primary dark:bg-gray-900">
+    <div class="max-w-3xl mx-auto px-4 text-center">
+        <h2 class="font-display text-3xl lg:text-4xl font-bold text-white mb-4">Need Help Choosing?</h2>
+        <p class="text-gray-300 mb-8">
+            Can't find what you are looking for? Or need advice on which product fits your home? Contact Cliffine Collection directly. We are happy to help.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/contact" class="px-8 py-3 bg-accent text-white font-bold rounded-full shadow-lg hover:bg-accent-dark transition-colors">
+                Contact Us
+            </a>
+            <a href="https://wa.me/254700000000" class="px-8 py-3 bg-white text-primary font-bold rounded-full shadow-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp Us
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 9. Quick View Modal -->
+<div id="quick-view-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeQuickView()"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-auto">
+        <button onclick="closeQuickView()" class="absolute top-4 right-4 z-10 w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+            <svg class="w-6 h-6 text-charcoal dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div class="grid md:grid-cols-2 gap-6 p-6 lg:p-8">
+            <div class="aspect-square rounded-xl overflow-hidden bg-sand dark:bg-gray-700">
+                <img id="modal-image" src="https://placehold.co/600x600/581C87/FFFFFF?text=Product" alt="Product" class="w-full h-full object-cover">
+            </div>
+            <div class="flex flex-col justify-center">
+                <span class="text-xs text-accent font-semibold uppercase tracking-wider mb-2">Quick View</span>
+                <h2 id="modal-title" class="font-display text-2xl lg:text-3xl font-bold text-charcoal dark:text-white mb-3">Product Name</h2>
+                <p id="modal-price" class="text-2xl font-bold text-primary dark:text-accent mb-4">KES 0.00</p>
+                <p id="modal-description" class="text-muted dark:text-gray-300 mb-6">Product description goes here.</p>
+                
+                <div class="flex gap-3">
+                    <button class="flex-1 py-3 bg-accent text-white font-bold rounded-lg hover:bg-accent-dark transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        Add to Cart
+                    </button>
+                    <a href="#" class="flex-1 py-3 border border-primary dark:border-white text-primary dark:text-white font-bold rounded-lg text-center hover:bg-primary hover:text-white transition-colors">
+                        View Full Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Quick View Modal Logic
+    const modal = document.getElementById('quick-view-modal');
+
+    function openQuickView(name, price, description) {
+        document.getElementById('modal-title').textContent = name;
+        document.getElementById('modal-price').textContent = price;
+        document.getElementById('modal-description').textContent = description;
+        
+        // Update image alt text and src based on name (simple simulation)
+        const imgSrc = `https://placehold.co/600x600/581C87/FFFFFF?text=${encodeURIComponent(name)}`;
+        document.getElementById('modal-image').src = imgSrc;
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeQuickView() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+    
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeQuickView();
+        }
+    });
+</script>
+{% endblock %}

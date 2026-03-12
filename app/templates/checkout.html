@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - Cliffine Collection{% endblock %}
+
+{% block content %}
+
+<!-- 2. Breadcrumb Navigation -->
+<div class="bg-sand dark:bg-gray-800 py-4 border-b border-gray-100 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex items-center space-x-2 text-sm text-muted dark:text-gray-400">
+            <a href="/" class="hover:text-accent transition-colors">Home</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <a href="/cart" class="hover:text-accent transition-colors">Cart</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="font-medium text-charcoal dark:text-white">Checkout</span>
+        </nav>
+    </div>
+</div>
+
+<!-- 1. Page Title / Header -->
+<section class="py-8 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="font-display text-3xl lg:text-4xl font-bold text-primary dark:text-white">Checkout</h1>
+        <p class="text-muted dark:text-gray-400 mt-1">Almost done! Complete your order details below.</p>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="py-8 lg:py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Form Action -->
+        <form action="/checkout/process" method="POST" id="checkout-form">
+            
+            <div class="grid lg:grid-cols-3 gap-8 lg:gap-12">
+                
+                <!-- Left Column: Forms -->
+                <div class="lg:col-span-2 space-y-8">
+                    
+                    <!-- 4. Customer Information -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-6 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            Customer Information
+                        </h2>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Full Name *</label>
+                                <input type="text" name="full_name" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="John Doe">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Email Address *</label>
+                                <input type="email" name="email" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="john@example.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Phone Number *</label>
+                                <input type="tel" name="phone" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="0712345678">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Delivery Address *</label>
+                                <input type="text" name="address" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="Street name, Building, House No.">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">City / Region *</label>
+                                <select name="city" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-charcoal dark:text-white">
+                                    <option value="">Select Location</option>
+                                    <option value="Nairobi">Nairobi</option>
+                                    <option value="Kericho">Kericho</option>
+                                    <option value="Bomet">Bomet</option>
+                                    <option value="Nakuru">Nakuru</option>
+                                    <option value="Eldoret">Eldoret</option>
+                                    <option value="Mombasa">Mombasa</option>
+                                    <option value="Kisumu">Kisumu</option>
+                                    <option value="Other">Other (Specify in Notes)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Delivery Options -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-6 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+                            Delivery Method
+                        </h2>
+                        
+                        <div class="space-y-3">
+                            <!-- Option 1 -->
+                            <label class="relative flex items-center justify-between p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 border-transparent hover:border-accent transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <input type="radio" name="delivery_method" value="pickup" class="w-5 h-5 text-accent focus:ring-primary" checked onchange="updateDeliveryFee(0)">
+                                    <div>
+                                        <span class="font-medium text-charcoal dark:text-white">Pickup (Nairobi)</span>
+                                        <p class="text-xs text-muted dark:text-gray-400">Pick up from our Nairobi point</p>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-green-600">FREE</span>
+                            </label>
+
+                            <!-- Option 2 -->
+                            <label class="relative flex items-center justify-between p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 border-transparent hover:border-accent transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <input type="radio" name="delivery_method" value="local" class="w-5 h-5 text-accent focus:ring-primary" onchange="updateDeliveryFee(300)">
+                                    <div>
+                                        <span class="font-medium text-charcoal dark:text-white">Local Delivery (Kericho/Bomet)</span>
+                                        <p class="text-xs text-muted dark:text-gray-400">Delivered to your doorstep</p>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-charcoal dark:text-white">KES 300</span>
+                            </label>
+
+                            <!-- Option 3 -->
+                            <label class="relative flex items-center justify-between p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 border-transparent hover:border-accent transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <input type="radio" name="delivery_method" value="countrywide" class="w-5 h-5 text-accent focus:ring-primary" onchange="updateDeliveryFee(500)">
+                                    <div>
+                                        <span class="font-medium text-charcoal dark:text-white">Countrywide Delivery</span>
+                                        <p class="text-xs text-muted dark:text-gray-400">Outside local areas (1-3 days)</p>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-charcoal dark:text-white">KES 500</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 5. Payment Method -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-6 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                            Payment Method
+                        </h2>
+
+                        <div class="space-y-4">
+                            <!-- Payment Option 1 -->
+                            <div>
+                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" onclick="showPaymentDetails('shop')">
+                                    <input type="radio" name="payment_method" value="shop" checked class="w-5 h-5 text-accent">
+                                    <span class="font-medium text-charcoal dark:text-white">Shop Payment</span>
+                                </label>
+                                <div id="shop-details" class="mt-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                                    <p class="font-bold text-green-800 dark:text-green-300">Pay via M-Pesa Paybill</p>
+                                    <p class="text-sm text-green-700 dark:text-green-400">Paybill: <span class="font-mono font-bold">714888</span></p>
+                                    <p class="text-sm text-green-700 dark:text-green-400">Account: <span class="font-mono font-bold">196856</span></p>
+                                    <p class="text-sm text-green-700 dark:text-green-400">Name: Cliphine Chepkoech</p>
+                                </div>
+                            </div>
+
+                            <!-- Payment Option 2 -->
+                            <div>
+                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" onclick="showPaymentDetails('chama')">
+                                    <input type="radio" name="payment_method" value="chama" class="w-5 h-5 text-accent">
+                                    <span class="font-medium text-charcoal dark:text-white">Chama Payment</span>
+                                </label>
+                                <div id="chama-details" class="mt-2 p-4 bg-accent/10 border border-accent/30 rounded-lg hidden">
+                                    <p class="font-bold text-primary dark:text-white">Pay Chama Contribution</p>
+                                    <p class="text-sm text-muted dark:text-gray-300">Paybill: <span class="font-mono font-bold text-charcoal dark:text-white">522522</span></p>
+                                    <p class="text-sm text-muted dark:text-gray-300">Account: <span class="font-mono font-bold text-charcoal dark:text-white">6339086</span></p>
+                                </div>
+                            </div>
+
+                            <!-- Payment Option 3 -->
+                            <div>
+                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" onclick="showPaymentDetails('lipa')">
+                                    <input type="radio" name="payment_method" value="lipa" class="w-5 h-5 text-accent">
+                                    <span class="font-medium text-charcoal dark:text-white">Lipa Pole Pole</span>
+                                </label>
+                                <div id="lipa-details" class="mt-2 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hidden">
+                                    <p class="font-bold text-blue-800 dark:text-blue-300">Pay Installment</p>
+                                    <p class="text-sm text-blue-700 dark:text-blue-400">Buy Goods Till: <span class="font-mono font-bold">4106106</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7. Order Notes -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-4">Order Notes (Optional)</h2>
+                        <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="Special instructions for delivery, e.g., 'Please call before arriving'"></textarea>
+                    </div>
+
+                    <!-- 9. Terms and Conditions -->
+                    <div class="flex items-start gap-3 py-4">
+                        <input type="checkbox" id="terms" name="terms" required class="mt-1 w-5 h-5 rounded text-accent focus:ring-primary">
+                        <label for="terms" class="text-sm text-muted dark:text-gray-300">
+                            I have read and agree to the website <a href="/terms" class="text-accent hover:underline font-medium">terms and conditions</a> and <a href="/privacy" class="text-accent hover:underline font-medium">privacy policy</a>. *
+                        </label>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Order Summary (Sticky Sidebar) -->
+                <div class="lg:col-span-1">
+                    <div class="sticky top-24 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+                        <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">Your Order</h2>
+                        
+                        <!-- Items List -->
+                        <div class="space-y-4 mb-6">
+                            <!-- Item 1 -->
+                            <div class="flex items-center gap-4">
+                                <div class="w-16 h-16 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+                                    <img src="https://placehold.co/100x100/581C87/FFFFFF?text=TV" alt="Product" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-charcoal dark:text-white text-sm">43" Smart Android TV</h3>
+                                    <p class="text-xs text-muted">Qty: 1</p>
+                                </div>
+                                <span class="font-bold text-charcoal dark:text-white text-sm">KES 32,500</span>
+                            </div>
+
+                            <!-- Item 2 -->
+                            <div class="flex items-center gap-4">
+                                <div class="w-16 h-16 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+                                    <img src="https://placehold.co/100x100/3B0D5D/D4AF37?text=Bag" alt="Product" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-charcoal dark:text-white text-sm">Leather Handbag</h3>
+                                    <p class="text-xs text-muted">Qty: 1</p>
+                                </div>
+                                <span class="font-bold text-charcoal dark:text-white text-sm">KES 4,200</span>
+                            </div>
+                        </div>
+
+                        <!-- Totals -->
+                        <div class="space-y-3 border-t border-gray-100 dark:border-gray-700 pt-4">
+                            <div class="flex justify-between text-muted dark:text-gray-300 text-sm">
+                                <span>Subtotal</span>
+                                <span>KES 36,700</span>
+                            </div>
+                            <div class="flex justify-between text-muted dark:text-gray-300 text-sm">
+                                <span>Delivery Fee</span>
+                                <span id="delivery-fee-display">KES 0</span>
+                            </div>
+                            <div class="flex justify-between text-lg font-bold text-charcoal dark:text-white border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
+                                <span>Total</span>
+                                <span id="total-amount">KES 36,700</span>
+                            </div>
+                        </div>
+
+                        <!-- 8. Place Order Button -->
+                        <button type="submit" class="w-full mt-6 py-4 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-accent-dark transition-all transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Place Order
+                        </button>
+                        
+                        <p class="text-xs text-center text-muted dark:text-gray-400 mt-4">
+                            Your payment details are processed securely.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initial subtotal (calculated from items)
+    const subtotal = 36700;
+    let deliveryFee = 0;
+
+    // Function to update delivery fee
+    function updateDeliveryFee(amount) {
+        deliveryFee = amount;
+        updateTotals();
+    }
+
+    // Function to update totals display
+    function updateTotals() {
+        const total = subtotal + deliveryFee;
+        
+        // Update text content
+        document.getElementById('delivery-fee-display').textContent = deliveryFee === 0 ? 'FREE' : `KES ${deliveryFee}`;
+        document.getElementById('total-amount').textContent = `KES ${total.toLocaleString()}`;
+    }
+
+    // Function to toggle payment details visibility
+    function showPaymentDetails(type) {
+        // Hide all details first
+        document.getElementById('shop-details').classList.add('hidden');
+        document.getElementById('chama-details').classList.add('hidden');
+        document.getElementById('lipa-details').classList.add('hidden');
+
+        // Show selected details
+        if(type === 'shop') {
+            document.getElementById('shop-details').classList.remove('hidden');
+        } else if(type === 'chama') {
+            document.getElementById('chama-details').classList.remove('hidden');
+        } else if(type === 'lipa') {
+            document.getElementById('lipa-details').classList.remove('hidden');
+        }
+    }
+</script>
+{% endblock %}
