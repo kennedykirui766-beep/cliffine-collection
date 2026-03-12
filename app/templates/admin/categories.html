@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management - Cliffine Collection Admin</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#5423E7',
+                            dark: '#3B0D5D',
+                            light: '#7C3AED',
+                            50: '#F5F3FF'
+                        },
+                        accent: {
+                            DEFAULT: '#D4AF37',
+                            dark: '#B8960C',
+                            light: '#F5D76E'
+                        },
+                        slate: {
+                            850: '#1A1F2C',
+                            900: '#0F121A',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['DM Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'DM Sans', sans-serif; background-color: #F3F4F6; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #5423E7; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3B0D5D; }
+        .sidebar { transition: transform 0.3s ease-in-out; }
+        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .nav-link.active { background: linear-gradient(90deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0) 100%); border-left: 4px solid #D4AF37; color: #D4AF37; }
+        .sub-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .sub-menu.open { max-height: 500px; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="flex h-screen overflow-hidden bg-slate-100">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar fixed z-20 h-full w-64 flex flex-col bg-primary text-white overflow-y-auto lg:translate-x-0 -translate-x-full">
+            <!-- Logo -->
+            <div class="flex items-center justify-between h-20 px-6 border-b border-white/10">
+                <a href="#" class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                        <span class="font-bold text-primary text-lg">CC</span>
+                    </div>
+                    <span class="font-bold text-lg tracking-wide">Cliffine Admin</span>
+                </a>
+                <button id="closeSidebarBtn" class="lg:hidden text-white hover:text-accent">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-6 space-y-1">
+                <a href="dashboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    Dashboard
+                </a>
+
+                <!-- Products (Closed) -->
+                <div class="nav-group">
+                    <button onclick="toggleSubMenu('products-menu')" class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                            Products
+                        </div>
+                        <svg class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div id="products-menu" class="sub-menu pl-10 space-y-1 mt-1">
+                        <a href="products.html" class="block py-2 px-2 text-sm text-white/70 hover:text-white rounded hover:bg-white/5">All Products</a>
+                        <a href="#" class="block py-2 px-2 text-sm text-white/70 hover:text-white rounded hover:bg-white/5">Add Product</a>
+                    </div>
+                </div>
+
+                <!-- Categories (Active) -->
+                <a href="categories.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    Categories
+                </a>
+                
+                <!-- Orders -->
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    Orders
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Overlay -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-10 lg:hidden hidden" onclick="toggleSidebar()"></div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden lg:ml-64">
+            
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm z-10 sticky top-0 border-b border-slate-200">
+                <div class="flex items-center justify-between h-16 px-6">
+                    <div class="flex items-center gap-4">
+                        <button id="openSidebarBtn" class="lg:hidden text-slate-600 hover:text-primary" onclick="toggleSidebar()">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                        <h1 class="text-xl font-bold text-slate-800 hidden sm:block">Category Management</h1>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                         <a href="#" class="inline-flex items-center gap-2 px-4 py-2 bg-accent text-slate-900 font-semibold rounded-lg hover:bg-accent-dark transition-colors text-sm shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            Add Category
+                        </a>
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=5423E7&color=fff" alt="Admin" class="w-9 h-9 rounded-full border-2 border-accent">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Area -->
+            <main class="flex-1 overflow-y-auto p-6">
+                
+                <!-- Metrics Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">12</h3>
+                        <p class="text-xs text-slate-500">Total Categories</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">3</h3>
+                        <p class="text-xs text-slate-500">Featured</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">10</h3>
+                        <p class="text-xs text-slate-500">Active</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">4</h3>
+                        <p class="text-xs text-slate-500">Subcategories</p>
+                    </div>
+                </div>
+
+                <!-- Filters & Search Bar -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-6">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <!-- Search -->
+                        <div class="flex-1 relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </span>
+                            <input type="text" placeholder="Search categories..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm">
+                        </div>
+                        
+                        <!-- Filters -->
+                        <div class="flex flex-wrap gap-3">
+                            <select class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
+                                <option>All Status</option>
+                                <option>Active</option>
+                                <option>Inactive</option>
+                            </select>
+                             <select class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
+                                <option>Parent Only</option>
+                                <option>All Categories</option>
+                            </select>
+                            <button class="px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors">
+                                Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">
+                                        <input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary">
+                                    </th>
+                                    <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
+                                    <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Slug</th>
+                                    <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Products</th>
+                                    <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Status</th>
+                                    <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                
+                                <!-- Row 1: Parent Category -->
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="p-4">
+                                        <input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary">
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex items-center gap-3">
+                                            <img src="https://placehold.co/100x100/5423E7/FFFFFF?text=EL" class="w-10 h-10 rounded-lg object-cover border border-slate-100" alt="Electronics">
+                                            <div>
+                                                <h4 class="font-semibold text-slate-800">Electronics</h4>
+                                                <p class="text-xs text-slate-400">Parent Category</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-sm text-slate-500 font-mono hidden md:table-cell">/electronics</td>
+                                    <td class="p-4 text-sm text-slate-600 hidden md:table-cell">45</td>
+                                    <td class="p-4 hidden sm:table-cell">
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" title="Edit"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                                            <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-accent transition-colors" title="View"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
+                                            <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-red-600 transition-colors" title="Delete"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 2: Child Category (Indented) -->
+                                <tr class="hover:bg-slate-50 transition-colors bg-slate-50/50">
+                                    <td class="p-4 border-l-4 border-primary/20">
+                                        <input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary ml-2">
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex items-center gap-3 pl-2">
+                                            <img src="https://placehold.co/100x100/7C3AED/FFFFFF?text=TV" class="w-9 h-9 rounded-lg object-cover border border-slate-100" alt="TV Stands">
+                                            <div>
+                                                <h4 class="font-semibold text-slate-800 text-sm">TV Stands</h4>
+                                                <p class="text-xs text-slate-400">↳ Parent: Electronics</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-sm text-slate-500 font-mono hidden md:table-cell">/electronics/tv-stands</td>
+                                    <td class="p-4 text-sm text-slate-600 hidden md:table-cell">12</td>
+                                    <td class="p-4 hidden sm:table-cell">
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button class="p-2 hover:bg-slate-200 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                                            <button class="p-2 hover:bg-slate-200 rounded-lg text-slate-500 hover:text-red-600 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 3: Parent Category -->
+                                <tr class="hover:bg-slate-50 transition-colors bg-accent/5">
+                                    <td class="p-4">
+                                        <input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary">
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex items-center gap-3">
+                                            <img src="https://placehold.co/100x100/D4AF37/000000?text=HB" class="w-10 h-10 rounded-lg object-cover border border-slate-100" alt="Handbags">
+                                            <div>
+                                                <h4 class="font-semibold text-slate-800">Handbags</h4>
+                                                <p class="text-xs text-accent font-semibold">Featured Category</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-sm text-slate-500 font-mono hidden md:table-cell">/handbags</td>
+                                    <td class="p-4 text-sm text-slate-600 hidden md:table-cell">88</td>
+                                    <td class="p-4 hidden sm:table-cell">
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                                            <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-accent transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
+                                            <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-red-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 4: Inactive -->
+                                <tr class="hover:bg-slate-50 transition-colors opacity-60">
+                                    <td class="p-4">
+                                        <input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary">
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex items-center gap-3">
+                                            <img src="https://placehold.co/100x100/cccccc/ffffff?text=Old" class="w-10 h-10 rounded-lg object-cover border border-slate-100 grayscale" alt="Old">
+                                            <div>
+                                                <h4 class="font-semibold text-slate-800">Vintage Items</h4>
+                                                <p class="text-xs text-slate-400">Parent Category</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-sm text-slate-500 font-mono hidden md:table-cell">/vintage</td>
+                                    <td class="p-4 text-sm text-slate-600 hidden md:table-cell">0</td>
+                                    <td class="p-4 hidden sm:table-cell">
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-600">Inactive</span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                                            <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-red-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-700">1</span> to <span class="font-medium text-slate-700">10</span> of <span class="font-medium text-slate-700">12</span> results</p>
+                        <nav class="flex items-center gap-1">
+                            <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-50" disabled>Previous</button>
+                            <button class="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium">1</button>
+                            <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-100">2</button>
+                            <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-100">Next</button>
+                        </nav>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const openBtn = document.getElementById('openSidebarBtn');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        
+        openBtn.addEventListener('click', toggleSidebar);
+        closeBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        function toggleSubMenu(id) {
+            const menu = document.getElementById(id);
+            menu.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>
