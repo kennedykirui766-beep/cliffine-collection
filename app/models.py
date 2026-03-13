@@ -73,6 +73,8 @@ class Product(db.Model):
     brand = db.Column(db.String(100))
 
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"))
+    
+    stock = db.Column(db.Integer, default=0)
 
     is_featured = db.Column(db.Boolean, default=False)
     is_trending = db.Column(db.Boolean, default=False)

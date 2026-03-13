@@ -1,19 +1,22 @@
-from flask import render_template
-from app import app, db
+from flask import redirect, render_template, url_for
+from flask import Blueprint, render_template
+from app import db
 from app.models import User, Product, Order, Coupon, Message
 # app/admin/routes.py
-from flask import Blueprint, render_template
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
-@admin_bp.route('/admin/dashboard')
+@admin_bp.route("/")
+@admin_bp.route("/dashboard")
 def admin_dashboard():
     # Top Metrics
-    total_revenue = db.session.query(db.func.sum(Order.total)).scalar() or 0
+    from sqlalchemy import func
+
+    total_revenue = db.session.query(func.coalesce(func.sum(Order.total_amount), 0)).scalar()
     total_users = User.query.count()
     total_products = Product.query.count()
     total_orders = Order.query.count()
-    active_coupons = Coupon.query.filter_by(active=True).count()
+    active_coupons = Coupon.query.filter_by(is_active=True).count()
     
     # Low stock products (e.g., stock <=5)
     low_stock_products = Product.query.filter(Product.stock <= 5).all()
@@ -160,3 +163,16 @@ def media():
 @admin_bp.route("/settings")
 def settings():
     return render_template("admin/settings/index.html")
+
+@admin_bp.route("/profile")
+def admin_profile():
+    return render_template("admin/profile.html")
+
+@admin_bp.route("/logout")
+def admin_logout():
+    # Logic for logout
+    return redirect(url_for("admin.admin_dashboard"))
+
+@admin_bp.route("/analytics")
+def analytics():
+    return render_template("admin/analytics/index.html")  

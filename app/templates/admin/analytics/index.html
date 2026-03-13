@@ -1,0 +1,254 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Analytics Overview{% endblock %}
+
+{% block page_title %}Analytics Overview{% endblock %}
+
+{% block content %}
+    
+    <!-- Date Filter Toggle (Moved from Header) -->
+    <div class="flex justify-end mb-6">
+        <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
+            <button class="px-4 py-2 text-sm font-medium rounded-md text-slate-500 hover:bg-white hover:shadow-sm transition-colors">Today</button>
+            <button class="px-4 py-2 text-sm font-medium rounded-md bg-white shadow-sm text-primary font-semibold">Month</button>
+            <button class="px-4 py-2 text-sm font-medium rounded-md text-slate-500 hover:bg-white hover:shadow-sm transition-colors">Year</button>
+        </div>
+    </div>
+
+    <!-- Sales Overview Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs text-slate-500 uppercase font-medium">Total Revenue</p>
+                    <h3 class="text-2xl font-bold text-slate-800 mt-1">KES 1.2M</h3>
+                    <p class="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                        12.5% vs last month
+                    </p>
+                </div>
+                <div class="p-3 bg-primary/10 rounded-lg">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs text-slate-500 uppercase font-medium">Total Orders</p>
+                    <h3 class="text-2xl font-bold text-slate-800 mt-1">1,240</h3>
+                    <p class="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                        8.2% vs last month
+                    </p>
+                </div>
+                <div class="p-3 bg-accent/10 rounded-lg">
+                    <svg class="w-6 h-6 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs text-slate-500 uppercase font-medium">Products Sold</p>
+                    <h3 class="text-2xl font-bold text-slate-800 mt-1">3,450</h3>
+                    <p class="text-xs text-slate-400 mt-1">Units this month</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-gradient-to-br from-primary to-primary-light rounded-xl p-5 shadow-sm text-white">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs text-white/70 uppercase font-medium">Avg. Order Value</p>
+                    <h3 class="text-2xl font-bold mt-1">KES 4,120</h3>
+                    <p class="text-xs text-white/60 mt-1">Per transaction</p>
+                </div>
+                <div class="p-3 bg-white/20 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Main Sales Chart -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800">Sales Trend</h3>
+                <select class="text-sm border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-primary/50 outline-none bg-slate-50">
+                    <option>Last 7 Days</option>
+                    <option selected>Last 30 Days</option>
+                    <option>Last 90 Days</option>
+                </select>
+            </div>
+            <div class="h-80">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Payment Methods Chart -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Payment Methods</h3>
+            <div class="h-64">
+                <canvas id="paymentChart"></canvas>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+                <div>
+                    <p class="text-lg font-bold text-slate-800">80%</p>
+                    <p class="text-xs text-slate-500">M-Pesa</p>
+                </div>
+                <div>
+                    <p class="text-lg font-bold text-slate-800">15%</p>
+                    <p class="text-xs text-slate-500">Card</p>
+                </div>
+                <div>
+                    <p class="text-lg font-bold text-slate-800">5%</p>
+                    <p class="text-xs text-slate-500">Cash</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer & Order Analytics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Order Status Breakdown -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Order Status</h3>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-slate-600">Completed</span>
+                        <span class="font-semibold text-slate-800">1,100 (89%)</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width: 89%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-slate-600">Processing</span>
+                        <span class="font-semibold text-slate-800">90 (7%)</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width: 7%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-slate-600">Cancelled</span>
+                        <span class="font-semibold text-slate-800">50 (4%)</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-red-400 h-2 rounded-full" style="width: 4%"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Analytics -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Customer Stats</h3>
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                    <span class="text-slate-600">Total Customers</span>
+                    <span class="font-bold text-slate-800">1,240</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                    <span class="text-slate-600">New (This Month)</span>
+                    <span class="font-bold text-green-700">+85</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-primary/5 rounded-lg">
+                    <span class="text-slate-600">Returning</span>
+                    <span class="font-bold text-primary">450</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chama & Coupons -->
+        <div class="space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                <h3 class="text-md font-bold text-slate-800 mb-3">Chama Analytics</h3>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xl font-bold text-slate-800">12</p>
+                        <p class="text-xs text-slate-500">Active Chamas</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg">
+                        <p class="text-xl font-bold text-slate-800">120</p>
+                        <p class="text-xs text-slate-500">Members</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                <h3 class="text-md font-bold text-slate-800 mb-3">Coupon Stats</h3>
+                <div class="text-sm space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Usage</span>
+                        <span class="font-medium text-slate-700">450 times</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Total Saved</span>
+                        <span class="font-bold text-accent-dark">KES 82,000</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // --- Chart.js Initialization ---
+        const ctxSales = document.getElementById('salesChart');
+        if (ctxSales) {
+            new Chart(ctxSales, {
+                type: 'line',
+                data: {
+                    labels: ['1 Oct', '5 Oct', '10 Oct', '15 Oct', '20 Oct', '25 Oct', '30 Oct'],
+                    datasets: [{
+                        label: 'Revenue (KES)',
+                        data: [30000, 45000, 42000, 85000, 62000, 95000, 120000],
+                        borderColor: '#5423E7',
+                        backgroundColor: 'rgba(84, 35, 231, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        const ctxPayment = document.getElementById('paymentChart');
+        if (ctxPayment) {
+            new Chart(ctxPayment, {
+                type: 'doughnut',
+                data: {
+                    labels: ['M-Pesa', 'Card', 'Cash'],
+                    datasets: [{
+                        data: [80, 15, 5],
+                        backgroundColor: ['#16A34A', '#5423E7', '#D4AF37'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+            });
+        }
+
+        // --- Sidebar Active State Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Remove active from default Dashboard link
+            const dashLink = document.querySelector('.nav-link.active');
+            if (dashLink) dashLink.classList.remove('active');
+
+            // 2. Find the 'Analytics' link and make it active
+            // In the base template, Analytics is a direct link under the "Management" section
+            const navLinks = document.querySelectorAll('aside nav a');
+            navLinks.forEach(link => {
+                const span = link.querySelector('span');
+                if (span && span.textContent.trim() === 'Analytics') {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+{% endblock %}

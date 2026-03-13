@@ -1,0 +1,286 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Orders Management{% endblock %}
+
+{% block page_title %}Orders Management{% endblock %}
+
+{% block content %}
+    
+    <!-- Page Specific Action Buttons (Moved from Header) -->
+    <div class="flex flex-wrap justify-end gap-3 mb-6">
+        <button class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm bg-white">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Export CSV
+        </button>
+        <button class="inline-flex items-center gap-2 px-4 py-2 bg-accent text-slate-900 font-semibold rounded-lg hover:bg-accent-dark transition-colors text-sm shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            Add Manual Order
+        </button>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+            <p class="text-xs text-slate-500">Total Orders</p>
+            <h3 class="text-xl font-bold text-slate-800 mt-1">1,540</h3>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-amber-500">
+            <p class="text-xs text-slate-500">Pending</p>
+            <h3 class="text-xl font-bold text-amber-600 mt-1">12</h3>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-blue-500">
+            <p class="text-xs text-slate-500">Processing</p>
+            <h3 class="text-xl font-bold text-blue-600 mt-1">8</h3>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-indigo-500">
+            <p class="text-xs text-slate-500">Shipped</p>
+            <h3 class="text-xl font-bold text-indigo-600 mt-1">45</h3>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-green-500">
+            <p class="text-xs text-slate-500">Delivered</p>
+            <h3 class="text-xl font-bold text-green-600 mt-1">1,420</h3>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-red-500">
+            <p class="text-xs text-slate-500">Cancelled</p>
+            <h3 class="text-xl font-bold text-red-600 mt-1">55</h3>
+        </div>
+        <div class="stat-card bg-gradient-to-br from-accent to-accent-dark rounded-xl p-4 shadow-sm border border-accent">
+            <p class="text-xs text-slate-800/70">Revenue Today</p>
+            <h3 class="text-xl font-bold text-slate-900 mt-1">KES 120k</h3>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-6">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1 relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </span>
+                <input type="text" placeholder="Search Order ID, Customer..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm">
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <select class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
+                    <option>All Status</option>
+                    <option>Pending</option>
+                    <option>Shipped</option>
+                    <option>Delivered</option>
+                    <option>Cancelled</option>
+                </select>
+                 <select class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
+                    <option>Payment Status</option>
+                    <option>Paid</option>
+                    <option>Pending</option>
+                    <option>Failed</option>
+                </select>
+                <input type="date" class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                <button class="px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors">
+                    Filter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">
+                            <input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary">
+                        </th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Order ID</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Date</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Payment</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Total</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    
+                    <!-- Pending Order -->
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
+                        <td class="p-4">
+                            <span class="font-semibold text-primary">#ORD-2451</span>
+                        </td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <img src="https://ui-avatars.com/api/?name=John+Doe&background=5423E7&color=fff" class="w-8 h-8 rounded-full" alt="">
+                                <div>
+                                    <p class="font-medium text-slate-800 text-sm">John Doe</p>
+                                    <p class="text-xs text-slate-400">john@mail.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 hidden md:table-cell">Oct 24, 2026</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Pending</span>
+                        </td>
+                        <td class="p-4 hidden sm:table-cell">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Paid</span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <p class="font-bold text-slate-800">KES 44,100</p>
+                            <p class="text-xs text-slate-400">M-Pesa</p>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" title="View Details"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-accent transition-colors" title="Print Invoice"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Shipped Order -->
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
+                        <td class="p-4"><span class="font-semibold text-primary">#ORD-2450</span></td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <img src="https://ui-avatars.com/api/?name=Mary+Anne&background=D4AF37&color=000" class="w-8 h-8 rounded-full" alt="">
+                                <div>
+                                    <p class="font-medium text-slate-800 text-sm">Mary Anne</p>
+                                    <p class="text-xs text-slate-400">+254712345678</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 hidden md:table-cell">Oct 23, 2026</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Shipped</span>
+                        </td>
+                        <td class="p-4 hidden sm:table-cell">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Paid</span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <p class="font-bold text-slate-800">KES 32,500</p>
+                             <p class="text-xs text-slate-400">Paybill</p>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-accent transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Delivered Order -->
+                    <tr class="hover:bg-slate-50 transition-colors bg-green-50/30">
+                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
+                        <td class="p-4"><span class="font-semibold text-primary">#ORD-2449</span></td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <img src="https://ui-avatars.com/api/?name=Peter+M&background=10B981&color=fff" class="w-8 h-8 rounded-full" alt="">
+                                <div>
+                                    <p class="font-medium text-slate-800 text-sm">Peter M.</p>
+                                    <p class="text-xs text-slate-400">peter@gmail.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 hidden md:table-cell">Oct 22, 2026</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Delivered</span>
+                        </td>
+                        <td class="p-4 hidden sm:table-cell">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Paid</span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <p class="font-bold text-slate-800">KES 12,500</p>
+                            <p class="text-xs text-slate-400">Till</p>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-accent transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Cancelled Order -->
+                    <tr class="hover:bg-red-50 transition-colors opacity-75">
+                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
+                        <td class="p-4"><span class="font-semibold text-slate-400">#ORD-2448</span></td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <img src="https://ui-avatars.com/api/?name=Fail+Test&background=EF4444&color=fff" class="w-8 h-8 rounded-full grayscale" alt="">
+                                <div>
+                                    <p class="font-medium text-slate-600 text-sm">Test User</p>
+                                    <p class="text-xs text-slate-400">test@mail.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-500 hidden md:table-cell">Oct 20, 2026</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">Cancelled</span>
+                        </td>
+                        <td class="p-4 hidden sm:table-cell">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">Refunded</span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <p class="font-bold text-slate-500 line-through">KES 5,000</p>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50">
+            <p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-700">1</span> to <span class="font-medium text-slate-700">10</span> of <span class="font-medium text-slate-700">245</span> orders</p>
+            <nav class="flex items-center gap-1">
+                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white disabled:opacity-50 bg-white shadow-sm" disabled>Previous</button>
+                <button class="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium shadow-sm">1</button>
+                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white bg-white shadow-sm">2</button>
+                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white bg-white shadow-sm">3</button>
+                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white bg-white shadow-sm">Next</button>
+            </nav>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // --- Sidebar Active State Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Remove active from default Dashboard link
+            const dashLink = document.querySelector('.nav-link.active');
+            if (dashLink) dashLink.classList.remove('active');
+
+            // 2. Find the 'Orders' button and make it active
+            const navButtons = document.querySelectorAll('.nav-group button');
+            navButtons.forEach(btn => {
+                // Check the text inside the span
+                const span = btn.querySelector('span');
+                if (span && span.textContent.trim() === 'Orders') {
+                    btn.classList.add('active');
+                    btn.classList.add('nav-link'); // Ensure styling hooks match
+                }
+            });
+
+            // 3. Expand the 'Orders' sub-menu
+            const ordersMenu = document.getElementById('orders-menu');
+            if (ordersMenu) {
+                ordersMenu.classList.add('open');
+            }
+            
+            // 4. Highlight 'All Orders' link inside the submenu
+            // The base template has links with class 'block py-2 px-4...'
+            const subLinks = ordersMenu ? ordersMenu.querySelectorAll('a') : [];
+            subLinks.forEach(link => {
+                if (link.textContent.trim() === 'All Orders') {
+                    link.classList.remove('text-white/70');
+                    link.classList.add('text-white', 'border-l-2', 'border-accent'); // Active style for sub-link
+                }
+            });
+        });
+    </script>
+{% endblock %}

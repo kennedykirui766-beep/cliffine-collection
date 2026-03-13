@@ -1,0 +1,238 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}User Management{% endblock %}
+
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+    
+    <!-- Page Specific Action Buttons -->
+    <div class="flex flex-wrap justify-end gap-3 mb-6">
+        <button class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm bg-white">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Export CSV
+        </button>
+        <button class="inline-flex items-center gap-2 px-4 py-2 bg-accent text-slate-900 font-semibold rounded-lg hover:bg-accent-dark transition-colors text-sm shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+            Add User
+        </button>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+            <p class="text-xs text-slate-500">Total Users</p>
+            <h3 class="text-xl font-bold text-slate-800 mt-1">1,205</h3>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-green-500">
+            <p class="text-xs text-slate-500">Active</p>
+            <h3 class="text-xl font-bold text-green-600 mt-1">1,150</h3>
+        </div>
+        <div class="stat-card bg-gradient-to-br from-accent to-accent-dark rounded-xl p-4 shadow-sm border border-accent">
+            <p class="text-xs text-slate-800/70">VIP Members</p>
+            <h3 class="text-xl font-bold text-slate-900 mt-1">45</h3>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-slate-400">
+            <p class="text-xs text-slate-500">Inactive</p>
+            <h3 class="text-xl font-bold text-slate-500 mt-1">32</h3>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-red-500">
+            <p class="text-xs text-slate-500">Banned</p>
+            <h3 class="text-xl font-bold text-red-600 mt-1">10</h3>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-6">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1 relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </span>
+                <input type="text" placeholder="Search Name, Email, Phone..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm">
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <select class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
+                    <option>All Status</option>
+                    <option>Active</option>
+                    <option>Inactive</option>
+                    <option>Banned</option>
+                </select>
+                 <select class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
+                    <option>All Roles</option>
+                    <option>Customer</option>
+                    <option>VIP</option>
+                    <option>Admin</option>
+                </select>
+                <button class="px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors">
+                    Filter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">
+                            <input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary">
+                        </th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">User ID</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Phone</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Orders</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Lifetime Spend</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    
+                    <!-- Active User -->
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <img src="https://ui-avatars.com/api/?name=John+Doe&background=5423E7&color=fff" class="w-10 h-10 rounded-full" alt="">
+                                <div>
+                                    <p class="font-semibold text-slate-800">John Doe</p>
+                                    <p class="text-xs text-slate-400">john@mail.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-500 font-mono hidden md:table-cell">#U-1001</td>
+                        <td class="p-4 text-sm text-slate-600 hidden lg:table-cell">+254 712 334 556</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 hidden sm:table-cell text-center">5</td>
+                        <td class="p-4 text-right">
+                            <p class="font-bold text-slate-800">KES 44,100</p>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" title="View"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" title="Edit"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-accent transition-colors" title="Message"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- VIP User -->
+                    <tr class="hover:bg-amber-50 transition-colors bg-amber-50/30">
+                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <img src="https://ui-avatars.com/api/?name=Mary+Anne&background=D4AF37&color=000" class="w-10 h-10 rounded-full ring-2 ring-amber-400" alt="">
+                                <div>
+                                    <p class="font-semibold text-slate-800 flex items-center gap-1">
+                                        Mary Anne
+                                        <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    </p>
+                                    <p class="text-xs text-slate-400">mary@gmail.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-500 font-mono hidden md:table-cell">#U-1002</td>
+                        <td class="p-4 text-sm text-slate-600 hidden lg:table-cell">+254 721 556 778</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">VIP</span>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 hidden sm:table-cell text-center">12</td>
+                        <td class="p-4 text-right">
+                            <p class="font-bold text-slate-800">KES 120,500</p>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-accent transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Suspended User -->
+                    <tr class="hover:bg-red-50 transition-colors opacity-60">
+                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <img src="https://ui-avatars.com/api/?name=Peter+Jones&background=EF4444&color=fff" class="w-10 h-10 rounded-full grayscale" alt="">
+                                <div>
+                                    <p class="font-semibold text-slate-600">Peter Jones</p>
+                                    <p class="text-xs text-slate-400">peter@mail.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-400 font-mono hidden md:table-cell">#U-1003</td>
+                        <td class="p-4 text-sm text-slate-500 hidden lg:table-cell">+254 733 889 001</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">Suspended</span>
+                        </td>
+                        <td class="p-4 text-sm text-slate-500 hidden sm:table-cell text-center">0</td>
+                        <td class="p-4 text-right">
+                            <p class="font-bold text-slate-400">KES 0</p>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-green-600 transition-colors" title="Unsuspend"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50">
+            <p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-700">1</span> to <span class="font-medium text-slate-700">10</span> of <span class="font-medium text-slate-700">1,205</span> users</p>
+            <nav class="flex items-center gap-1">
+                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white disabled:opacity-50 bg-white shadow-sm" disabled>Previous</button>
+                <button class="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium shadow-sm">1</button>
+                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white bg-white shadow-sm">2</button>
+                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white bg-white shadow-sm">3</button>
+                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white bg-white shadow-sm">Next</button>
+            </nav>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // --- Sidebar Active State Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Remove active from default Dashboard link
+            const dashLink = document.querySelector('.nav-link.active');
+            if (dashLink) dashLink.classList.remove('active');
+
+            // 2. Find the 'Customers' button and make it active (Base template uses 'Customers' for Users)
+            const navButtons = document.querySelectorAll('.nav-group button');
+            navButtons.forEach(btn => {
+                const span = btn.querySelector('span');
+                if (span && span.textContent.trim() === 'Customers') {
+                    btn.classList.add('active');
+                    btn.classList.add('nav-link');
+                }
+            });
+
+            // 3. Expand the 'Customers' sub-menu
+            const customersMenu = document.getElementById('customers-menu');
+            if (customersMenu) {
+                customersMenu.classList.add('open');
+            }
+            
+            // 4. Highlight 'All Users' link inside the submenu
+            const subLinks = customersMenu ? customersMenu.querySelectorAll('a') : [];
+            subLinks.forEach(link => {
+                if (link.textContent.trim() === 'All Users') {
+                    link.classList.remove('text-white/70');
+                    link.classList.add('text-white', 'border-l-2', 'border-accent'); // Active style for sub-link
+                }
+            });
+        });
+    </script>
+{% endblock %}
