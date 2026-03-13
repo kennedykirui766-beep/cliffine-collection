@@ -1,0 +1,175 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Add Category{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+        </svg>
+        <a href="{{ url_for('admin.all_categories') }}">Categories</a>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+        </svg>
+        <span>Add New</span>
+    </div>
+    <h1 class="page-title">Add New Category</h1>
+    <p class="page-subtitle">Create a new product category for your store.</p>
+</div>
+
+<form action="{{ url_for('admin.add_category') }}" method="POST" enctype="multipart/form-data" class="max-w-4xl">
+    
+    <!-- Main Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-800" style="font-family: 'Space Grotesk', sans-serif;">Category Information</h3>
+            <span class="px-3 py-1 text-xs font-medium rounded-full bg-purple-50 text-purple-700">Draft</span>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 space-y-6">
+            
+            <!-- Name & Slug Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Name -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">Category Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" id="name" required 
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500 transition"
+                        placeholder="e.g. Men's Fashion">
+                </div>
+
+                <!-- Slug -->
+                <div>
+                    <label for="slug" class="block text-sm font-medium text-gray-700 mb-1.5">Slug (URL Key) <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">cliffine.com/category/</span>
+                        <input type="text" name="slug" id="slug" required 
+                            class="w-full pl-36 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500 transition"
+                            placeholder="mens-fashion">
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">Auto-generated from name. Must be unique.</p>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+                <textarea name="description" id="description" rows="4" 
+                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500 transition resize-none"
+                    placeholder="Write a brief description of this category..."></textarea>
+            </div>
+
+            <!-- Image Upload -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Category Image</label>
+                
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-200 border-dashed rounded-xl hover:border-purple-400 transition-colors cursor-pointer relative" id="dropZone">
+                    
+                    <!-- Hidden Input -->
+                    <input type="file" name="image" id="imageInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    
+                    <!-- Placeholder Content -->
+                    <div class="text-center" id="placeholderContent">
+                        <svg class="mx-auto h-12 w-12 text-gray-300" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <div class="flex text-sm text-gray-600 justify-center mt-3">
+                            <span class="relative rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none">
+                                Upload a file
+                            </span>
+                            <p class="pl-1">or drag and drop</p>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB</p>
+                    </div>
+
+                    <!-- Preview Image (Hidden by default) -->
+                    <div class="hidden flex-col items-center" id="previewContainer">
+                        <img id="imagePreview" class="h-32 w-auto object-contain rounded-lg shadow-sm mb-3" alt="Preview">
+                        <button type="button" onclick="clearImage()" class="text-xs text-red-500 hover:text-red-700 font-medium">Remove Image</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Is Active Toggle -->
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Publish Category</h4>
+                    <p class="text-xs text-gray-500 mt-0.5">Make this category visible to customers immediately.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="is_active" value="true" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-100 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+            </div>
+
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-end gap-3">
+            <a href="{{ url_for('admin.all_categories') }}" class="w-full sm:w-auto px-6 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition text-center font-medium text-sm">
+                Cancel
+            </a>
+            <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 shadow-sm hover:shadow-md transition text-center font-medium text-sm">
+                Save Category
+            </button>
+        </div>
+
+    </div>
+</form>
+
+<script>
+    // Auto-generate slug from name
+    const nameInput = document.getElementById('name');
+    const slugInput = document.getElementById('slug');
+
+    nameInput.addEventListener('input', (e) => {
+        const nameValue = e.target.value;
+        // Create slug: lowercase, replace spaces with hyphens, remove special chars
+        const generatedSlug = nameValue
+            .toLowerCase()
+            .replace(/\s+/g, '-')       // Replace spaces with -
+            .replace(/[^\w\-]+/g, '')   // Remove all non-word chars
+            .replace(/\-\-+/g, '-')     // Replace multiple - with single -
+            .replace(/^-+/, '')         // Trim - from start of text
+            .replace(/-+$/, '');        // Trim - from end of text
+        
+        slugInput.value = generatedSlug;
+    });
+
+    // Image Preview Logic
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewContainer = document.getElementById('previewContainer');
+    const placeholderContent = document.getElementById('placeholderContent');
+
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        
+        if (file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                imagePreview.setAttribute('src', e.target.result);
+                previewContainer.classList.remove('hidden');
+                previewContainer.classList.add('flex');
+                placeholderContent.classList.add('hidden');
+            }
+            
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function clearImage() {
+        imageInput.value = '';
+        previewContainer.classList.add('hidden');
+        previewContainer.classList.remove('flex');
+        placeholderContent.classList.remove('hidden');
+    }
+</script>
+
+{% endblock %}

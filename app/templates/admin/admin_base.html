@@ -1,434 +1,840 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Admin Dashboard{% endblock %} - Cliffine Collection</title>
-    
-    <!-- Fonts -->
+    <title>{% block title %}Admin Dashboard{% endblock %} | Cliffine Collection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            DEFAULT: '#5423E7',
-                            dark: '#3B0D5D',
-                            light: '#7C3AED',
-                            50: '#F5F3FF'
-                        },
-                        accent: {
-                            DEFAULT: '#D4AF37',
-                            dark: '#B8960C',
-                            light: '#F5D76E'
-                        },
-                        slate: {
-                            850: '#1A1F2C',
-                            900: '#0F121A',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['DM Sans', 'sans-serif']
-                    },
-                    boxShadow: {
-                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-                        'glow': '0 0 15px rgba(84, 35, 231, 0.3)'
-                    }
-                }
-            }
-        }
-    </script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #fafafa;
+            --fg: #1a1a2e;
+            --muted: #6b7280;
+            --accent: #7c3aed;
+            --accent-dark: #5b21b6;
+            --accent-light: #a78bfa;
+            --gold: #d4a017;
+            --gold-light: #f5d76e;
+            --gold-dark: #b8860b;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --sidebar-bg: #1a1a2e;
+            --sidebar-hover: #2d2d44;
+            --sidebar-active: #3d3d5c;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'DM Sans', sans-serif;
-            background-color: #F8FAFC;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #5423E7; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3B0D5D; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 
-        /* Sidebar Styling */
+        .bg-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(124, 58, 237, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(212, 160, 23, 0.03) 0%, transparent 50%);
+        }
+
+        /* Sidebar Base Styles */
         .sidebar {
-            background: linear-gradient(180deg, #3B0D5D 0%, #5423E7 100%);
-            transition: transform 0.3s ease-in-out;
-            box-shadow: 5px 0 20px rgba(0,0,0,0.1);
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #0f0f1a 100%);
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0; /* Changed from height: 100vh for better mobile support */
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Active Nav Link Styling */
-        .nav-link.active {
-            background: linear-gradient(90deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0) 100%);
-            border-left: 4px solid #D4AF37;
-            color: #D4AF37;
-            box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.05);
+        /* --- RESPONSIVITY LOGIC --- */
+        
+        /* 1. Large Screens (Laptops/Desktops) - UNALTERED */
+        @media (min-width: 1025px) {
+            .sidebar {
+                transform: translateX(0) !important;
+            }
+            .main-content {
+                margin-left: 280px;
+            }
+            .sidebar-overlay.active {
+                display: none;
+            }
+            .menu-toggle {
+                display: none !important;
+            }
+        }
+
+        /* 2. Small Screens (Mobile/Tablets) - UPDATED */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%); /* Hidden by default */
+            }
+            .sidebar.active {
+                transform: translateX(0); /* Show when active */
+            }
+            .main-content {
+                margin-left: 0; /* Full width */
+            }
+            /* Force Hamburger to be visible */
+            .menu-toggle {
+                display: flex !important;
+            }
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, transparent 100%);
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+
+        .logo-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+            flex-shrink: 0;
+        }
+        .logo-icon svg { width: 24px; height: 24px; color: white; }
+
+        .logo-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem; font-weight: 700;
+            color: white;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+        .logo-text span { color: var(--gold); }
+        .logo-subtext {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* --- SCROLLABLE AREA --- */
+        .sidebar-scroll-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            scroll-behavior: smooth;
+            /* Webkit scrollbar for desktop */
+            scrollbar-width: thin; 
         }
         
-        .nav-link:hover:not(.active) {
+        .sidebar-scroll-wrapper::-webkit-scrollbar { width: 6px; }
+        .sidebar-scroll-wrapper::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-scroll-wrapper::-webkit-scrollbar-thumb { background: var(--accent-dark); border-radius: 3px; }
+
+        /* Scroll Indicators */
+        .scroll-indicator {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .scroll-indicator.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .scroll-indicator.top {
+            top: 0;
+            background: linear-gradient(to bottom, var(--sidebar-bg) 0%, transparent 100%);
+        }
+        
+        .scroll-indicator.bottom {
+            bottom: 0;
+            background: linear-gradient(to top, #0f0f1a 0%, transparent 100%);
+        }
+
+        .scroll-indicator svg {
+            width: 24px; /* Slightly larger for touch */
+            height: 24px;
+            color: rgba(255,255,255,0.7);
+            transition: transform 0.2s ease;
+        }
+
+        .scroll-indicator:hover svg, .scroll-indicator:active svg {
+            color: var(--gold);
+            transform: scale(1.2);
+        }
+
+        /* Navigation */
+        .nav-section { padding: 1rem 0; }
+        .nav-label {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.7rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .nav-item { position: relative; }
+        
+        .nav-link {
+            display: flex; align-items: center; gap: 0.875rem;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.9rem; font-weight: 500;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+        .nav-link:hover {
+            color: white;
             background: rgba(255, 255, 255, 0.05);
         }
+        .nav-link.active {
+            color: white;
+            background: linear-gradient(90deg, rgba(124, 58, 237, 0.3) 0%, transparent 100%);
+        }
+        .nav-link.active::before {
+            content: '';
+            position: absolute; left: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+            border-radius: 0 3px 3px 0;
+        }
+        .nav-link svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .nav-link .arrow { margin-left: auto; transition: transform 0.3s ease; }
+        .nav-item.expanded .nav-link .arrow { transform: rotate(180deg); }
 
-        /* Sub-menu Animation */
-        .sub-menu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-            opacity: 0;
+        /* Submenu */
+        .submenu {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(0, 0, 0, 0.15);
         }
-        .sub-menu.open {
-            max-height: 500px;
-            opacity: 1;
+        .nav-item.expanded .submenu { max-height: 500px; }
+
+        .submenu-link {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.625rem 1.5rem 0.625rem 3.375rem;
+            color: rgba(255, 255, 255, 0.55);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        .submenu-link:hover { color: var(--gold-light); background: rgba(212, 160, 23, 0.05); }
+        .submenu-link::before {
+            content: ''; width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: background 0.2s ease;
+        }
+        .submenu-link:hover::before { background: var(--gold); }
+        .submenu-link.active { color: var(--gold-light); font-weight: 600; }
+        .submenu-link.active::before { background: var(--gold); }
+
+        .nav-badge {
+            padding: 0.2rem 0.5rem;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: #1a1a2e;
+            font-size: 0.7rem; font-weight: 700;
+            border-radius: 20px;
+            margin-left: auto;
         }
 
-        /* Card Styling */
-        .stat-card { 
-            transition: transform 0.2s ease, box-shadow 0.2s ease; 
-        }
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        /* Main Content */
+        .main-content {
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Notification Pulse */
-        .pulse-dot {
+        /* Top Header */
+        .top-header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky; top: 0;
+            z-index: 50;
+        }
+        .header-content { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+
+        /* Hamburger Button */
+        .menu-toggle {
+            width: 42px; height: 42px;
+            border: none; background: var(--card);
+            border-radius: 10px;
+            cursor: pointer;
+            align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.2s ease;
+        }
+        .menu-toggle:hover { background: var(--accent); color: white; }
+        .menu-toggle svg { width: 22px; height: 22px; }
+
+        .search-box { position: relative; width: 320px; }
+        .search-box input {
+            width: 100%; padding: 0.75rem 1rem 0.75rem 2.75rem;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 12px; font-size: 0.9rem;
+            transition: all 0.25s ease;
+        }
+        .search-box input:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+        }
+        .search-box svg {
+            position: absolute; left: 0.875rem; top: 50%;
+            transform: translateY(-50%);
+            width: 18px; height: 18px; color: var(--muted);
+        }
+
+        .header-right { display: flex; align-items: center; gap: 0.75rem; }
+        .header-btn {
+            width: 42px; height: 42px;
+            border: none; background: var(--bg);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            transition: all 0.25s ease;
+        }
+        .header-btn:hover { background: var(--accent); color: white; }
+        .header-btn svg { width: 20px; height: 20px; }
+
+        .notification-dot {
+            position: absolute; top: 8px; right: 8px;
+            width: 10px; height: 10px;
+            background: var(--gold);
+            border-radius: 50%;
+            border: 2px solid white;
             animation: pulse 2s infinite;
         }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
 
-        /* Focus States for Inputs */
-        input:focus, select:focus {
-            box-shadow: 0 0 0 2px rgba(84, 35, 231, 0.2);
-        }
-    </style>
-    {% block head %}{% endblock %}
-</head>
-<body class="antialiased">
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
-    <!-- Main Container: Holds Sidebar and Content Area -->
-    <div class="flex h-screen overflow-hidden bg-slate-50">
+        .user-menu {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.5rem 1rem 0.5rem 0.5rem;
+            background: var(--bg);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+        .user-menu:hover { background: rgba(124, 58, 237, 0.1); }
+        .user-avatar {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 600; font-size: 0.875rem;
+        }
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { font-weight: 600; font-size: 0.875rem; color: var(--fg); }
+        .user-role { font-size: 0.75rem; color: var(--muted); }
+
+        /* Page Content */
+        .page-content { flex: 1; padding: 2rem; }
+
+        .page-header { margin-bottom: 2rem; animation: fadeInUp 0.5s ease; }
+        .page-title { font-size: 2rem; font-weight: 700; color: var(--fg); margin-bottom: 0.5rem; }
+        .page-subtitle { color: var(--muted); font-size: 1rem; }
+
+        .breadcrumb {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.875rem; color: var(--muted);
+            margin-bottom: 1rem;
+        }
+        .breadcrumb a { color: var(--accent); text-decoration: none; transition: color 0.2s ease; }
+        .breadcrumb a:hover { color: var(--gold); }
+
+        /* Footer */
+        .admin-footer {
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            margin-top: auto;
+        }
+        .footer-content {
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 1rem;
+        }
+        .footer-links { display: flex; align-items: center; gap: 1.5rem; }
+        .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.875rem; transition: color 0.2s ease; }
+        .footer-links a:hover { color: var(--accent); }
+        .footer-copyright { color: var(--muted); font-size: 0.875rem; }
+        .footer-copyright span { color: var(--gold); font-weight: 600; }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         
-        <!-- Sidebar: Fixed position on mobile, static on large screens (pushes content) -->
-        <!-- w-64 defines width. lg:translate-x-0 ensures it's visible on large screens. -->
-        <aside id="sidebar" class="sidebar fixed z-30 h-full w-64 flex flex-col text-white overflow-y-auto -translate-x-full lg:translate-x-0 transition-transform duration-300">
-            
-            <!-- Logo Area -->
-            <div class="flex items-center justify-between h-20 px-6 border-b border-white/10">
-                <a href="{{ url_for('admin.admin_dashboard') }}" class="flex items-center gap-3 group">
-                    <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                        <span class="font-bold text-primary text-lg">CC</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-bold text-lg tracking-wide leading-tight">Cliffine</span>
-                        <span class="text-[10px] tracking-widest text-white/60 uppercase">Admin Panel</span>
-                    </div>
-                </a>
-                <!-- Close Button (Mobile) -->
-                <button id="closeSidebarBtn" class="lg:hidden text-white hover:text-accent p-1 rounded-full hover:bg-white/10">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
+        .sidebar-overlay {
+            position: fixed; inset: 0;
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 90;
+            opacity: 0; visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 768px) {
+            .top-header { padding: 1rem; }
+            .search-box { display: none; }
+            .page-content { padding: 1rem; }
+            .page-title { font-size: 1.5rem; }
+            .footer-content { flex-direction: column; text-align: center; }
+            .user-info { display: none; }
+        }
+
+        /* Flash Messages */
+        .alert {
+            padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 0.75rem;
+            animation: fadeInUp 0.4s ease;
+        }
+        .alert-success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #047857; }
+        .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #b91c1c; }
+        .alert-info { background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.3); color: var(--accent-dark); }
+    </style>
+</head>
+<body class="bg-pattern">
+
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div>
+                    <span class="logo-text">Cliffine <span>Collection</span></span>
+                    <span class="logo-subtext">Admin Panel</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Scrollable Navigation Wrapper -->
+        <div class="sidebar-scroll-wrapper" id="sidebarScrollWrapper">
+            <!-- Top Scroll Indicator -->
+            <div class="scroll-indicator top" id="scrollUpIndicator" onclick="scrollSidebar(-200)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="18 15 12 9 6 15"/>
+                </svg>
             </div>
 
-            <!-- Navigation -->
-            <nav class="flex-1 px-3 py-6 space-y-1.5">
+            <nav class="nav-section">
+                <div class="nav-label">Main Menu</div>
+
                 <!-- Dashboard -->
-                <a href="{{ url_for('admin.admin_dashboard') }}" class="nav-link active flex items-center gap-3 px-4 py-2.5 rounded-lg text-white transition-all duration-200">
-                    <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                    <span class="font-medium text-sm">Dashboard</span>
-                </a>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.admin_dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'admin.admin_dashboard' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                </div>
+
+                <!-- Categories -->
+                <div class="nav-item {{ 'expanded' if request.endpoint in ['admin.all_categories', 'admin.add_category'] }}">
+                    <div class="nav-link" onclick="toggleSubmenu(this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 6h16M4 12h16M4 18h16"/>
+                            <circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/>
+                        </svg>
+                        Categories
+                        <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="submenu">
+                        <a href="{{ url_for('admin.all_categories') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.all_categories' }}">All Categories</a>
+                        <a href="{{ url_for('admin.add_category') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.add_category' }}">Add Category</a>
+                    </div>
+                </div>
 
                 <!-- Products -->
-                <div class="nav-group">
-                    <button onclick="toggleSubMenu('products-menu')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                            <span class="font-medium text-sm">Products</span>
-                        </div>
-                        <svg class="w-4 h-4 transform transition-transform opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div id="products-menu" class="sub-menu pl-8 space-y-1 mt-1">
-                        <a href="{{ url_for('admin.all_products') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">All Products</a>
-                        <a href="{{ url_for('admin.add_product') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Add Product</a>
-                        <a href="{{ url_for('admin.product_categories') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Categories</a>
-                        <a href="{{ url_for('admin.product_inventory') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Inventory</a>
-                        <a href="{{ url_for('admin.product_reviews') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Reviews</a>
+                <div class="nav-item {{ 'expanded' if request.endpoint in ['admin.all_products', 'admin.add_product', 'admin.product_inventory', 'admin.product_reviews'] }}">
+                    <div class="nav-link" onclick="toggleSubmenu(this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                        Products
+                        <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="submenu">
+                        <a href="{{ url_for('admin.all_products') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.all_products' }}">All Products</a>
+                        <a href="{{ url_for('admin.add_product') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.add_product' }}">Add Product</a>
+                        <a href="{{ url_for('admin.all_categories') }}" class="submenu-link">Categories</a>
+                        <a href="{{ url_for('admin.product_inventory') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.product_inventory' }}">Inventory</a>
+                        <a href="{{ url_for('admin.product_reviews') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.product_reviews' }}">Reviews</a>
                     </div>
                 </div>
 
                 <!-- Orders -->
-                <div class="nav-group">
-                    <button onclick="toggleSubMenu('orders-menu')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                            <span class="font-medium text-sm">Orders</span>
-                        </div>
-                        <svg class="w-4 h-4 transform transition-transform opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div id="orders-menu" class="sub-menu pl-8 space-y-1 mt-1">
-                        <a href="{{ url_for('admin.all_orders') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">All Orders</a>
-                        <a href="{{ url_for('admin.pending_orders') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Pending</a>
-                        <a href="{{ url_for('admin.processing_orders') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Processing</a>
-                        <a href="{{ url_for('admin.delivered_orders') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Delivered</a>
-                        <a href="{{ url_for('admin.cancelled_orders') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Cancelled</a>
-                        <a href="{{ url_for('admin.order_refunds') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Refunds</a>
+                <div class="nav-item {{ 'expanded' if request.endpoint in ['admin.all_orders', 'admin.pending_orders', 'admin.processing_orders', 'admin.delivered_orders', 'admin.cancelled_orders', 'admin.order_refunds'] }}">
+                    <div class="nav-link" onclick="toggleSubmenu(this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <path d="M16 10a4 4 0 0 1-8 0"/>
+                        </svg>
+                        Orders
+                        <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="submenu">
+                        <a href="{{ url_for('admin.all_orders') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.all_orders' }}">All Orders</a>
+                        <a href="{{ url_for('admin.pending_orders') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.pending_orders' }}">Pending</a>
+                        <a href="{{ url_for('admin.processing_orders') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.processing_orders' }}">Processing</a>
+                        <a href="{{ url_for('admin.delivered_orders') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.delivered_orders' }}">Delivered</a>
+                        <a href="{{ url_for('admin.cancelled_orders') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.cancelled_orders' }}">Cancelled</a>
+                        <a href="{{ url_for('admin.order_refunds') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.order_refunds' }}">Refunds</a>
                     </div>
                 </div>
 
                 <!-- Customers -->
-                <div class="nav-group">
-                    <button onclick="toggleSubMenu('customers-menu')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                            <span class="font-medium text-sm">Customers</span>
-                        </div>
-                        <svg class="w-4 h-4 transform transition-transform opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div id="customers-menu" class="sub-menu pl-8 space-y-1 mt-1">
-                        <a href="{{ url_for('admin.all_users') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">All Users</a>
-                        <a href="{{ url_for('admin.user_roles') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Roles</a>
+                <div class="nav-item {{ 'expanded' if request.endpoint in ['admin.all_users', 'admin.user_roles'] }}">
+                    <div class="nav-link" onclick="toggleSubmenu(this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Customers
+                        <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="submenu">
+                        <a href="{{ url_for('admin.all_users') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.all_users' }}">All Users</a>
+                        <a href="{{ url_for('admin.user_roles') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.user_roles' }}">Roles</a>
                     </div>
                 </div>
 
                 <!-- Payments -->
-                <div class="nav-group">
-                    <button onclick="toggleSubMenu('payments-menu')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                            <span class="font-medium text-sm">Payments</span>
-                        </div>
-                        <svg class="w-4 h-4 transform transition-transform opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div id="payments-menu" class="sub-menu pl-8 space-y-1 mt-1">
-                        <a href="{{ url_for('admin.transactions') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Transactions</a>
-                        <a href="{{ url_for('admin.payment_methods') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Payment Methods</a>
-                        <a href="{{ url_for('admin.payment_refunds') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Refunds</a>
+                <div class="nav-item {{ 'expanded' if request.endpoint in ['admin.transactions', 'admin.payment_methods', 'admin.payment_refunds'] }}">
+                    <div class="nav-link" onclick="toggleSubmenu(this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                            <line x1="1" y1="10" x2="23" y2="10"/>
+                        </svg>
+                        Payments
+                        <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="submenu">
+                        <a href="{{ url_for('admin.transactions') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.transactions' }}">Transactions</a>
+                        <a href="{{ url_for('admin.payment_methods') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.payment_methods' }}">Payment Methods</a>
+                        <a href="{{ url_for('admin.payment_refunds') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.payment_refunds' }}">Refunds</a>
                     </div>
                 </div>
 
                 <!-- Coupons -->
-                <a href="{{ url_for('admin.coupons') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                    <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
-                    <span class="font-medium text-sm">Coupons</span>
-                </a>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.coupons') }}" class="nav-link {{ 'active' if request.endpoint == 'admin.coupons' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                        Coupons
+                    </a>
+                </div>
+
+                <div class="nav-label">Community</div>
 
                 <!-- Chamas -->
-                <div class="nav-group">
-                    <button onclick="toggleSubMenu('chamas-menu')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                            <span class="font-medium text-sm">Chamas</span>
-                        </div>
-                        <svg class="w-4 h-4 transform transition-transform opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div id="chamas-menu" class="sub-menu pl-8 space-y-1 mt-1">
-                        <a href="{{ url_for('admin.all_chamas') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">All Chamas</a>
-                        <a href="{{ url_for('admin.chama_members') }}" class="block py-2 px-4 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-md border-l border-transparent hover:border-accent/50 transition-all">Members</a>
+                <div class="nav-item {{ 'expanded' if request.endpoint in ['admin.all_chamas', 'admin.chama_members'] }}">
+                    <div class="nav-link" onclick="toggleSubmenu(this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        Chamas
+                        <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="submenu">
+                        <a href="{{ url_for('admin.all_chamas') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.all_chamas' }}">All Chamas</a>
+                        <a href="{{ url_for('admin.chama_members') }}" class="submenu-link {{ 'active' if request.endpoint == 'admin.chama_members' }}">Members</a>
                     </div>
                 </div>
 
                 <!-- Messages -->
-                <a href="{{ url_for('admin.messages') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                    <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    <span class="font-medium text-sm">Messages</span>
-                    <span class="ml-auto bg-accent text-primary text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">5</span>
-                </a>
-
-                <!-- Inventory & Shipping (Grouped for cleanliness) -->
-                <div class="pt-2 border-t border-white/10 mt-4 space-y-1.5">
-                    <p class="px-4 text-[10px] uppercase tracking-wider text-white/40 font-bold mb-2">Management</p>
-
-                    <a href="{{ url_for('admin.inventory') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
-                        <span class="font-medium text-sm">Inventory</span>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.messages') }}" class="nav-link {{ 'active' if request.endpoint == 'admin.messages' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        Messages
                     </a>
+                </div>
 
-                    <a href="{{ url_for('admin.shipping') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
-                        <span class="font-medium text-sm">Shipping</span>
-                    </a>
+                <div class="nav-label">Operations</div>
 
-                    <a href="{{ url_for('admin.analytics') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        <span class="font-medium text-sm">Analytics</span>
+                <!-- Inventory -->
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.inventory') }}" class="nav-link {{ 'active' if request.endpoint == 'admin.inventory' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                        Inventory
                     </a>
+                </div>
 
-                    <a href="{{ url_for('admin.reports') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        <span class="font-medium text-sm">Reports</span>
+                <!-- Shipping -->
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.shipping') }}" class="nav-link {{ 'active' if request.endpoint == 'admin.shipping' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="1" y="3" width="15" height="13"/>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                            <circle cx="5.5" cy="18.5" r="2.5"/>
+                            <circle cx="18.5" cy="18.5" r="2.5"/>
+                        </svg>
+                        Shipping
                     </a>
-                    
-                    <a href="{{ url_for('admin.pages') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                        <span class="font-medium text-sm">Pages</span>
-                    </a>
+                </div>
 
-                    <a href="{{ url_for('admin.media') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <span class="font-medium text-sm">Media</span>
+                <!-- Reports -->
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.reports') }}" class="nav-link {{ 'active' if request.endpoint == 'admin.reports' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        Reports & Analytics
                     </a>
+                </div>
 
-                    <a href="{{ url_for('admin.settings') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-white/5 transition-colors">
-                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        <span class="font-medium text-sm">Settings</span>
+                <div class="nav-label">System</div>
+
+                <!-- Pages -->
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.pages') }}" class="nav-link {{ 'active' if request.endpoint == 'admin.pages' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        Pages
+                    </a>
+                </div>
+
+                <!-- Media -->
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.media') }}" class="nav-link {{ 'active' if request.endpoint == 'admin.media' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        Media
+                    </a>
+                </div>
+
+                <!-- Settings -->
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.settings') }}" class="nav-link {{ 'active' if request.endpoint == 'admin.settings' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        Settings
                     </a>
                 </div>
             </nav>
-        </aside>
 
-        <!-- Overlay for mobile -->
-        <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 z-20 lg:hidden hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
+            <!-- Bottom Scroll Indicator -->
+            <div class="scroll-indicator bottom" id="scrollDownIndicator" onclick="scrollSidebar(200)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
+        </div>
+    </aside>
 
-        <!-- Main Content Area -->
-        <!-- Added lg:ml-64 to push content to the right on large screens, accommodating the fixed sidebar width -->
-        <div class="flex-1 flex flex-col overflow-hidden lg:ml-64">
-            
-            <!-- Top Bar -->
-            <header class="bg-white/80 backdrop-blur-md z-10 sticky top-0 border-b border-slate-200/80">
-                <div class="flex items-center justify-between h-16 px-6">
-                    <div class="flex items-center gap-4">
-                        <!-- Mobile Menu Button -->
-                        <button id="openSidebarBtn" class="lg:hidden text-slate-600 hover:text-primary p-2 rounded-lg hover:bg-slate-100 transition-colors" onclick="toggleSidebar()">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                        </button>
-                        <h1 class="text-xl font-bold text-slate-800 hidden sm:block">{% block page_title %}Dashboard Overview{% endblock %}</h1>
-                    </div>
-                    
-                    <div class="flex items-center gap-4">
-                        <!-- Search Bar (Hidden on Mobile) -->
-                        <div class="hidden md:block relative">
-                            <input type="text" placeholder="Search..." class="w-64 bg-slate-100 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all">
-                            <svg class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        </div>
-
-                        <!-- Notifications -->
-                        <div class="relative">
-                            <button onclick="toggleDropdown('notif-dropdown')" class="relative p-2 text-slate-500 hover:text-primary hover:bg-slate-100 rounded-full transition-colors">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                                <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full pulse-dot border border-white"></span>
-                            </button>
-                            <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 overflow-hidden">
-                                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                                    <h4 class="font-semibold text-slate-800">Notifications</h4>
-                                    <span class="text-xs bg-primary text-white px-2 py-0.5 rounded-full">3 New</span>
-                                </div>
-                                <div class="max-h-64 overflow-y-auto">
-                                    <a href="#" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-l-2 border-transparent hover:border-primary">
-                                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm text-slate-700 font-medium">New order received</p>
-                                            <p class="text-xs text-slate-400 mt-0.5">#ORD-2452 • 2 mins ago</p>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="px-4 py-2 border-t border-slate-100 bg-slate-50/50 text-center">
-                                    <a href="#" class="text-sm text-primary font-medium hover:underline">View all notifications</a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Profile -->
-                        <div class="relative ml-1">
-                            <button onclick="toggleDropdown('profile-dropdown')" class="flex items-center gap-2 hover:bg-slate-100 p-1.5 pr-3 rounded-full transition-colors">
-                                <img src="https://ui-avatars.com/api/?name=Admin+User&background=5423E7&color=fff" alt="Admin" class="w-8 h-8 rounded-full border-2 border-accent shadow-sm">
-                                <span class="hidden md:block text-sm font-medium text-slate-700">Admin</span>
-                                <svg class="hidden md:block w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
-                                <div class="px-4 py-3 border-b border-slate-100">
-                                    <p class="text-sm font-semibold text-slate-800">Admin User</p>
-                                    <p class="text-xs text-slate-500">admin@cliffine.com</p>
-                                </div>
-                                <div class="py-1">
-                                    <a href="{{ url_for('admin.admin_profile') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                        Profile
-                                    </a>
-                                    <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                        Settings
-                                    </a>
-                                </div>
-                                <div class="border-t border-slate-100 py-1">
-                                    <a href="{{ url_for('admin.admin_logout') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                                        Logout
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <div class="search-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" placeholder="Search products, orders, customers..." aria-label="Search">
                     </div>
                 </div>
-            </header>
+                <div class="header-right">
+                    <button class="header-btn" aria-label="Notifications">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span class="notification-dot"></span>
+                    </button>
+                    <a href="{{ url_for('admin.messages') }}" class="header-btn" aria-label="Messages">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </a>
+                    <a href="{{ url_for('admin.admin_profile') }}" class="user-menu">
+                        <div class="user-avatar">JD</div>
+                        <div class="user-info">
+                            <span class="user-name">Admin User</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </header>
 
-            <!-- Main Content Area -->
-            <main class="flex-1 overflow-y-auto p-6 bg-slate-50/50">
-                {% block content %}
-                <!-- Child content goes here -->
-                {% endblock %}
-            </main>
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {% if category == 'success' %}
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            {% elif category == 'error' %}
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            {% else %}
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            {% endif %}
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
         </div>
-    </div>
 
-    <!-- Scripts -->
+        <!-- Footer -->
+        <footer class="admin-footer">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="#">Documentation</a>
+                    <a href="#">Support</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+                <div class="footer-copyright">
+                    2025 <span>Cliffine Collection</span>. All rights reserved.
+                </div>
+            </div>
+        </footer>
+    </main>
+
     <script>
-        // --- Sidebar Toggle Logic ---
+        // Toggle submenu
+        function toggleSubmenu(element) {
+            const navItem = element.parentElement;
+            navItem.classList.toggle('expanded');
+            // Check scroll indicators after toggle
+            setTimeout(checkScrollIndicators, 350); 
+        }
+
+        // Mobile Sidebar Toggle
         const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        const openBtn = document.getElementById('openSidebarBtn');
-        const closeBtn = document.getElementById('closeSidebarBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const menuToggle = document.getElementById('menuToggle');
 
         function toggleSidebar() {
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
         }
+
+        menuToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        // --- Scrollable Sidebar Logic ---
+        const scrollWrapper = document.getElementById('sidebarScrollWrapper');
+        const scrollUpBtn = document.getElementById('scrollUpIndicator');
+        const scrollDownBtn = document.getElementById('scrollDownIndicator');
+
+        function checkScrollIndicators() {
+            const scrollTop = scrollWrapper.scrollTop;
+            const scrollHeight = scrollWrapper.scrollHeight;
+            const clientHeight = scrollWrapper.clientHeight;
+
+            // Show Top Arrow if scrolled down
+            if (scrollTop > 20) {
+                scrollUpBtn.classList.add('visible');
+            } else {
+                scrollUpBtn.classList.remove('visible');
+            }
+
+            // Show Bottom Arrow if can scroll further down
+            if (scrollHeight > (scrollTop + clientHeight + 20)) {
+                scrollDownBtn.classList.add('visible');
+            } else {
+                scrollDownBtn.classList.remove('visible');
+            }
+        }
+
+        function scrollSidebar(amount) {
+            scrollWrapper.scrollBy({ top: amount, behavior: 'smooth' });
+        }
+
+        // Listen for scroll events
+        scrollWrapper.addEventListener('scroll', checkScrollIndicators);
         
-        openBtn.addEventListener('click', toggleSidebar);
-        closeBtn.addEventListener('click', toggleSidebar);
+        // Initial check on load
+        window.addEventListener('load', checkScrollIndicators);
+        
+        // Recheck on resize (in case responsive layout changes height)
+        window.addEventListener('resize', checkScrollIndicators);
 
-        // --- Sub-menu Accordion Logic ---
-        function toggleSubMenu(id) {
-            const menu = document.getElementById(id);
-            const allMenus = document.querySelectorAll('.sub-menu');
-            
-            // Close other sub-menus (optional, for single open accordion behavior)
-            // allMenus.forEach(m => {
-            //     if (m.id !== id) m.classList.remove('open');
-            // });
-            
-            menu.classList.toggle('open');
-        }
-
-        // --- Dropdown Logic ---
-        function toggleDropdown(id) {
-            const dropdown = document.getElementById(id);
-            document.querySelectorAll('.absolute.z-50').forEach(el => {
-                if (el.id !== id) el.classList.add('hidden');
-            });
-            dropdown.classList.toggle('hidden');
-        }
-
-        window.addEventListener('click', function(e) {
-            if (!e.target.closest('.relative')) {
-                document.querySelectorAll('.absolute.z-50').forEach(el => el.classList.add('hidden'));
+        // Close sidebar on window resize if larger than mobile
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024 && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
             }
         });
     </script>
-    {% block scripts %}{% endblock %}
 </body>
 </html>

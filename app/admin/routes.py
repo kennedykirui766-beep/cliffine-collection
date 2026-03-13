@@ -6,6 +6,7 @@ from flask import render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import os
 from sqlalchemy.exc import IntegrityError
+from app.utils.helpers import generate_unique_slug
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
