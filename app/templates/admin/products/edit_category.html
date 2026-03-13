@@ -1,0 +1,52 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Edit Category{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Edit Category</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.all_categories') }}">Categories</a></li>
+        <li class="breadcrumb-item active">Edit</li>
+    </ol>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-edit me-1"></i>
+            Update Category Details
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('admin.edit_category', category_id=category.id) }}" method="POST">
+                
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" 
+                           value="{{ category.name }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="slug" class="form-label">Slug</label>
+                    <input type="text" class="form-control" id="slug" name="slug" 
+                           value="{{ category.slug }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" 
+                              rows="3">{{ category.description }}</textarea>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="is_active" 
+                           name="is_active" value="1" 
+                           {% if category.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="is_active">Is Active</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Update Category</button>
+                <a href="{{ url_for('admin.all_categories') }}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

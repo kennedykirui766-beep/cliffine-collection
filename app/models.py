@@ -64,20 +64,41 @@ class Product(db.Model):
     name = db.Column(db.String(200), nullable=False)
     slug = db.Column(db.String(200), unique=True)
 
+    short_description = db.Column(db.String(500))
     description = db.Column(db.Text)
 
     price = db.Column(db.Float, nullable=False)
     discount_price = db.Column(db.Float)
+    cost_price = db.Column(db.Float)
 
     sku = db.Column(db.String(100))
     brand = db.Column(db.String(100))
 
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"))
-    
+
     stock = db.Column(db.Integer, default=0)
+    low_stock = db.Column(db.Integer)
+
+    stock_status = db.Column(db.String(50), default="in_stock")
 
     is_featured = db.Column(db.Boolean, default=False)
     is_trending = db.Column(db.Boolean, default=False)
+
+    allow_reviews = db.Column(db.Boolean, default=True)
+
+    lipa_pole_pole = db.Column(db.Boolean, default=False)
+    chama_eligible = db.Column(db.Boolean, default=False)
+
+    weight = db.Column(db.Float)
+    length = db.Column(db.Float)
+    width = db.Column(db.Float)
+    height = db.Column(db.Float)
+
+    shipping_class = db.Column(db.String(50))
+
+    meta_title = db.Column(db.String(255))
+    meta_description = db.Column(db.Text)
+    meta_keywords = db.Column(db.String(255))
 
     is_active = db.Column(db.Boolean, default=True)
 

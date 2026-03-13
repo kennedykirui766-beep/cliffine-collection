@@ -18,21 +18,21 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Page Specific Action Buttons (Placed above form to replace header buttons) -->
+    <!-- Page Specific Action Buttons -->
     <div class="flex flex-wrap justify-end gap-3 mb-6">
         <a href="{{ url_for('admin.all_products') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm">
             Cancel
         </a>
-        <button type="submit" form="productForm" class="inline-flex items-center gap-2 px-4 py-2 border border-primary text-primary font-semibold rounded-lg hover:bg-primary/5 transition-colors text-sm shadow-sm">
+        <button type="button" onclick="submitForm('Draft')" class="inline-flex items-center gap-2 px-4 py-2 border border-primary text-primary font-semibold rounded-lg hover:bg-primary/5 transition-colors text-sm shadow-sm">
             Save as Draft
         </button>
-        <button type="submit" form="productForm" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
+        <button type="button" onclick="submitForm('Published')" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
             Publish Product
         </button>
     </div>
 
-    <form id="productForm" action="#" method="POST" enctype="multipart/form-data">
+    <form id="productForm" action="{{ url_for('admin.add_product') }}" method="POST" enctype="multipart/form-data">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             <!-- Main Content Column (Left) -->
@@ -46,45 +46,45 @@
                     <div class="p-6 space-y-5">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Product Name <span class="text-red-500">*</span></label>
-                            <input type="text" id="productName" oninput="updateSlug()" placeholder="e.g. 43 Inch Smart TV" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="text" id="productName" name="name" oninput="updateSlug()" placeholder="e.g. 43 Inch Smart TV" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Product Slug</label>
                             <div class="flex items-center gap-2">
                                 <span class="text-slate-400 text-sm">cliffine.co.ke/product/</span>
-                                <input type="text" id="productSlug" placeholder="product-name" class="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm">
+                                <input type="text" id="productSlug" name="slug" placeholder="product-name" class="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Category <span class="text-red-500">*</span></label>
-                                <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
-                                    <option>Select Category</option>
-                                    <option>Electronics</option>
-                                    <option>Ladies Handbags</option>
-                                    <option>Men's Shoes</option>
-                                    <option>Household Items</option>
+                                <!-- Updated Category Select with Specific Options -->
+                                <select name="category_id" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white" required>
+                                    <option value="">Select Category</option>
+                                    <option value="1">Households (including TV Stands)</option>
+                                    <option value="2">Electronics</option>
+                                    <option value="3">Men Shoes</option>
+                                    <option value="4">Ladies Handbags</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Product SKU</label>
-                                <input type="text" placeholder="e.g. TV-4321" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                <input type="text" name="sku" placeholder="e.g. TV-4321" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Short Description</label>
-                            <textarea rows="3" placeholder="Brief summary for product listings..." class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"></textarea>
+                            <textarea name="short_description" rows="3" placeholder="Brief summary for product listings..." class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"></textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Full Description</label>
-                            <!-- Placeholder for Rich Text Editor -->
                             <div class="border border-slate-200 rounded-lg overflow-hidden">
                                 <div class="bg-slate-50 border-b border-slate-200 px-3 py-2 flex gap-2">
                                     <button type="button" class="p-1.5 hover:bg-slate-200 rounded"><b>B</b></button>
                                     <button type="button" class="p-1.5 hover:bg-slate-200 rounded"><i>I</i></button>
                                     <button type="button" class="p-1.5 hover:bg-slate-200 rounded">U</button>
                                 </div>
-                                <textarea rows="6" placeholder="Write detailed product description here..." class="w-full px-4 py-3 focus:outline-none"></textarea>
+                                <textarea name="description" rows="6" placeholder="Write detailed product description here..." class="w-full px-4 py-3 focus:outline-none"></textarea>
                             </div>
                         </div>
                     </div>
@@ -98,15 +98,15 @@
                     <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Price (KES) <span class="text-red-500">*</span></label>
-                            <input type="number" placeholder="0.00" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="number" name="price" step="0.01" placeholder="0.00" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Discount Price</label>
-                            <input type="number" placeholder="0.00" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="number" name="discount_price" step="0.01" placeholder="0.00" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Cost Price</label>
-                            <input type="number" placeholder="For profit tracking" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="number" name="cost_price" step="0.01" placeholder="For profit tracking" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                         </div>
                     </div>
                 </div>
@@ -119,18 +119,18 @@
                     <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Stock Quantity <span class="text-red-500">*</span></label>
-                            <input type="number" placeholder="0" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="number" name="stock" placeholder="0" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Low Stock Alert</label>
-                            <input type="number" placeholder="e.g. 5" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="number" name="low_stock_alert" placeholder="e.g. 5" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Stock Status</label>
-                            <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
-                                <option>In Stock</option>
-                                <option>Out of Stock</option>
-                                <option>On Backorder</option>
+                            <select name="stock_status" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
+                                <option value="In Stock">In Stock</option>
+                                <option value="Out of Stock">Out of Stock</option>
+                                <option value="On Backorder">On Backorder</option>
                             </select>
                         </div>
                     </div>
@@ -142,7 +142,6 @@
                         <h3 class="text-lg font-bold text-slate-800">Product Images</h3>
                     </div>
                     <div class="p-6 space-y-5">
-                        <!-- Main Image -->
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-2">Main Product Image</label>
                             <div class="file-input-wrapper relative flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-md hover:border-primary transition-colors cursor-pointer">
@@ -154,22 +153,25 @@
                                     </div>
                                     <p class="text-xs text-slate-500">PNG, JPG, GIF up to 5MB</p>
                                 </div>
-                                <input type="file" accept="image/*" onchange="previewMainImage(event)">
+                                <input type="file" name="main_image" accept="image/*" onchange="previewMainImage(event)">
                             </div>
                             <div id="mainImagePreview" class="mt-4 hidden">
                                 <img src="#" alt="Main Preview" class="w-48 h-48 object-contain rounded-lg border shadow-sm">
                             </div>
                         </div>
-                        <!-- Gallery -->
+                        
+                        <!-- Gallery Images Section -->
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-2">Gallery Images</label>
                             <div class="file-input-wrapper relative flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-md hover:border-primary transition-colors cursor-pointer">
                                 <div class="space-y-1 text-center">
                                     <svg class="mx-auto h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     <p class="text-sm text-slate-600">Drop multiple images here</p>
-                                    <input type="file" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                    <input type="file" name="gallery_images" multiple accept="image/*" onchange="previewGalleryImages(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                 </div>
                             </div>
+                            <!-- Gallery Preview Container -->
+                            <div id="galleryPreview" class="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4"></div>
                         </div>
                     </div>
                 </div>
@@ -187,10 +189,10 @@
                     <div class="p-6 space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                            <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
-                                <option>Published</option>
-                                <option>Draft</option>
-                                <option>Hidden</option>
+                            <select name="status" id="statusSelect" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
+                                <option value="Published">Published</option>
+                                <option value="Draft">Draft</option>
+                                <option value="Hidden">Hidden</option>
                             </select>
                         </div>
                         <p class="text-xs text-slate-400">Status determines if the product is visible on the store.</p>
@@ -206,28 +208,28 @@
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-slate-700">Featured Product</span>
                             <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="toggle" id="featured" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
+                                <input type="checkbox" name="featured" id="featured" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
                                 <label for="featured" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-slate-700">Allow Reviews</span>
                             <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" checked name="toggle" id="reviews" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
+                                <input type="checkbox" name="allow_reviews" id="reviews" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
                                 <label for="reviews" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-slate-700">Lipa Pole Pole</span>
                             <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" checked name="toggle" id="lipa" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
+                                <input type="checkbox" name="lipa_pole_pole" id="lipa" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
                                 <label for="lipa" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-slate-700">Chama Eligible</span>
                             <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" checked name="toggle" id="chama" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
+                                <input type="checkbox" name="chama_eligible" id="chama" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
                                 <label for="chama" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                             </div>
                         </div>
@@ -242,22 +244,22 @@
                     <div class="p-6 space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Weight (kg)</label>
-                            <input type="number" step="0.1" placeholder="0.0" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">
+                            <input type="number" name="weight" step="0.1" placeholder="0.0" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Dimensions (L x W x H)</label>
                             <div class="grid grid-cols-3 gap-2">
-                                <input type="text" placeholder="L" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center">
-                                <input type="text" placeholder="W" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center">
-                                <input type="text" placeholder="H" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center">
+                                <input type="text" name="length" placeholder="L" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center">
+                                <input type="text" name="width" placeholder="W" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center">
+                                <input type="text" name="height" placeholder="H" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center">
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Shipping Class</label>
-                            <select class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-white">
-                                <option>Standard</option>
-                                <option>Fragile</option>
-                                <option>Heavy Duty</option>
+                            <select name="shipping_class" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                                <option value="Standard">Standard</option>
+                                <option value="Fragile">Fragile</option>
+                                <option value="Heavy Duty">Heavy Duty</option>
                             </select>
                         </div>
                     </div>
@@ -272,15 +274,15 @@
                     <div id="seoContent" class="p-6 space-y-4 hidden">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Meta Title</label>
-                            <input type="text" placeholder="SEO Title" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">
+                            <input type="text" name="meta_title" placeholder="SEO Title" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Meta Description</label>
-                            <textarea rows="3" placeholder="Short description for search engines" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+                            <textarea name="meta_description" rows="3" placeholder="Short description for search engines" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Keywords</label>
-                            <input type="text" placeholder="Comma, separated, keywords" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">
+                            <input type="text" name="meta_keywords" placeholder="Comma, separated, keywords" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">
                         </div>
                     </div>
                 </div>
@@ -294,27 +296,21 @@
     <script>
         // --- Sidebar Active State Logic ---
         document.addEventListener('DOMContentLoaded', function() {
-            // 1. Remove 'active' from Dashboard (default in base)
-            const dashLink = document.querySelector('.nav-link.active'); // Finds the one hardcoded in base
+            const dashLink = document.querySelector('.nav-link.active');
             if (dashLink) dashLink.classList.remove('active');
 
-            // 2. Add 'active' to the Products button and expand the menu
-            // We find the button by its text content or structure
             const navButtons = document.querySelectorAll('.nav-group button');
             navButtons.forEach(btn => {
                 const span = btn.querySelector('span');
                 if (span && span.textContent.trim() === 'Products') {
-                    btn.classList.add('active'); // Visually style the button
-                    // Also ensure the button has the 'nav-link' class if styling requires it
+                    btn.classList.add('active');
                     btn.classList.add('nav-link'); 
                 }
             });
 
-            // 3. Open the Products Sub-menu
             const productsMenu = document.getElementById('products-menu');
             if (productsMenu) {
                 productsMenu.classList.add('open');
-                // Optional: Rotate the arrow icon
                 const arrow = productsMenu.previousElementSibling.querySelector('svg:last-child');
                 if(arrow) arrow.classList.add('rotate-180');
             }
@@ -327,7 +323,7 @@
             document.getElementById('productSlug').value = slug;
         }
 
-        // --- Image Preview ---
+        // --- Main Image Preview ---
         function previewMainImage(event) {
             const reader = new FileReader();
             reader.onload = function(){
@@ -339,12 +335,94 @@
             reader.readAsDataURL(event.target.files[0]);
         }
 
+        // --- Gallery Images Logic ---
+        
+        // Array to store the selected gallery files
+        let galleryFilesList = [];
+
+        function previewGalleryImages(event) {
+            // Get the new files selected by the user
+            const newFiles = Array.from(event.target.files);
+            
+            // Add new files to our stored list
+            galleryFilesList = galleryFilesList.concat(newFiles);
+            
+            // Render the updated list
+            renderGalleryPreviews();
+        }
+
+        function renderGalleryPreviews() {
+            const previewContainer = document.getElementById('galleryPreview');
+            previewContainer.innerHTML = ''; // Clear existing previews
+            
+            galleryFilesList.forEach((file, index) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    // Create wrapper div
+                    const div = document.createElement('div');
+                    div.className = "relative group";
+                    
+                    // Create image
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = "w-full h-20 object-cover rounded-lg border border-slate-200 shadow-sm";
+                    
+                    // Create Delete Button (X)
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = "button"; // Prevent form submission
+                    removeBtn.className = "absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow hover:bg-red-600 transition-colors z-10";
+                    removeBtn.innerHTML = "&times;";
+                    
+                    // Add click event to remove the file
+                    removeBtn.onclick = function() {
+                        removeGalleryImage(index);
+                    };
+                    
+                    div.appendChild(img);
+                    div.appendChild(removeBtn);
+                    previewContainer.appendChild(div);
+                };
+                
+                reader.readAsDataURL(file);
+            });
+
+            // Update the actual input element with the modified list
+            updateFileInput();
+        }
+
+        function removeGalleryImage(index) {
+            // Remove the file from the array
+            galleryFilesList.splice(index, 1);
+            
+            // Re-render previews
+            renderGalleryPreviews();
+        }
+
+        function updateFileInput() {
+            // Because the input.files list is read-only, we use DataTransfer
+            // to create a new FileList from our array and assign it back to the input
+            const dataTransfer = new DataTransfer();
+            galleryFilesList.forEach(file => {
+                dataTransfer.items.add(file);
+            });
+            
+            const input = document.querySelector('input[name="gallery_images"]');
+            input.files = dataTransfer.files;
+        }
+
         // --- Toggle SEO Section ---
         function toggleSeo() {
             const content = document.getElementById('seoContent');
             const arrow = document.getElementById('seoArrow');
             content.classList.toggle('hidden');
             arrow.classList.toggle('rotate-180');
+        }
+
+        // --- Form Submit Logic (Draft vs Publish) ---
+        function submitForm(status) {
+            document.getElementById('statusSelect').value = status;
+            document.getElementById('productForm').submit();
         }
     </script>
 {% endblock %}

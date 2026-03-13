@@ -1,0 +1,164 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Add New Category{% endblock %}
+
+{% block page_title %}Add New Category{% endblock %}
+
+{% block head %}
+<style>
+    /* Toggle Switch Specific Styles */
+    .toggle-checkbox:checked { right: 0; border-color: #5423E7; }
+    .toggle-checkbox:checked + .toggle-label { background-color: #5423E7; }
+
+    /* Custom File Input Styling */
+    .file-input-wrapper input[type="file"] { 
+        position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; 
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- Page Specific Action Buttons -->
+    <div class="flex flex-wrap justify-end gap-3 mb-6">
+        <a href="{{ url_for('admin.all_categories') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm">
+            Cancel
+        </a>
+        <button type="submit" form="categoryForm" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Save Category
+        </button>
+    </div>
+
+    <form id="categoryForm" action="{{ url_for('admin.add_category') }}" method="POST" enctype="multipart/form-data">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Main Content Column (Left) -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Basic Information -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100">
+                        <h3 class="text-lg font-bold text-slate-800">Category Information</h3>
+                    </div>
+                    <div class="p-6 space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Category Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="categoryName" name="name" oninput="updateSlug()" placeholder="e.g. Electronics" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Slug</label>
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-400 text-sm">cliffine.co.ke/category/</span>
+                                <input type="text" id="categorySlug" name="slug" placeholder="category-name" class="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                            <textarea name="description" rows="4" placeholder="Brief description for the category..." class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100">
+                        <h3 class="text-lg font-bold text-slate-800">Category Image</h3>
+                    </div>
+                    <div class="p-6 space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Upload Image</label>
+                            <div class="file-input-wrapper relative flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-md hover:border-primary transition-colors cursor-pointer">
+                                <div class="space-y-1 text-center">
+                                    <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4a.5.5 0 11-1 0 .5.5 0 011 0zM28 32a.5.5 0 11-1 0 .5.5 0 011 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                                    <div class="flex text-sm text-slate-600">
+                                        <span class="relative font-medium text-primary hover:text-primary-dark">Upload a file</span>
+                                        <p class="pl-1">or drag and drop</p>
+                                    </div>
+                                    <p class="text-xs text-slate-500">PNG, JPG, GIF up to 5MB</p>
+                                </div>
+                                <input type="file" name="image" accept="image/*" onchange="previewImage(event)">
+                            </div>
+                            <div id="imagePreview" class="mt-4 hidden">
+                                <img src="#" alt="Image Preview" class="w-48 h-48 object-contain rounded-lg border shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Sidebar Column (Right) -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- Visibility -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100">
+                        <h3 class="text-lg font-bold text-slate-800">Visibility</h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-slate-700">Is Active?</span>
+                            <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                <!-- Checked by default for better UX, sends "is_active" to backend -->
+                                <input type="checkbox" name="is_active" id="isActive" checked class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
+                                <label for="isActive" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400">Only active categories will be shown in the store.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // --- Sidebar Active State Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // Remove 'active' from Dashboard (default in base)
+            const dashLink = document.querySelector('.nav-link.active');
+            if (dashLink) dashLink.classList.remove('active');
+
+            // Add 'active' to the Categories button
+            // Assuming sidebar structure similar to products
+            const navButtons = document.querySelectorAll('.nav-group button');
+            navButtons.forEach(btn => {
+                const span = btn.querySelector('span');
+                // Adjust this text if your sidebar says "Categories" or similar
+                if (span && span.textContent.trim() === 'Categories') {
+                    btn.classList.add('active');
+                    btn.classList.add('nav-link'); 
+                }
+            });
+            
+            // If Categories is a direct link (not a dropdown button), find the <a> tag
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                if(link.textContent.trim() === 'Categories') {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // --- Auto Slug Generator ---
+        function updateSlug() {
+            const name = document.getElementById('categoryName').value;
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            document.getElementById('categorySlug').value = slug;
+        }
+
+        // --- Image Preview ---
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function(){
+                const output = document.getElementById('imagePreview');
+                const img = output.querySelector('img');
+                img.src = reader.result;
+                output.classList.remove('hidden');
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
+{% endblock %}
