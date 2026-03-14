@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 import os
 from sqlalchemy.exc import IntegrityError
 from app.utils.helpers import generate_unique_slug
+from app.models import Chama
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -255,6 +256,7 @@ def add_category():
     return render_template("admin/categories/add_category.html")
 
 
+
 @admin_bp.route("/categories/<int:category_id>/edit", methods=["GET", "POST"])
 def edit_category(category_id):
 
@@ -357,9 +359,40 @@ def payment_refunds():
 def coupons():
     return render_template("admin/coupons/index.html")
 
-@admin_bp.route("/chamas")
-def all_chamas():
-    return render_template("admin/chamas/all_chamas.html")
+
+@admin_bp.route("/")
+def chamas():
+    all_chamas = Chama.query.all()
+    return render_template("admin/chamas.html", chamas=all_chamas)
+
+
+@admin_bp.route("/create", methods=["POST"])
+def create_chama():
+    name = request.form.get("name")
+    description = request.form.get("description")
+    category = request.form.get("category")
+    target_amount = request.form.get("target_amount")
+    contribution_amount = request.form.get("contribution_amount")
+    frequency = request.form.get("frequency")
+    max_members = request.form.get("max_members")
+    privacy = request.form.get("privacy")
+
+    chama = Chama(
+        name=name,
+        description=description,
+        category=category,
+        target_amount=target_amount,
+        contribution_amount=contribution_amount,
+        frequency=frequency,
+        max_members=max_members,
+        privacy=privacy
+    )
+
+    db.session.add(chama)
+    db.session.commit()
+
+    flash("Chama created successfully", "success")
+    return redirect(url_for("chamas.chamas"))
 
 
 @admin_bp.route("/chamas/members")

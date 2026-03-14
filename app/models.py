@@ -103,6 +103,7 @@ class Product(db.Model):
     is_active = db.Column(db.Boolean, default=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     images = db.relationship("ProductImage", backref="product", lazy=True)
     reviews = db.relationship("Review", backref="product", lazy=True)
@@ -280,28 +281,48 @@ class Message(db.Model):
 # ===============================
 # CHAMAS
 # ===============================
+
 class Chama(db.Model):
     __tablename__ = "chamas"
 
     id = db.Column(db.Integer, primary_key=True)
 
-    name = db.Column(db.String(200))
-
+    # Basic Information
+    name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
 
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"))
+    category = db.Column(db.String(100))
 
-    monthly_payment = db.Column(db.Float)
+    # Target purchase
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=True)
+    target_amount = db.Column(db.Float)
 
-    total_members = db.Column(db.Integer)
+    # Contribution Plan
+    contribution_amount = db.Column(db.Float)
+    contribution_frequency = db.Column(db.String(50))  # weekly / monthly
 
-    start_date = db.Column(db.DateTime)
+    max_members = db.Column(db.Integer)
 
+    # Privacy
+    privacy = db.Column(db.String(20), default="public")  # public / private
+    invite_code = db.Column(db.String(50), nullable=True)
+
+    # Optional Cover Image
+    cover_image = db.Column(db.String(255))
+
+    # Status
     status = db.Column(db.String(50), default="open")
 
+    # Creator
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+
+    # Dates
+    start_date = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
     members = db.relationship("ChamaMember", backref="chama", lazy=True)
+    product = db.relationship("Product", backref="chamas", lazy=True)
 
 
 # ===============================

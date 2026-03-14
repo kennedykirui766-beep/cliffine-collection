@@ -3,7 +3,7 @@
 {% block title %}Edit Product{% endblock %}
 
 {% block page_title %}
-    Edit Product: <span class="text-primary">43" Smart Android TV</span>
+    Edit Product: <span class="text-primary">{{ product.name }}</span>
 {% endblock %}
 
 {% block head %}
@@ -26,16 +26,24 @@
         <a href="#" class="p-2.5 text-slate-500 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors border border-slate-200" title="Preview Product">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
         </a>
-        <button type="submit" form="productForm" class="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors text-sm shadow-sm">
+        
+        <!-- Updated Delete Button Trigger -->
+        <button type="button" 
+                data-url="{{ url_for('admin.delete_product', product_id=product.id) }}" 
+                data-name="{{ product.name }}"
+                onclick="openDeleteModal(this)"
+                class="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors text-sm shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             Delete
         </button>
+
         <button type="submit" form="productForm" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
             Update Product
         </button>
     </div>
 
-    <form id="productForm" action="#" method="POST" enctype="multipart/form-data">
+    <form id="productForm" action="{{ url_for('admin.edit_product', product_id=product.id) }}" method="POST" enctype="multipart/form-data">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             <!-- Main Content Column (Left) -->
@@ -50,38 +58,37 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm font-medium text-slate-500 mb-1">Product ID</label>
-                                <input type="text" value="#PRD-1024" readonly class="w-full px-4 py-2.5 border border-slate-100 rounded-lg bg-slate-50 text-slate-500 cursor-not-allowed">
+                                <input type="text" value="#PRD-{{ product.id }}" readonly class="w-full px-4 py-2.5 border border-slate-100 rounded-lg bg-slate-50 text-slate-500 cursor-not-allowed">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Product Name <span class="text-red-500">*</span></label>
-                                <input type="text" id="productName" oninput="updateSlug()" value="43 Inch Smart Android TV" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                <input type="text" name="name" id="productName" oninput="updateSlug()" value="{{ product.name }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Product Slug</label>
                             <div class="flex items-center gap-2">
                                 <span class="text-slate-400 text-sm">cliffine.co.ke/product/</span>
-                                <input type="text" id="productSlug" value="43-inch-smart-android-tv" class="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm">
+                                <input type="text" name="slug" id="productSlug" value="{{ product.slug }}" class="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Category <span class="text-red-500">*</span></label>
-                                <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
-                                    <option>Electronics</option>
-                                    <option selected>Electronics</option>
-                                    <option>Ladies Handbags</option>
-                                    <option>Men's Shoes</option>
+                                <select name="category_id" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
+                                    {% for category in categories %}
+                                        <option value="{{ category.id }}" {% if category.id == product.category_id %}selected{% endif %}>{{ category.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Product SKU</label>
-                                <input type="text" value="ELEC-TV-4321" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                <input type="text" name="sku" value="{{ product.sku }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Short Description</label>
-                            <textarea rows="3" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">High definition 43 inch smart TV with Android OS and built-in WiFi.</textarea>
+                            <textarea name="short_description" rows="3" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">{{ product.short_description or '' }}</textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Full Description</label>
@@ -90,7 +97,7 @@
                                     <button type="button" class="p-1.5 hover:bg-slate-200 rounded"><b>B</b></button>
                                     <button type="button" class="p-1.5 hover:bg-slate-200 rounded"><i>I</i></button>
                                 </div>
-                                <textarea rows="6" class="w-full px-4 py-3 focus:outline-none">Experience cinema-quality visuals with this 43 inch Smart Android TV. Featuring 4K resolution, Dolby Audio, and seamless streaming capabilities...</textarea>
+                                <textarea name="description" rows="6" class="w-full px-4 py-3 focus:outline-none">{{ product.description or '' }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -104,15 +111,15 @@
                     <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Price (KES) <span class="text-red-500">*</span></label>
-                            <input type="number" value="32500" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="number" name="price" value="{{ product.price }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Discount Price</label>
-                            <input type="number" placeholder="0.00" value="29999" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="number" name="discount_price" step="0.01" placeholder="0.00" value="{{ product.discount_price or '' }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Cost Price</label>
-                            <input type="number" value="22000" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="number" name="cost_price" value="{{ product.cost_price or '' }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                         </div>
                     </div>
                 </div>
@@ -125,23 +132,26 @@
                     <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Stock Quantity <span class="text-red-500">*</span></label>
-                            <input type="number" value="12" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="number" name="stock" value="{{ product.stock }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Low Stock Alert</label>
-                            <input type="number" value="5" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                            <input type="number" name="low_stock_threshold" value="{{ product.low_stock_threshold or 5 }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Stock Status</label>
-                            <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
-                                <option selected>In Stock</option>
-                                <option>Out of Stock</option>
-                                <option>On Backorder</option>
+                            <select name="stock_status" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
+                                <option value="In Stock" {% if product.stock_status == 'In Stock' %}selected{% endif %}>In Stock</option>
+                                <option value="Out of Stock" {% if product.stock_status == 'Out of Stock' %}selected{% endif %}>Out of Stock</option>
+                                <option value="On Backorder" {% if product.stock_status == 'On Backorder' %}selected{% endif %}>On Backorder</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-500 mb-1">Last Updated</label>
-                            <input type="text" value="24 Oct, 2026" readonly class="w-full px-4 py-2.5 border border-slate-100 rounded-lg bg-slate-50 text-slate-500 cursor-not-allowed">
+                            <input type="text"
+                                    value="{{ product.updated_at.strftime('%d %b, %Y') if product.updated_at else product.created_at.strftime('%d %b, %Y') }}"
+                                    readonly
+                                    class="w-full px-4 py-2.5 border border-slate-100 rounded-lg bg-slate-50 text-slate-500 cursor-not-allowed">
                         </div>
                     </div>
                 </div>
@@ -156,30 +166,24 @@
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-3">Current Images</label>
                             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                                <!-- Main Image -->
-                                <div class="relative group aspect-square rounded-lg overflow-hidden border-2 border-primary shadow-sm">
-                                    <img src="https://placehold.co/200x200/5423E7/FFFFFF?text=TV+Main" class="w-full h-full object-cover">
-                                    <div class="absolute top-1 left-1 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">MAIN</div>
-                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                        <button type="button" class="p-1.5 bg-white rounded-full text-red-600 hover:bg-red-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                    </div>
-                                </div>
-                                <!-- Secondary Image -->
-                                <div class="relative group aspect-square rounded-lg overflow-hidden border border-slate-200">
-                                    <img src="https://placehold.co/200x200/7C3AED/FFFFFF?text=Angle" class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                        <button type="button" class="p-1.5 bg-white rounded-full text-primary hover:bg-primary/10" title="Set as Main"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.98 8.72c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg></button>
-                                        <button type="button" class="p-1.5 bg-white rounded-full text-red-600 hover:bg-red-100" title="Delete"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                    </div>
-                                </div>
-                                <!-- Secondary Image 2 -->
-                                <div class="relative group aspect-square rounded-lg overflow-hidden border border-slate-200">
-                                    <img src="https://placehold.co/200x200/D4AF37/000000?text=Box" class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                        <button type="button" class="p-1.5 bg-white rounded-full text-primary hover:bg-primary/10"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.98 8.72c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg></button>
-                                        <button type="button" class="p-1.5 bg-white rounded-full text-red-600 hover:bg-red-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                    </div>
-                                </div>
+                                {% if product.images %}
+                                    {% for image in product.images %}
+                                        <div class="relative group aspect-square rounded-lg overflow-hidden border {% if loop.first %}border-2 border-primary shadow-sm{% else %}border-slate-200{% endif %}">
+                                            <img src="{{ url_for('static', filename='uploads/' ~ image.image_url) }}" class="w-full h-full object-cover">
+                                            {% if loop.first %}
+                                                <div class="absolute top-1 left-1 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">MAIN</div>
+                                            {% endif %}
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                {% if not loop.first %}
+                                                    <button type="button" class="p-1.5 bg-white rounded-full text-primary hover:bg-primary/10" title="Set as Main"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.98 8.72c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg></button>
+                                                {% endif %}
+                                                <button type="button" class="p-1.5 bg-white rounded-full text-red-600 hover:bg-red-100" title="Delete"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-sm text-slate-400 col-span-full">No images uploaded yet.</p>
+                                {% endif %}
                             </div>
                         </div>
                         <!-- Upload New -->
@@ -189,7 +193,7 @@
                                 <div class="space-y-1 text-center">
                                     <svg class="mx-auto h-10 w-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     <p class="text-sm text-slate-600">Drop images here or click to upload</p>
-                                    <input type="file" multiple accept="image/*">
+                                    <input type="file" name="images" multiple accept="image/*">
                                 </div>
                             </div>
                         </div>
@@ -204,14 +208,14 @@
                     <div class="p-6 space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Weight (kg)</label>
-                            <input type="number" step="0.1" value="8.5" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">
+                            <input type="number" name="weight" step="0.1" value="{{ product.weight or '' }}" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Dimensions (L x W x H cm)</label>
                             <div class="grid grid-cols-3 gap-2">
-                                <input type="text" value="98" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center">
-                                <input type="text" value="56" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center">
-                                <input type="text" value="8" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center">
+                                <input type="text" name="length" value="{{ product.length or '' }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center" placeholder="L">
+                                <input type="text" name="width" value="{{ product.width or '' }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center" placeholder="W">
+                                <input type="text" name="height" value="{{ product.height or '' }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center" placeholder="H">
                             </div>
                         </div>
                     </div>
@@ -230,10 +234,10 @@
                     <div class="p-6 space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                            <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
-                                <option selected>Published</option>
-                                <option>Draft</option>
-                                <option>Hidden</option>
+                            <select name="status" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
+                                <option value="Published" {% if product.status == 'Published' %}selected{% endif %}>Published</option>
+                                <option value="Draft" {% if product.status == 'Draft' %}selected{% endif %}>Draft</option>
+                                <option value="Hidden" {% if product.status == 'Hidden' %}selected{% endif %}>Hidden</option>
                             </select>
                         </div>
                         <p class="text-xs text-green-600 flex items-center gap-1"><span class="w-2 h-2 bg-green-600 rounded-full"></span> Product is live on store.</p>
@@ -247,19 +251,19 @@
                     </div>
                     <div class="p-4 grid grid-cols-2 gap-3 text-center">
                         <div class="bg-slate-50 p-3 rounded-lg">
-                            <p class="text-2xl font-bold text-primary">32</p>
+                            <p class="text-2xl font-bold text-primary">{{ product.sales_count or 0 }}</p>
                             <p class="text-xs text-slate-500">Sales</p>
                         </div>
                         <div class="bg-slate-50 p-3 rounded-lg">
-                            <p class="text-2xl font-bold text-slate-800">25</p>
+                            <p class="text-2xl font-bold text-slate-800">{{ product.order_count or 0 }}</p>
                             <p class="text-xs text-slate-500">Orders</p>
                         </div>
                         <div class="bg-slate-50 p-3 rounded-lg col-span-2 flex items-center justify-center gap-1">
-                            <p class="text-2xl font-bold text-amber-500">4.5</p>
+                            <p class="text-2xl font-bold text-amber-500">{{ product.rating or '0.0' }}</p>
                             <div class="flex text-amber-400">
                                 <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                             </div>
-                            <p class="text-sm text-slate-500">(18 reviews)</p>
+                            <p class="text-sm text-slate-500">({{ product.review_count or 0 }} reviews)</p>
                         </div>
                     </div>
                 </div>
@@ -273,28 +277,28 @@
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-slate-700">Featured Product</span>
                             <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="toggle" id="featured" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
+                                <input type="checkbox" name="featured" value="true" id="featured" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none" {% if product.featured %}checked{% endif %}/>
                                 <label for="featured" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-slate-700">Allow Reviews</span>
                             <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" checked name="toggle" id="reviews" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
+                                <input type="checkbox" name="allow_reviews" value="true" id="reviews" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none" {% if product.allow_reviews or product.allow_reviews is none %}checked{% endif %}/>
                                 <label for="reviews" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-slate-700">Lipa Pole Pole</span>
                             <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" checked name="toggle" id="lipa" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
+                                <input type="checkbox" name="lipa_pole_pole" value="true" id="lipa" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none" {% if product.lipa_pole_pole %}checked{% endif %}/>
                                 <label for="lipa" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-slate-700">Chama Eligible</span>
                             <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" checked name="toggle" id="chama" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
+                                <input type="checkbox" name="chama_eligible" value="true" id="chama" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none" {% if product.chama_eligible %}checked{% endif %}/>
                                 <label for="chama" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                             </div>
                         </div>
@@ -310,11 +314,11 @@
                     <div id="seoContent" class="p-6 space-y-4 hidden">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Meta Title</label>
-                            <input type="text" value="43 Inch Smart Android TV | Cliffine" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">
+                            <input type="text" name="meta_title" value="{{ product.meta_title or product.name }}" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Meta Description</label>
-                            <textarea rows="3" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">Buy the best 43 inch Smart Android TV in Kenya. 4K Display, Dolby Audio, WiFi.</textarea>
+                            <textarea name="meta_description" rows="3" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm">{{ product.meta_description or '' }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -322,6 +326,57 @@
             </div>
         </div>
     </form>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            
+            <!-- Background Backdrop -->
+            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
+
+            <!-- Centering Trick -->
+            <span class="hidden sm:inline-block sm:h-screen sm:align-middle">&#8203;</span>
+
+            <!-- Modal Content -->
+            <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:align-middle">
+                
+                <!-- Header / Icon Area -->
+                <div class="bg-white px-6 pt-8 pb-6 text-center">
+                    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 mb-5">
+                        <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-900" id="modal-title">
+                        Delete Product
+                    </h3>
+                    
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-500">
+                            Are you sure you want to delete:
+                        </p>
+                        <div class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <span class="text-lg font-semibold text-gray-800 block truncate" id="delete-product-name">Product Name</span>
+                        </div>
+                        <p class="mt-3 text-sm text-red-500 font-medium">
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="bg-gray-50 px-6 py-5 flex flex-col-reverse sm:flex-row sm:justify-center gap-3 rounded-b-2xl">
+                    <button type="button" onclick="closeDeleteModal()" class="w-full inline-flex justify-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none sm:w-auto transition-colors">
+                        Cancel
+                    </button>
+                    <a href="#" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none sm:w-auto transition-colors">
+                        Delete Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
 
@@ -363,6 +418,26 @@
             const arrow = document.getElementById('seoArrow');
             content.classList.toggle('hidden');
             arrow.classList.toggle('rotate-180');
+        }
+
+        // --- Delete Modal Logic ---
+        function openDeleteModal(button) {
+            // Get data from button
+            const productName = button.getAttribute('data-name');
+            const deleteUrl = button.getAttribute('data-url');
+            
+            // Set modal content
+            document.getElementById('delete-product-name').textContent = productName;
+            document.getElementById('confirmDeleteBtn').href = deleteUrl;
+            
+            // Show modal
+            document.getElementById('deleteModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            document.body.style.overflow = 'auto'; // Restore scroll
         }
     </script>
 {% endblock %}

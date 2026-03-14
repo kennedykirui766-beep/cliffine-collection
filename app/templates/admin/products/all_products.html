@@ -137,7 +137,6 @@
                         </td>
                         <td class="p-4">
                             <div class="flex items-center gap-3">
-                                <!-- Updated Image Logic -->
                                 {% if product.images %}
                                     <img src="{{ url_for('static', filename='uploads/' ~ product.images[0].image_url) }}"
                                          class="w-14 h-14 rounded-lg object-cover border border-slate-100" 
@@ -192,13 +191,15 @@
                                 <a href="{{ url_for('admin.edit_product', product_id=product.id) }}" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" title="Edit">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </a>
-                                <!-- Delete Button -->
-                                <a href="{{ url_for('admin.delete_product', product_id=product.id) }}" 
-                                   onclick="return confirm('Are you sure you want to delete {{ product.name }}?')" 
-                                   class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-red-600 transition-colors" 
-                                   title="Delete">
+                                <!-- Delete Button (Trigger) -->
+                                <button type="button" 
+                                        data-url="{{ url_for('admin.delete_product', product_id=product.id) }}" 
+                                        data-name="{{ product.name }}"
+                                        onclick="openDeleteModal(this)"
+                                        class="p-2 hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors" 
+                                        title="Delete">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </a>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -217,9 +218,59 @@
         {% if products %}
         <div class="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-700">{{ products|length }}</span> products</p>
-            <!-- Pagination logic can be added here later -->
         </div>
         {% endif %}
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            
+            <!-- Background Backdrop -->
+            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
+
+            <!-- Centering Trick -->
+            <span class="hidden sm:inline-block sm:h-screen sm:align-middle">&#8203;</span>
+
+            <!-- Modal Content -->
+            <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:align-middle">
+                
+                <!-- Header / Icon Area -->
+                <div class="bg-white px-6 pt-8 pb-6 text-center">
+                    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 mb-5">
+                        <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-900" id="modal-title">
+                        Delete Product
+                    </h3>
+                    
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-500">
+                            Are you sure you want to delete:
+                        </p>
+                        <div class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <span class="text-lg font-semibold text-gray-800 block truncate" id="delete-product-name">Product Name</span>
+                        </div>
+                        <p class="mt-3 text-sm text-red-500 font-medium">
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="bg-gray-50 px-6 py-5 flex flex-col-reverse sm:flex-row sm:justify-center gap-3 rounded-b-2xl">
+                    <button type="button" onclick="closeDeleteModal()" class="w-full inline-flex justify-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none sm:w-auto transition-colors">
+                        Cancel
+                    </button>
+                    <a href="#" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none sm:w-auto transition-colors">
+                        Delete Product
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
 {% endblock %}
@@ -292,5 +343,25 @@
             stockFilter.addEventListener('change', filterTable);
             statusFilter.addEventListener('change', filterTable);
         });
+
+        // --- Delete Modal Logic ---
+        function openDeleteModal(button) {
+            // Get data from button
+            const productName = button.getAttribute('data-name');
+            const deleteUrl = button.getAttribute('data-url');
+            
+            // Set modal content
+            document.getElementById('delete-product-name').textContent = productName;
+            document.getElementById('confirmDeleteBtn').href = deleteUrl;
+            
+            // Show modal
+            document.getElementById('deleteModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            document.body.style.overflow = 'auto'; // Restore scroll
+        }
     </script>
 {% endblock %}
