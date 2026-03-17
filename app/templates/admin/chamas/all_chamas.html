@@ -29,37 +29,68 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
             Export CSV
         </button>
-        <button class="inline-flex items-center gap-2 px-4 py-2 bg-accent text-slate-900 font-semibold rounded-lg hover:bg-accent-dark transition-colors text-sm shadow-sm">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        
+        <!-- Updated Button: Now links to the create page -->
+        <a href="{{ url_for('admin.create_chama') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-accent text-slate-900 font-semibold rounded-lg hover:bg-accent-dark transition-colors text-sm shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
             Create Chama
-        </button>
+        </a>
     </div>
 
-    <!-- Metrics Cards -->
+    <!-- Metrics Cards (Dynamic) -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <!-- Total Chamas -->
         <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100">
             <p class="text-xs text-slate-500">Total Chamas</p>
-            <h3 class="text-xl font-bold text-slate-800 mt-1">48</h3>
+            <h3 class="text-xl font-bold text-slate-800 mt-1">{{ chamas|length }}</h3>
         </div>
+        
+        <!-- Active Chamas -->
         <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-green-500">
             <p class="text-xs text-slate-500">Active</p>
-            <h3 class="text-xl font-bold text-green-600 mt-1">12</h3>
+            <h3 class="text-xl font-bold text-green-600 mt-1">
+                {{ chamas|selectattr('status', 'equalto', 'open')|list|length }}
+            </h3>
         </div>
+        
+        <!-- Completed Chamas -->
         <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-blue-500">
             <p class="text-xs text-slate-500">Completed</p>
-            <h3 class="text-xl font-bold text-blue-600 mt-1">32</h3>
+            <h3 class="text-xl font-bold text-blue-600 mt-1">
+                {{ chamas|selectattr('status', 'equalto', 'closed')|list|length }}
+            </h3>
         </div>
+        
+        <!-- Pending Chamas -->
         <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-amber-500">
             <p class="text-xs text-slate-500">Pending</p>
-            <h3 class="text-xl font-bold text-amber-600 mt-1">4</h3>
+            <h3 class="text-xl font-bold text-amber-600 mt-1">
+                {{ chamas|selectattr('status', 'equalto', 'pending')|list|length }}
+            </h3>
         </div>
+        
+        <!-- Total Members -->
         <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100">
             <p class="text-xs text-slate-500">Total Members</p>
-            <h3 class="text-xl font-bold text-slate-800 mt-1">520</h3>
+            {% set member_count = namespace(value=0) %}
+            {% for chama in chamas %}
+                {% set member_count.value = member_count.value + (chama.members|length) %}
+            {% endfor %}
+            <h3 class="text-xl font-bold text-slate-800 mt-1">{{ member_count.value }}</h3>
         </div>
+        
+        <!-- Total Target -->
         <div class="stat-card bg-gradient-to-br from-primary to-primary-light rounded-xl p-4 shadow-sm text-white">
-            <p class="text-xs text-white/80">Total Collected</p>
-            <h3 class="text-lg font-bold mt-1">KES 2.4M</h3>
+            <p class="text-xs text-white/80">Total Target</p>
+            {% set total_target = namespace(value=0) %}
+            {% for chama in chamas %}
+                {% if chama.target_amount %}
+                    {% set total_target.value = total_target.value + chama.target_amount %}
+                {% endif %}
+            {% endfor %}
+            <h3 class="text-lg font-bold mt-1">KES {{ "{:,.0f}".format(total_target.value) }}</h3>
         </div>
     </div>
 
@@ -70,24 +101,26 @@
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                     <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </span>
-                <input type="text" placeholder="Search Chama Name..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm">
+                <!-- Added ID for Search Input -->
+                <input type="text" id="searchInput" placeholder="Search Chama Name or Target..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm">
             </div>
             <div class="flex flex-wrap gap-3">
-                <select class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
-                    <option>All Status</option>
-                    <option>Active</option>
-                    <option>Completed</option>
-                    <option>Pending</option>
+                <!-- Added ID for Status Filter -->
+                <select id="statusFilter" class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
+                    <option value="All Status">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending</option>
                 </select>
-                 <select class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
-                    <option>All Categories</option>
-                    <option>Electronics</option>
-                    <option>Shoes</option>
-                    <option>Handbags</option>
+                <!-- Added ID for Category Filter -->
+                <select id="categoryFilter" class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
+                    <option value="All Categories">All Categories</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Shoes">Shoes</option>
+                    <option value="Handbags">Handbags</option>
+                    <option value="General">General</option>
                 </select>
-                <button class="px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors">
-                    Filter
-                </button>
+                <!-- Removed Filter Button as filtering is now instant -->
             </div>
         </div>
     </div>
@@ -95,7 +128,7 @@
     <!-- Chamas Table -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-left" id="chamaTable">
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">
@@ -110,177 +143,180 @@
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-100" id="chamaTableBody">
                     
-                    <!-- Active Chama -->
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
-                        <td class="p-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">EC</div>
-                                <div>
-                                    <p class="font-semibold text-slate-800">Electronics Chama</p>
-                                    <p class="text-xs text-slate-400">Target: KES 120,000</p>
+                    {% if chamas %}
+                        {% for chama in chamas %}
+                            {% set progress_percent = 0 %}
+                            {% set current_amount = 0 %}
+                            
+                            <!-- Added Data Attributes for Filtering -->
+                            {% if chama.status == 'closed' %}
+                                <tr class="hover:bg-green-50 transition-colors bg-green-50/30" 
+                                    data-name="{{ chama.name|lower }}" 
+                                    data-status="Completed" 
+                                    data-category="{{ chama.category or 'General' }}"
+                                    data-target="{{ chama.target_amount }}">
+                            {% elif chama.status == 'pending' %}
+                                <tr class="hover:bg-slate-50 transition-colors opacity-60" 
+                                    data-name="{{ chama.name|lower }}" 
+                                    data-status="Pending" 
+                                    data-category="{{ chama.category or 'General' }}"
+                                    data-target="{{ chama.target_amount }}">
+                            {% else %}
+                                <tr class="hover:bg-slate-50 transition-colors" 
+                                    data-name="{{ chama.name|lower }}" 
+                                    data-status="Active" 
+                                    data-category="{{ chama.category or 'General' }}"
+                                    data-target="{{ chama.target_amount }}">
+                            {% endif %}
+                                <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
+                                <td class="p-4">
+                                    <div class="flex items-center gap-3">
+                                        {% if chama.cover_image %}
+                                            <img src="{{ url_for('static', filename=chama.cover_image) }}" class="w-10 h-10 rounded-lg object-cover" alt="{{ chama.name }}">
+                                        {% else %}
+                                            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                                {{ chama.name[0:1] }}
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <p class="font-semibold text-slate-800">{{ chama.name }}</p>
+                                            <p class="text-xs text-slate-400">
+                                                Target: KES {{ "{:,.0f}".format(chama.target_amount) if chama.target_amount else 'N/A' }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-4 hidden md:table-cell">
+                                    <span class="text-sm text-slate-600">{{ chama.category or 'General' }}</span>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <span class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 rounded-full text-sm font-semibold text-slate-700">
+                                        {{ chama.members|length }}
+                                    </span>
+                                </td>
+                                <td class="p-4 w-48">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="font-medium text-slate-700">KES {{ "{:,.0f}".format(current_amount) }}</span>
+                                        <span class="text-slate-400">{{ progress_percent }}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 rounded-full h-2">
+                                        {% set bar_color = 'bg-primary' %}
+                                        {% if chama.status == 'closed' %}
+                                            {% set bar_color = 'bg-green-500' %}
+                                        {% elif progress_percent > 80 %}
+                                            {% set bar_color = 'bg-amber-400' %}
+                                        {% endif %}
+                                        <div class="{{ bar_color }} h-2 rounded-full" style="width: {{ progress_percent }}%"></div>
+                                    </div>
+                                </td>
+                                <td class="p-4">
+                                    {% if chama.status == 'open' %}
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span>
+                                    {% elif chama.status == 'closed' %}
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span>
+                                    {% else %}
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-600">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="p-4 text-sm text-slate-500 hidden lg:table-cell">
+                                    {{ chama.deadline.strftime('%b %d, %Y') if chama.deadline else 'Not Set' }}
+                                </td>
+                                <td class="p-4 text-center">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <a href="#" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" title="View Details">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                        </a>
+                                        <a href="{{ url_for('admin.edit_chama', chama_id=chama.id) }}" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" title="Edit">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        </a>
+                                        <button type="button" 
+                                                onclick="openDeleteModal('{{ chama.id }}', '{{ chama.name }}', '{{ url_for('admin.delete_chama', chama_id=chama.id) }}')" 
+                                                class="p-2 hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors" 
+                                                title="Delete">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="p-10 text-center">
+                                <div class="flex flex-col items-center justify-center py-10">
+                                    <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    <h3 class="text-lg font-semibold text-gray-600 mb-1">No Chamas Found</h3>
+                                    <p class="text-sm text-gray-400 mb-4">Get started by creating your first Chama.</p>
+                                    <a href="{{ url_for('admin.create_chama') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg" style="background: var(--accent);">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                        Create First Chama
+                                    </a>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="p-4 hidden md:table-cell">
-                            <span class="text-sm text-slate-600">Electronics</span>
-                        </td>
-                        <td class="p-4 text-center">
-                            <span class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 rounded-full text-sm font-semibold text-slate-700">12</span>
-                        </td>
-                        <td class="p-4 w-48">
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="font-medium text-slate-700">KES 85,000</span>
-                                <span class="text-slate-400">71%</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2">
-                                <div class="bg-primary h-2 rounded-full" style="width: 71%"></div>
-                            </div>
-                        </td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span>
-                        </td>
-                        <td class="p-4 text-sm text-slate-500 hidden lg:table-cell">Mar 30, 2026</td>
-                        <td class="p-4 text-center">
-                            <div class="flex items-center justify-center gap-1">
-                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" title="View Details"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
-                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" title="Edit"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
-                                <button class="p-2 hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors" title="Delete"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                            </td>
+                        </tr>
+                    {% endif %}
+
+                    <!-- "No Results Found" Row (Hidden by default) -->
+                    <tr id="noResultsRow" class="hidden">
+                        <td colspan="8" class="p-10 text-center">
+                            <div class="flex flex-col items-center justify-center py-10">
+                                <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h3 class="text-lg font-semibold text-gray-600 mb-1">No Results Found</h3>
+                                <p class="text-sm text-gray-400">We couldn't find any chamas matching your criteria.</p>
                             </div>
                         </td>
                     </tr>
 
-                    <!-- Near Completion Chama -->
-                    <tr class="hover:bg-amber-50 transition-colors bg-amber-50/30">
-                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
-                        <td class="p-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center text-accent-dark font-bold text-sm">SC</div>
-                                <div>
-                                    <p class="font-semibold text-slate-800">Shoes Chama</p>
-                                    <p class="text-xs text-slate-400">Target: KES 200,000</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="p-4 hidden md:table-cell">
-                            <span class="text-sm text-slate-600">Men's Shoes</span>
-                        </td>
-                        <td class="p-4 text-center">
-                            <span class="inline-flex items-center justify-center w-8 h-8 bg-amber-100 rounded-full text-sm font-semibold text-amber-700">20</span>
-                        </td>
-                        <td class="p-4 w-48">
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="font-medium text-slate-700">KES 180,000</span>
-                                <span class="text-amber-600 font-bold">90%</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2">
-                                <div class="bg-amber-400 h-2 rounded-full" style="width: 90%"></div>
-                            </div>
-                        </td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">Near End</span>
-                        </td>
-                        <td class="p-4 text-sm text-slate-500 hidden lg:table-cell">Apr 05, 2026</td>
-                        <td class="p-4 text-center">
-                            <div class="flex items-center justify-center gap-1">
-                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
-                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
-                                <button class="p-2 hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Completed Chama -->
-                    <tr class="hover:bg-green-50 transition-colors bg-green-50/30">
-                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
-                        <td class="p-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600 font-bold text-sm">HC</div>
-                                <div>
-                                    <p class="font-semibold text-slate-800">Handbags Chama</p>
-                                    <p class="text-xs text-green-600">Completed</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="p-4 hidden md:table-cell">
-                            <span class="text-sm text-slate-600">Ladies Bags</span>
-                        </td>
-                        <td class="p-4 text-center">
-                            <span class="inline-flex items-center justify-center w-8 h-8 bg-green-100 rounded-full text-sm font-semibold text-green-700">15</span>
-                        </td>
-                        <td class="p-4 w-48">
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="font-medium text-green-700">KES 150,000</span>
-                                <span class="text-green-600 font-bold">100%</span>
-                            </div>
-                            <div class="w-full bg-green-200 rounded-full h-2">
-                                <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
-                            </div>
-                        </td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span>
-                        </td>
-                        <td class="p-4 text-sm text-slate-500 hidden lg:table-cell">Feb 28, 2026</td>
-                        <td class="p-4 text-center">
-                            <div class="flex items-center justify-center gap-1">
-                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Pending Chama -->
-                    <tr class="hover:bg-slate-50 transition-colors opacity-60">
-                        <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
-                        <td class="p-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-sm">HH</div>
-                                <div>
-                                    <p class="font-semibold text-slate-600">Household Chama</p>
-                                    <p class="text-xs text-slate-400">Pending Approval</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="p-4 hidden md:table-cell">
-                            <span class="text-sm text-slate-400">Household</span>
-                        </td>
-                        <td class="p-4 text-center">
-                            <span class="inline-flex items-center justify-center w-8 h-8 bg-slate-100 rounded-full text-sm font-semibold text-slate-500">0</span>
-                        </td>
-                        <td class="p-4 w-48">
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="font-medium text-slate-400">KES 0</span>
-                                <span class="text-slate-300">0%</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2"></div>
-                        </td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-600">Pending</span>
-                        </td>
-                        <td class="p-4 text-sm text-slate-400 hidden lg:table-cell">Not Set</td>
-                        <td class="p-4 text-center">
-                            <div class="flex items-center justify-center gap-1">
-                                <button class="p-2 hover:bg-green-100 rounded-lg text-green-600 transition-colors" title="Approve"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>
-                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
-                                <button class="p-2 hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                            </div>
-                        </td>
-                    </tr>
                 </tbody>
             </table>
         </div>
 
         <!-- Pagination -->
         <div class="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50">
-            <p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-700">1</span> to <span class="font-medium text-slate-700">10</span> of <span class="font-medium text-slate-700">48</span> chamas</p>
-            <nav class="flex items-center gap-1">
-                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white disabled:opacity-50 bg-white shadow-sm" disabled>Previous</button>
-                <button class="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium shadow-sm">1</button>
-                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white bg-white shadow-sm">2</button>
-                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white bg-white shadow-sm">3</button>
-                <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-white bg-white shadow-sm">Next</button>
-            </nav>
+            <p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-700" id="visibleCount">{{ chamas|length }}</span> chamas</p>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeDeleteModal()" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="flex items-center justify-center flex-shrink-0 w-12 h-12 mx-auto bg-red-100 rounded-full sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">Delete Chama</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    Are you sure you want to delete the Chama named: <strong id="chamaNameDisplay" class="text-gray-700"></strong>?
+                                </p>
+                                <p class="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100">
+                                    <strong>Warning:</strong> This action cannot be undone. All data associated with this Chama, including member contributions and settings, will be permanently removed.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <form id="deleteForm" action="#" method="POST" class="w-full sm:w-auto">
+                        <button type="submit" class="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                            Yes, Delete
+                        </button>
+                    </form>
+                    <button type="button" onclick="closeDeleteModal()" class="inline-flex justify-center w-full px-4 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -290,20 +326,24 @@
     <script>
         // --- Sidebar Active State Logic ---
         document.addEventListener('DOMContentLoaded', function() {
-            // 1. Remove 'active' from default Dashboard link
             const dashLink = document.querySelector('.nav-link.active');
             if (dashLink) dashLink.classList.remove('active');
 
-            // 2. Activate the 'Chamas' menu link
-            // Since Chamas is a direct link in the nav (not a dropdown in the provided snippet, though logic exists for submenus)
             const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => {
-                const span = link.querySelector('span');
-                // Check text content or href
                 if (link.textContent.trim() === 'Chamas') {
                     link.classList.add('active');
                 }
             });
+
+            // Initialize Filter Listeners
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const categoryFilter = document.getElementById('categoryFilter');
+
+            if(searchInput) searchInput.addEventListener('keyup', filterTable);
+            if(statusFilter) statusFilter.addEventListener('change', filterTable);
+            if(categoryFilter) categoryFilter.addEventListener('change', filterTable);
         });
 
         // --- Submenu Toggle Logic ---
@@ -312,6 +352,72 @@
             if (menu) {
                 menu.classList.toggle('open');
             }
+        }
+
+        // --- Filter Table Logic ---
+        function filterTable() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const statusValue = document.getElementById('statusFilter').value;
+            const categoryValue = document.getElementById('categoryFilter').value;
+            
+            const tableBody = document.getElementById('chamaTableBody');
+            const rows = tableBody.querySelectorAll('tr[data-name]'); // Only select data rows
+            const noResultsRow = document.getElementById('noResultsRow');
+            const visibleCountSpan = document.getElementById('visibleCount');
+            
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const rowName = row.getAttribute('data-name') || '';
+                const rowStatus = row.getAttribute('data-status') || '';
+                const rowCategory = row.getAttribute('data-category') || '';
+                const rowTarget = row.getAttribute('data-target') || '';
+
+                // Search Check (Check name AND target amount)
+                const matchesSearch = (searchValue === '') || 
+                                      rowName.includes(searchValue) || 
+                                      rowTarget.includes(searchValue);
+
+                // Status Check
+                const matchesStatus = (statusValue === 'All Status') || (rowStatus === statusValue);
+
+                // Category Check
+                const matchesCategory = (categoryValue === 'All Categories') || (rowCategory === categoryValue);
+
+                // Apply visibility
+                if (matchesSearch && matchesStatus && matchesCategory) {
+                    row.style.display = ''; // Show
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none'; // Hide
+                }
+            });
+
+            // Handle "No Results" display
+            if (visibleCount === 0) {
+                noResultsRow.classList.remove('hidden');
+            } else {
+                noResultsRow.classList.add('hidden');
+            }
+
+            // Update count
+            visibleCountSpan.textContent = visibleCount;
+        }
+
+        // --- Delete Modal Logic ---
+        function openDeleteModal(id, name, url) {
+            const modal = document.getElementById('deleteModal');
+            const nameDisplay = document.getElementById('chamaNameDisplay');
+            const deleteForm = document.getElementById('deleteForm');
+
+            nameDisplay.textContent = name;
+            deleteForm.action = url;
+            modal.classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.classList.add('hidden');
         }
     </script>
 {% endblock %}

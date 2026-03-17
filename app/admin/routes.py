@@ -1,13 +1,14 @@
-from flask import redirect, render_template, url_for
+from datetime import datetime
+
+from flask import current_app, redirect, render_template, url_for
 from flask import Blueprint, render_template
 from app import db
-from app.models import User, Product, Order, Coupon, Message, Category, ProductImage
+from app.models import User, Product, Order, Coupon, Message, Category, ProductImage, Chama
 from flask import render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import os
 from sqlalchemy.exc import IntegrityError
 from app.utils.helpers import generate_unique_slug
-from app.models import Chama
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -359,45 +360,186 @@ def payment_refunds():
 def coupons():
     return render_template("admin/coupons/index.html")
 
+@admin_bp.route("/chamas")
+def all_chamas():
+    chamas = Chama.query.order_by(Chama.created_at.desc()).all()
 
-@admin_bp.route("/")
-def chamas():
-    all_chamas = Chama.query.all()
-    return render_template("admin/chamas.html", chamas=all_chamas)
-
-
-@admin_bp.route("/create", methods=["POST"])
-def create_chama():
-    name = request.form.get("name")
-    description = request.form.get("description")
-    category = request.form.get("category")
-    target_amount = request.form.get("target_amount")
-    contribution_amount = request.form.get("contribution_amount")
-    frequency = request.form.get("frequency")
-    max_members = request.form.get("max_members")
-    privacy = request.form.get("privacy")
-
-    chama = Chama(
-        name=name,
-        description=description,
-        category=category,
-        target_amount=target_amount,
-        contribution_amount=contribution_amount,
-        frequency=frequency,
-        max_members=max_members,
-        privacy=privacy
+    return render_template(
+        "admin/chamas/all_chamas.html",
+        chamas=chamas
     )
-
-    db.session.add(chama)
-    db.session.commit()
-
-    flash("Chama created successfully", "success")
-    return redirect(url_for("chamas.chamas"))
-
 
 @admin_bp.route("/chamas/members")
 def chama_members():
     return render_template("admin/chamas/members.html")
+
+
+
+@admin_bp.route("/create", methods=["GET", "POST"])
+def create_chama():
+    if request.method == "POST":
+        # ── Basic Information ───────────────────────────────────────
+        name              = request.form.get("name")
+        description       = request.form.get("description")
+        category          = request.form.get("category")
+        target_amount     = request.form.get("target_amount")
+        target_product    = request.form.get("target_product")
+        deadline_str      = request.form.get("deadline")
+
+        # ── Contribution Plan ──────────────────────────────────────
+        contribution_amount = request.form.get("contribution_amount")
+        contribution_frequency = request.form.get("frequency")
+        max_members       = request.form.get("max_members")
+
+        # ── Privacy & Access ───────────────────────────────────────
+        privacy           = request.form.get("privacy")
+        invite_code       = request.form.get("invite_code")
+
+        # ── Rules ──────────────────────────────────────────────────
+        rules             = request.form.get("rules")
+
+        # ── Payment Methods ────────────────────────────────────────
+        accepts_mpesa = True if request.form.get("payment_mpesa") else False
+        accepts_card  = True if request.form.get("payment_card") else False
+        accepts_bank  = True if request.form.get("payment_bank") else False
+
+        mpesa_type        = request.form.get("mpesa_type")
+        mpesa_number      = request.form.get("mpesa_number")
+        mpesa_account     = request.form.get("mpesa_account")
+
+        # ── Notifications ──────────────────────────────────────────
+        notify_on_join    = bool(request.form.get("notify_join"))
+        notify_on_payment = bool(request.form.get("notify_payment"))
+        notify_on_goal    = bool(request.form.get("notify_goal"))
+
+        # ── Cover Image Handling ───────────────────────────────────
+        cover_image = request.files.get("cover_image")
+        cover_filename = None
+        
+        # Define upload folder (ensure this is configured in app config or use static path)
+        upload_folder = os.path.join(current_app.root_path, 'static/uploads/chama_covers')
+        
+        if cover_image and cover_image.filename:
+            filename = secure_filename(cover_image.filename)
+            # Add timestamp to filename to avoid conflicts
+            unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+            save_path = os.path.join(upload_folder, unique_filename)
+            
+            try:
+                os.makedirs(upload_folder, exist_ok=True)
+                cover_image.save(save_path)
+                cover_filename = f"uploads/chama_covers/{unique_filename}"
+            except Exception as e:
+                flash(f"Error uploading image: {str(e)}", "error")
+        
+        
+        start_date_str = request.form.get("start_date")
+        start_date = None
+
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, "%Y-%m-%dT%H:%M")
+            except ValueError:
+                print("Invalid start date format:", start_date_str)
+        
+        # ── Date Parsing ───────────────────────────────────────────
+        deadline = None
+        if deadline_str:
+            try:
+                deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date()
+            except ValueError:
+                pass
+            
+        import uuid
+        invite_code = f"CHM-{uuid.uuid4().hex[:6].upper()}"
+        existing = Chama.query.filter_by(invite_code=invite_code).first()
+        while existing:
+            invite_code = f"CHM-{uuid.uuid4().hex[:6].upper()}"
+            existing = Chama.query.filter_by(invite_code=invite_code).first()
+      
+        # ── Create model instance ──────────────────────────────────
+        chama = Chama(
+            name                  = name,
+            description           = description,
+            category              = category,
+            target_amount         = float(target_amount) if target_amount else None,
+            product_id            = target_product if target_product else None,
+            start_date            = start_date,
+            deadline              = deadline,
+            contribution_amount   = float(contribution_amount) if contribution_amount else None,
+            contribution_frequency= contribution_frequency,
+            max_members           = int(max_members) if max_members else None,
+            privacy               = privacy,
+            invite_code           = invite_code,
+            rules                 = rules,
+            
+            # Payment flags
+            accepts_mpesa         = accepts_mpesa,
+            accepts_card          = accepts_card,
+            accepts_bank          = accepts_bank,
+            mpesa_type            = mpesa_type,
+            mpesa_number          = mpesa_number,
+            mpesa_account         = mpesa_account,
+            
+            # Notifications
+            notify_on_join        = notify_on_join,
+            notify_on_payment     = notify_on_payment,
+            notify_on_goal        = notify_on_goal,
+            
+            # Image path
+            cover_image           = cover_filename,
+        )
+
+        try:
+            db.session.add(chama)
+            db.session.commit()
+            flash("Chama created successfully", "success")
+            return redirect(url_for('admin.all_chamas')) # Adjust endpoint as needed
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error creating Chama: {str(e)}", "error")
+
+    # Handle GET request
+    return render_template("admin/chamas/create.html")
+
+
+@admin_bp.route("/chamas/edit/<int:chama_id>", methods=["GET", "POST"])
+def edit_chama(chama_id):
+
+    chama = Chama.query.get_or_404(chama_id)
+
+    if request.method == "POST":
+        chama.name = request.form.get("name")
+        chama.description = request.form.get("description")
+        chama.category = request.form.get("category")
+
+        db.session.commit()
+
+        flash("Chama updated successfully", "success")
+        return redirect(url_for("admin.all_chamas"))
+
+    return render_template(
+        "admin/chamas/edit_chama.html",
+        chama=chama
+    )
+
+
+@admin_bp.route("/chamas/delete/<int:chama_id>", methods=["POST"])
+def delete_chama(chama_id):
+
+    chama = Chama.query.get_or_404(chama_id)
+
+    try:
+        db.session.delete(chama)
+        db.session.commit()
+        flash("Chama deleted successfully", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting chama: {str(e)}", "error")
+
+    return redirect(url_for("admin.all_chamas"))
+
 
 @admin_bp.route("/messages")
 def messages():

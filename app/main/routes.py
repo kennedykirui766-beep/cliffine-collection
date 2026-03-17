@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template
 from datetime import datetime
 
+from app.models import Product
+
 # Create blueprint
 main_bp = Blueprint("main", __name__)
 
@@ -10,9 +12,22 @@ def index():
     return render_template("index.html", current_year=datetime.now().year)
 
 # Products
+from datetime import datetime, timedelta
+
 @main_bp.route("/products")
 def products():
-    return render_template("products.html", current_year=datetime.now().year)
+    # Fetch active products ordered by newest first
+    products = Product.query.filter_by(is_active=True).order_by(Product.created_at.desc()).all()
+
+    # Calculate date 30 days ago
+    thirty_days_ago = datetime.now() - timedelta(days=30)
+
+    return render_template(
+        "products.html",
+        products=products,
+        thirty_days_ago=thirty_days_ago,   # pass it here!
+        current_year=datetime.now().year
+    )
 
 # Categories
 @main_bp.route("/categories")

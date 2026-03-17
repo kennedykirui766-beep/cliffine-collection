@@ -287,40 +287,52 @@ class Chama(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    # Basic Information
-    name = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text)
+    name                = db.Column(db.String(200), nullable=False)
+    description         = db.Column(db.Text, nullable=True)
+    category            = db.Column(db.String(100), nullable=True)
 
-    category = db.Column(db.String(100))
+    # ── Target / Goal ────────────────────────────────────────────────────
+    product_id          = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=True)
+    target_amount       = db.Column(db.Numeric(12, 2), nullable=True)     # better precision than Float
+    deadline            = db.Column(db.Date, nullable=True)               # contribution/purchase deadline
 
-    # Target purchase
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=True)
-    target_amount = db.Column(db.Float)
+    # ── Contribution Plan ────────────────────────────────────────────────
+    contribution_amount    = db.Column(db.Numeric(12, 2), nullable=True)
+    contribution_frequency = db.Column(db.String(50), nullable=True)      # Daily / Weekly / Monthly
+    max_members            = db.Column(db.Integer, nullable=True)
 
-    # Contribution Plan
-    contribution_amount = db.Column(db.Float)
-    contribution_frequency = db.Column(db.String(50))  # weekly / monthly
+    # ── Rules & Guidelines ───────────────────────────────────────────────
+    rules               = db.Column(db.Text, nullable=True)
 
-    max_members = db.Column(db.Integer)
+    # ── Privacy & Access ─────────────────────────────────────────────────
+    privacy             = db.Column(db.String(20), default="public", nullable=False)  # public / private
+    invite_code         = db.Column(db.String(50), nullable=True, unique=True)
 
-    # Privacy
-    privacy = db.Column(db.String(20), default="public")  # public / private
-    invite_code = db.Column(db.String(50), nullable=True)
+    # ── Payment Methods ──────────────────────────────────────────────────
+    accepts_mpesa       = db.Column(db.Boolean, default=False)
+    accepts_card        = db.Column(db.Boolean, default=False)
+    accepts_bank        = db.Column(db.Boolean, default=False)
 
-    # Optional Cover Image
-    cover_image = db.Column(db.String(255))
+    # M-Pesa specific (only relevant when accepts_mpesa = True)
+    mpesa_type          = db.Column(db.String(30), nullable=True)     # Paybill / TillNumber / ...
+    mpesa_number        = db.Column(db.String(50), nullable=True)     # Business/Paybill number
+    mpesa_account       = db.Column(db.String(100), nullable=True)    # Account name/number
 
-    # Status
-    status = db.Column(db.String(50), default="open")
+    # ── Notifications ────────────────────────────────────────────────────
+    notify_on_join      = db.Column(db.Boolean, default=True)
+    notify_on_payment   = db.Column(db.Boolean, default=True)
+    notify_on_goal      = db.Column(db.Boolean, default=True)
 
-    # Creator
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+    # ── Media ────────────────────────────────────────────────────────────
+    cover_image         = db.Column(db.String(255), nullable=True)    # path e.g. /uploads/chama_covers/xxx.jpg
 
-    # Dates
-    start_date = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # ── Status & Audit ───────────────────────────────────────────────────
+    status              = db.Column(db.String(50), default="open", nullable=False)
+    created_by          = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at          = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    start_date          = db.Column(db.DateTime, nullable=True)       # when chama actually starts (optional)
 
-    # Relationships
+    # ── Relationships ────────────────────────────────────────────────────
     members = db.relationship("ChamaMember", backref="chama", lazy=True)
     product = db.relationship("Product", backref="chamas", lazy=True)
 
