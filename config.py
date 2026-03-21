@@ -2,7 +2,6 @@ import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-
 class Config:
     # --- SECURITY ---
     SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key")
@@ -10,11 +9,12 @@ class Config:
     # --- DATABASE ---
     db_uri = os.getenv("DATABASE_URL")
 
-    # Fix for Render / PostgreSQL URL format
+    # Fix for Render / Neon URL format
     if db_uri and db_uri.startswith("postgres://"):
         db_uri = db_uri.replace("postgres://", "postgresql://", 1)
 
-    SQLALCHEMY_DATABASE_URI = db_uri or f"sqlite:///{os.path.join(BASE_DIR, 'cliffine_collection.db')}"
+    # Use PostgreSQL in production
+    SQLALCHEMY_DATABASE_URI = db_uri  # no SQLite fallback here
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # --- MAIL (SendGrid) ---
