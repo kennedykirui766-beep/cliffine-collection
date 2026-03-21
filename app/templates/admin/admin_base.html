@@ -80,14 +80,13 @@
             border-radius: 0 3px 3px 0;
         }
 
-        /* Sub-menu Animation - Fixed to match HTML class 'submenu' */
+        /* Sub-menu Animation */
         .submenu {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
             opacity: 0;
         }
-        /* Open state triggered by parent class */
         .nav-item.expanded .submenu {
             max-height: 500px;
             opacity: 1;
@@ -178,11 +177,11 @@
     <div class="flex h-screen overflow-hidden bg-slate-50">
         
         <!-- Sidebar Overlay (Mobile) -->
-        <div class="sidebar-overlay fixed inset-0 bg-black/60 z-20 lg:hidden hidden backdrop-blur-sm" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        <div class="sidebar-overlay fixed inset-0 bg-black/60 z-20 lg:hidden hidden backdrop-blur-sm" id="sidebarOverlay"></div>
 
         <!-- Sidebar -->
         <aside class="sidebar fixed z-30 h-full w-64 flex flex-col text-white overflow-hidden lg:translate-x-0 -translate-x-full" id="sidebar">
-            <div class="sidebar-header border-b border-white/10 bg-gradient-to-br from-purple-600/20 to-transparent">
+            <div class="sidebar-header border-b border-white/10 bg-gradient-to-br from-purple-600/20 to-transparent relative">
                 <a href="{{ url_for('admin.admin_dashboard') }}" class="logo flex items-center gap-3">
                     <div class="logo-icon w-10 h-10 rounded-lg shadow-lg flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6 text-white">
@@ -196,14 +195,14 @@
                         <span class="block text-[10px] tracking-widest text-white/50 uppercase">Admin Panel</span>
                     </div>
                 </a>
-                <button id="closeSidebarBtn" class="lg:hidden absolute top-4 right-4 text-white/70 hover:text-white" onclick="toggleSidebar()">
+                <button id="closeSidebarBtn" class="lg:hidden absolute top-4 right-4 text-white/70 hover:text-white">
                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
             <!-- Scrollable Navigation Wrapper -->
             <div class="sidebar-scroll-wrapper" id="sidebarScrollWrapper">
-                <div class="scroll-indicator top" id="scrollUpIndicator" onclick="scrollSidebar(-200)">
+                <div class="scroll-indicator top" id="scrollUpIndicator">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
                 </div>
 
@@ -216,7 +215,7 @@
                         </a>
                     </div>
 
-                    <!-- Categories (Removed default expanded logic) -->
+                    <!-- Categories -->
                     <div class="nav-item relative">
                         <div class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer" onclick="toggleSubmenu(this)">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
@@ -372,7 +371,7 @@
                     </div>
                 </nav>
 
-                <div class="scroll-indicator bottom" id="scrollDownIndicator" onclick="scrollSidebar(200)">
+                <div class="scroll-indicator bottom" id="scrollDownIndicator">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
             </div>
@@ -385,7 +384,8 @@
             <header class="bg-white/80 backdrop-blur-md z-10 sticky top-0 border-b border-slate-200/80">
                 <div class="flex items-center justify-between h-16 px-6">
                     <div class="flex items-center gap-4">
-                        <button id="openSidebarBtn" class="lg:hidden text-slate-600 hover:text-primary p-2 rounded-lg hover:bg-slate-100 transition-colors" onclick="toggleSidebar()">
+                        <!-- Removed onclick from HTML, handled by JS listener -->
+                        <button id="openSidebarBtn" class="lg:hidden text-slate-600 hover:text-primary p-2 rounded-lg hover:bg-slate-100 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                         </button>
                         <h1 class="text-xl font-bold text-slate-800 hidden sm:block">{% block page_title %}Dashboard Overview{% endblock %}</h1>
@@ -512,16 +512,19 @@
         const closeBtn = document.getElementById('closeSidebarBtn');
 
         function toggleSidebar() {
+            // Toggle the class that hides/shows the sidebar
             sidebar.classList.toggle('-translate-x-full');
-            sidebar.classList.toggle('active'); 
+            
+            // Toggle the overlay visibility
             overlay.classList.toggle('hidden');
-            overlay.classList.toggle('active');
         }
         
+        // Add click listeners
         if(openBtn) openBtn.addEventListener('click', toggleSidebar);
         if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+        if(overlay) overlay.addEventListener('click', toggleSidebar);
 
-        // --- Submenu Accordion Logic (Updated) ---
+        // --- Submenu Accordion Logic ---
         function toggleSubmenu(element) {
             const navItem = element.parentElement;
             const isExpanded = navItem.classList.contains('expanded');
@@ -584,6 +587,10 @@
         function scrollSidebar(amount) {
             scrollWrapper.scrollBy({ top: amount, behavior: 'smooth' });
         }
+        
+        // Scroll indicator click handlers
+        if(scrollUpBtn) scrollUpBtn.addEventListener('click', () => scrollSidebar(-200));
+        if(scrollDownBtn) scrollDownBtn.addEventListener('click', () => scrollSidebar(200));
 
         // Listen for scroll events
         if (scrollWrapper) {
@@ -598,11 +605,16 @@
 
         // Close sidebar on window resize if larger than mobile
         window.addEventListener('resize', () => {
-            if (window.innerWidth > 1024 && sidebar.classList.contains('active')) {
-                sidebar.classList.remove('active');
-                sidebar.classList.remove('-translate-x-full'); 
-                overlay.classList.remove('active');
-                overlay.classList.add('hidden');
+            if (window.innerWidth > 1024 && !sidebar.classList.contains('-translate-x-full')) {
+                // If window becomes large, ensure sidebar is hidden (since it's fixed on mobile)
+                // But on desktop, we want it visible via CSS classes, not JS inline styles.
+                // This logic ensures the mobile overlay state is reset.
+                if(!overlay.classList.contains('hidden')) {
+                    overlay.classList.add('hidden');
+                }
+                // Ensure sidebar follows CSS rules for desktop
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.remove('translate-x-full');
             }
         });
     </script>
