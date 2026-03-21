@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Join a Chama - Cliffine Collection{% endblock %}
+
+{% block content %}
+
+<!-- 1. Page Header -->
+<section class="bg-primary dark:bg-gray-900 py-12 lg:py-16 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-primary-dark via-primary to-primary-light opacity-80"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <span class="inline-block px-4 py-1 bg-accent/20 text-accent rounded-full text-sm font-semibold mb-4">Group Savings</span>
+        <h1 class="font-display text-4xl lg:text-5xl font-bold text-white mb-4">Join a Chama</h1>
+        <p class="text-lg text-gray-200 max-w-2xl mx-auto mb-8">
+            Browse available groups below and start your journey to owning quality products through easy contributions.
+        </p>
+        <a href="#chama-grid-section" class="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-bold rounded-full shadow-lg hover:bg-accent-dark transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Browse Available Chamas
+        </a>
+    </div>
+</section>
+
+<!-- Main Content Area -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    
+    <!-- 2. Search & Filters -->
+    <div class="mb-8 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Search -->
+            <div class="relative md:col-span-2">
+                <input type="text" id="chama-search" placeholder="Search chama by name..." class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent">
+                <svg class="w-5 h-5 text-muted absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            
+            <!-- Category Filter -->
+            <select id="filter-category" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent">
+                <option value="all">All Categories</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Furniture">Furniture</option>
+                <option value="Fashion">Fashion</option>
+                <option value="Household">Household</option>
+            </select>
+
+            <!-- Status Filter -->
+            <select id="filter-status" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent">
+                <option value="all">All Status</option>
+                <option value="open">Open</option>
+                <option value="full">Full</option>
+                <option value="closed">Closed</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Chamas List Section -->
+    <section id="chama-grid-section">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white">Available Groups</h2>
+            <p class="text-sm text-muted">Showing <span id="result-count">{{ chamas|length }}</span> groups</p>
+        </div>
+
+        {% if chamas %}
+        <div id="chama-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            {% for chama in chamas %}
+            
+            {# --- Data Logic --- #}
+            {% set current_members = chama.members|length %}
+            {% set max_members = chama.max_members if chama.max_members else 10 %}
+            {% set progress_percent = (current_members / max_members * 100)|round|int %}
+            
+            {# Determine actual status based on count if not explicitly set #}
+            {% set computed_status = chama.status %}
+            {% if chama.status == 'open' and current_members >= max_members %}
+                {% set computed_status = 'full' %}
+            {% endif %}
+
+            {# Image Logic: Cover Image -> Product Image -> Placeholder #}
+            {% set image_url = 'https://placehold.co/400x250/581C87/FFFFFF?text=' ~ chama.name|urlencode %}
+            {% if chama.cover_image %}
+                {% set image_url = url_for('static', filename='uploads/' ~ chama.cover_image) %}
+            {% elif chama.product and chama.product.images %}
+                {% set image_url = url_for('static', filename='uploads/' ~ chama.product.images[0].image_url) %}
+            {% endif %}
+
+            <!-- Chama Card -->
+            <div class="chama-card bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col" 
+                 data-name="{{ chama.name }}"
+                 data-category="{{ chama.category or 'General' }}"
+                 data-status="{{ computed_status }}">
+                
+                <div class="relative">
+                    <!-- Updated to use the image_url variable logic -->
+                    <img src="{{ url_for('static', filename=chama.cover_image) }}"
+                         alt="{{ chama.name }}" 
+                         class="w-full h-48 object-cover">
+                    
+                    <div class="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                        <!-- Status Badge -->
+                        <span class="px-2 py-1 text-xs font-bold rounded shadow 
+                            {% if computed_status == 'open' %}bg-green-500 text-white
+                            {% elif computed_status == 'full' %}bg-red-500 text-white
+                            {% else %}bg-gray-600 text-white{% endif %}">
+                            {{ computed_status|title }}
+                        </span>
+
+                        <!-- Frequency Badge -->
+                        {% if chama.contribution_frequency %}
+                        <span class="px-2 py-1 bg-white/90 text-charcoal text-xs font-bold rounded shadow">
+                            {{ chama.contribution_frequency }}
+                        </span>
+                        {% endif %}
+
+                        <!-- Privacy Badge -->
+                        {% if chama.privacy == 'private' %}
+                        <span class="px-2 py-1 bg-gray-800/80 text-white text-xs font-bold rounded shadow flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            Private
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="p-5 flex-1 flex flex-col">
+                    <div class="flex justify-between items-start mb-1">
+                        <h3 class="font-bold text-lg text-charcoal dark:text-white">{{ chama.name }}</h3>
+                        {% if chama.accepts_mpesa %}
+                        <span class="text-green-600 text-xs font-bold bg-green-50 px-2 py-1 rounded">M-Pesa</span>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-sm text-muted mb-4 line-clamp-2">{{ chama.description or 'No description provided.' }}</p>
+                    
+                    <div class="space-y-3 mb-5 mt-auto">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-muted">Target Amount:</span>
+                            <span class="font-bold text-charcoal dark:text-white">KES {{ "{:,.0f}".format(chama.target_amount) if chama.target_amount else 'N/A' }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-muted">Contribution:</span>
+                            <span class="font-bold text-primary dark:text-accent">
+                                KES {{ "{:,.0f}".format(chama.contribution_amount) if chama.contribution_amount else 'N/A' }}
+                                <span class="text-xs text-muted font-normal">/ {{ chama.contribution_frequency or 'time' }}</span>
+                            </span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-muted">Members:</span>
+                            <span class="font-bold text-charcoal dark:text-white">{{ current_members }} / {{ max_members }}</span>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-muted">Capacity</span>
+                                <span class="font-bold text-muted">{{ progress_percent }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                                <div class="bg-accent h-2 rounded-full transition-all" style="width: {{ progress_percent }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Updated Button: Now links to the detail page -->
+                    {% if computed_status == 'open' %}
+                        <a href="{{ url_for('main.chama_detail', chama_id=chama.id) }}" class="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                            Join Chama
+                        </a>
+                    {% elif computed_status == 'full' %}
+                        <button disabled class="w-full py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-lg font-medium text-sm cursor-not-allowed">
+                            Group Full
+                        </button>
+                    {% else %}
+                        <button disabled class="w-full py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-lg font-medium text-sm cursor-not-allowed">
+                            Closed
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+        {% else %}
+        <div class="col-span-full py-12 text-center bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <h3 class="text-lg font-semibold text-gray-600 dark:text-white mb-1">No Available Chamas</h3>
+            <p class="text-sm text-gray-400">Check back soon for new groups to join.</p>
+        </div>
+        {% endif %}
+
+    </section>
+
+</div>
+
+<!-- CTA Section -->
+<section class="py-16 bg-sand dark:bg-gray-800">
+    <div class="max-w-3xl mx-auto px-4 text-center">
+        <h2 class="font-display text-3xl lg:text-4xl font-bold text-charcoal dark:text-white mb-4">Can't Find a Suitable Group?</h2>
+        <p class="text-muted dark:text-gray-300 mb-8">
+            Create your own Chama, invite friends and family, and start saving towards your dream product today.
+        </p>
+        <a href="/create-chama" class="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-bold rounded-full shadow-lg hover:bg-accent-dark transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            Create One Now
+        </a>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // --- DOM Elements ---
+    const searchInput = document.getElementById('chama-search');
+    const categorySelect = document.getElementById('filter-category');
+    const statusSelect = document.getElementById('filter-status');
+    const grid = document.getElementById('chama-grid');
+    const cards = document.querySelectorAll('.chama-card');
+    const resultCount = document.getElementById('result-count');
+
+    // --- Fuzzy Search Logic ---
+    function fuzzyMatch(str, pattern) {
+        str = str.toLowerCase();
+        pattern = pattern.toLowerCase();
+        let patternIdx = 0;
+        let strIdx = 0;
+        while (patternIdx < pattern.length && strIdx < str.length) {
+            if (pattern[patternIdx] === str[strIdx]) patternIdx++;
+            strIdx++;
+        }
+        return patternIdx === pattern.length;
+    }
+
+    // --- Filter Function ---
+    function applyFilters() {
+        const searchTerm = searchInput.value;
+        const category = categorySelect.value;
+        const status = statusSelect.value;
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name');
+            const cardCategory = card.getAttribute('data-category');
+            const cardStatus = card.getAttribute('data-status');
+
+            const matchSearch = fuzzyMatch(name, searchTerm);
+            const matchCategory = category === 'all' || cardCategory.toLowerCase().includes(category.toLowerCase());
+            const matchStatus = status === 'all' || cardStatus.toLowerCase() === status.toLowerCase();
+
+            if (matchSearch && matchCategory && matchStatus) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        if(resultCount) resultCount.textContent = visibleCount;
+    }
+
+    // --- Event Listeners ---
+    searchInput.addEventListener('input', applyFilters);
+    categorySelect.addEventListener('change', applyFilters);
+    statusSelect.addEventListener('change', applyFilters);
+</script>
+{% endblock %}

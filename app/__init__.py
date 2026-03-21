@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 import flask_migrate
 from flask_sqlalchemy import SQLAlchemy
 
@@ -21,5 +21,10 @@ def create_app():
     # Main (public) routes
     from app.main.routes import main_bp
     app.register_blueprint(main_bp)
+    
+    @app.context_processor
+    def inject_cart_count():
+        cart = session.get("cart", [])
+        return dict(cart_count=len(cart))
 
     return app

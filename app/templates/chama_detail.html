@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}TV Chama - Cliffine Collection{% endblock %}
+{% block title %}{{ chama.name }} - Cliffine Collection{% endblock %}
 
 {% block content %}
 
@@ -10,9 +10,9 @@
         <nav class="flex items-center space-x-2 text-sm text-muted dark:text-gray-400">
             <a href="/" class="hover:text-accent transition-colors">Home</a>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <a href="/chamas" class="hover:text-accent transition-colors">Chamas</a>
+            <a href="{{ url_for('main.chama') }}" class="hover:text-accent transition-colors">Chamas</a>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <span class="font-medium text-charcoal dark:text-white">Smart TV Chama</span>
+            <span class="font-medium text-charcoal dark:text-white">{{ chama.name }}</span>
         </nav>
     </div>
 </div>
@@ -25,8 +25,8 @@
                 <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </div>
             <div>
-                <h1 class="font-display text-3xl lg:text-4xl font-bold text-primary dark:text-white">Chama Details</h1>
-                <p class="text-muted dark:text-gray-400">Join a group purchase for this product</p>
+                <h1 class="font-display text-3xl lg:text-4xl font-bold text-primary dark:text-white">{{ chama.name }}</h1>
+                <p class="text-muted dark:text-gray-400">{{ chama.category or 'Group Savings' }}</p>
             </div>
         </div>
     </div>
@@ -41,33 +41,41 @@
             <div class="space-y-6">
                 <!-- Main Image -->
                 <div class="aspect-square bg-sand dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-lg">
-                    <img src="https://placehold.co/800x800/581C87/FFFFFF?text=43+Smart+TV" alt="43 Smart TV" class="w-full h-full object-cover">
+                    {% if chama.cover_image %}
+                        <img src="{{ url_for('static', filename=chama.cover_image) }}" alt="{{ chama.name }}" class="w-full h-full object-cover">
+                    {% elif chama.product and chama.product.images %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ chama.product.images[0].image_url) }}" alt="{{ chama.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <img src="https://placehold.co/800x800/581C87/FFFFFF?text=Chama+Image" alt="{{ chama.name }}" class="w-full h-full object-cover">
+                    {% endif %}
                 </div>
                 
-                <!-- Thumbnails -->
+                <!-- Thumbnails (Optional: If product has multiple images) -->
+                {% if chama.product and chama.product.images|length > 1 %}
                 <div class="grid grid-cols-4 gap-3">
-                    <div class="aspect-square bg-sand dark:bg-gray-800 rounded-lg overflow-hidden border-2 border-accent">
-                        <img src="https://placehold.co/200x200/581C87/FFFFFF?text=View+1" class="w-full h-full object-cover">
-                    </div>
+                    {% for image in chama.product.images[:4] %}
                     <div class="aspect-square bg-sand dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <img src="https://placehold.co/200x200/3B0D5D/D4AF37?text=View+2" class="w-full h-full object-cover">
+                        <img src="{{ url_for('static', filename='uploads/' ~ image.image_url) }}" class="w-full h-full object-cover hover:opacity-80 cursor-pointer transition-opacity">
                     </div>
-                    <div class="aspect-square bg-sand dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <img src="https://placehold.co/200x200/581C87/FFFFFF?text=View+3" class="w-full h-full object-cover">
-                    </div>
-                    <div class="aspect-square bg-sand dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <img src="https://placehold.co/200x200/3B0D5D/D4AF37?text=View+4" class="w-full h-full object-cover">
-                    </div>
+                    {% endfor %}
                 </div>
+                {% endif %}
 
-                <!-- Product Info Card (Mobile Only - shows above details on desktop) -->
+                <!-- Product Info Card (Mobile Only) -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 lg:hidden">
-                    <span class="text-xs font-semibold text-accent uppercase tracking-wider">Electronics</span>
-                    <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white mt-1">43" Smart Android TV</h2>
-                    <p class="text-muted dark:text-gray-400 mt-2 text-sm">Full HD, Built-in WiFi, Netflix & YouTube. The perfect living room companion.</p>
+                    <span class="text-xs font-semibold text-accent uppercase tracking-wider">{{ chama.category or 'General' }}</span>
+                    <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white mt-1">{{ chama.product.name if chama.product else chama.name }}</h2>
+                    <p class="text-muted dark:text-gray-400 mt-2 text-sm">{{ chama.description }}</p>
                     <div class="flex items-center gap-2 mt-4">
-                        <span class="px-3 py-1 bg-primary text-white text-xs font-bold rounded-full">Chama Available</span>
-                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-bold rounded-full">In Stock</span>
+                        <span class="px-3 py-1 
+                            {% if chama.status == 'open' %}
+                                bg-green-100 text-green-700
+                            {% elif chama.status == 'full' %}
+                                bg-red-100 text-red-700
+                            {% else %}
+                                bg-gray-100 text-gray-700
+                            {% endif %} 
+                            text-xs font-bold rounded-full capitalize">{{ chama.status }}</span>
                     </div>
                 </div>
             </div>
@@ -77,138 +85,139 @@
                 
                 <!-- Product Info (Desktop Only) -->
                 <div class="hidden lg:block bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-                    <span class="text-xs font-semibold text-accent uppercase tracking-wider">Electronics</span>
-                    <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white mt-1">43" Smart Android TV</h2>
-                    <p class="text-muted dark:text-gray-400 mt-2 text-sm">Full HD, Built-in WiFi, Netflix & YouTube. The perfect living room companion.</p>
+                    <span class="text-xs font-semibold text-accent uppercase tracking-wider">{{ chama.category or 'General' }}</span>
+                    <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white mt-1">{{ chama.product.name if chama.product else chama.name }}</h2>
+                    <p class="text-muted dark:text-gray-400 mt-2 text-sm">{{ chama.description }}</p>
                     <div class="flex items-center gap-2 mt-4">
-                        <span class="px-3 py-1 bg-primary text-white text-xs font-bold rounded-full">Chama Available</span>
+                         <span class="px-3 py-1 
+                            {% if chama.status == 'open' %}
+                                bg-green-100 text-green-700
+                            {% elif chama.status == 'full' %}
+                                bg-red-100 text-red-700
+                            {% else %}
+                                bg-gray-100 text-gray-700
+                            {% endif %} 
+                            text-xs font-bold rounded-full capitalize">{{ chama.status }}</span>
                     </div>
                 </div>
 
                 <!-- Chama Progress Card -->
                 <div class="bg-primary dark:bg-gray-800 p-6 rounded-xl shadow-lg text-white">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-lg">Chama Progress</h3>
-                        <span class="px-3 py-1 bg-accent text-white text-xs font-bold rounded-full">Active</span>
+                        <h3 class="font-bold text-lg">Group Progress</h3>
+                        <span class="px-3 py-1 bg-accent text-white text-xs font-bold rounded-full capitalize">{{ chama.status }}</span>
                     </div>
+                    
+                    {% set current_members = chama.members|length %}
+                    {% set max_members = chama.max_members if chama.max_members else 10 %}
+                    {% set progress_percent = (current_members / max_members * 100)|round|int %}
                     
                     <!-- Progress Bar -->
                     <div class="mb-4">
                         <div class="flex justify-between text-sm mb-1">
-                            <span>Contributions Collected</span>
-                            <span class="font-bold">70%</span>
+                            <span>Members Joined</span>
+                            <span class="font-bold">{{ progress_percent }}%</span>
                         </div>
                         <div class="w-full bg-white/20 rounded-full h-3">
-                            <div class="bg-accent h-3 rounded-full transition-all duration-500" style="width: 70%"></div>
+                            <div class="bg-accent h-3 rounded-full transition-all duration-500" style="width: {{ progress_percent }}%"></div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                            <p class="text-gray-300">Total Value</p>
-                            <p class="text-xl font-bold text-accent">KES 32,500</p>
+                            <p class="text-gray-300">Target Amount</p>
+                            <p class="text-xl font-bold text-accent">KES {{ "{:,.0f}".format(chama.target_amount) }}</p>
                         </div>
                         <div>
-                            <p class="text-gray-300">Remaining</p>
-                            <p class="text-xl font-bold">KES 9,750</p>
+                            <p class="text-gray-300">Slots Remaining</p>
+                            <p class="text-xl font-bold">{{ max_members - current_members }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- 4. Chama Details Section -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
-                    <h3 class="font-display text-xl font-bold text-charcoal dark:text-white border-b border-gray-100 dark:border-gray-700 pb-3">Chama Terms & Rules</h3>
+                    <h3 class="font-display text-xl font-bold text-charcoal dark:text-white border-b border-gray-100 dark:border-gray-700 pb-3">Terms & Schedule</h3>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm">
                         <div class="flex items-center gap-3">
                             <svg class="w-5 h-5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             <div>
-                                <p class="text-muted dark:text-gray-400">Contribution Amount</p>
-                                <p class="font-bold text-charcoal dark:text-white">KES 3,250 / Month</p>
+                                <p class="text-muted dark:text-gray-400">Contribution</p>
+                                <p class="font-bold text-charcoal dark:text-white">KES {{ "{:,.0f}".format(chama.contribution_amount) }} / {{ chama.contribution_frequency or 'Month' }}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <svg class="w-5 h-5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             <div>
-                                <p class="text-muted dark:text-gray-400">Duration</p>
-                                <p class="font-bold text-charcoal dark:text-white">10 Months</p>
+                                <p class="text-muted dark:text-gray-400">Deadline</p>
+                                <p class="font-bold text-charcoal dark:text-white">{{ chama.deadline.strftime('%b %d, %Y') if chama.deadline else 'Open' }}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <svg class="w-5 h-5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             <div>
                                 <p class="text-muted dark:text-gray-400">Participants</p>
-                                <p class="font-bold text-charcoal dark:text-white">7 / 10 Slots</p>
+                                <p class="font-bold text-charcoal dark:text-white">{{ current_members }} / {{ max_members }} Slots</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <svg class="w-5 h-5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             <div>
                                 <p class="text-muted dark:text-gray-400">Start Date</p>
-                                <p class="font-bold text-charcoal dark:text-white">Oct 1, 2023</p>
+                                <p class="font-bold text-charcoal dark:text-white">{{ chama.start_date.strftime('%b %d, %Y') if chama.start_date else 'Flexible' }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 7. Payment Info -->
+                {% if chama.accepts_mpesa and chama.mpesa_number %}
                 <div class="bg-accent/10 border border-accent/30 p-6 rounded-xl">
                     <h3 class="font-bold text-primary dark:text-white mb-3 flex items-center gap-2">
                         <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                        Payment Instructions
+                        Payment Instructions (M-Pesa)
                     </h3>
                     <p class="text-sm text-muted dark:text-gray-300 mb-4">Use the details below to make your contribution.</p>
                     <div class="bg-white dark:bg-gray-900 p-4 rounded-lg space-y-2 font-mono text-sm">
-                        <p><span class="text-muted">Paybill:</span> <span class="font-bold text-charcoal dark:text-white text-lg">522522</span></p>
-                        <p><span class="text-muted">Account:</span> <span class="font-bold text-charcoal dark:text-white text-lg">6339086</span></p>
+                        <p><span class="text-muted">{{ chama.mpesa_type or 'Paybill' }}:</span> <span class="font-bold text-charcoal dark:text-white text-lg">{{ chama.mpesa_number }}</span></p>
+                        {% if chama.mpesa_account %}
+                        <p><span class="text-muted">Account:</span> <span class="font-bold text-charcoal dark:text-white text-lg">{{ chama.mpesa_account }}</span></p>
+                        {% endif %}
                     </div>
-                    <p class="text-xs text-muted dark:text-gray-400 mt-3">Please use your registered phone number as the account number for easier tracking.</p>
+                    <p class="text-xs text-muted dark:text-gray-400 mt-3">Please use your registered phone number for easier tracking.</p>
                 </div>
+                {% endif %}
 
-                <!-- 5. How to Join Section -->
+                <!-- 5. Rules / How to Join Section -->
+                {% if chama.rules %}
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-                    <h3 class="font-display text-xl font-bold text-charcoal dark:text-white mb-4">How to Join</h3>
-                    <ul class="space-y-4">
-                        <li class="flex items-start gap-3">
-                            <div class="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</div>
-                            <div>
-                                <p class="font-medium text-charcoal dark:text-white">Click "Join Chama"</p>
-                                <p class="text-sm text-muted dark:text-gray-400">Register your interest with your phone number.</p>
-                            </div>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <div class="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</div>
-                            <div>
-                                <p class="font-medium text-charcoal dark:text-white">Pay Initial Contribution</p>
-                                <p class="text-sm text-muted dark:text-gray-400">Send KES 3,250 via Paybill 522522.</p>
-                            </div>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <div class="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</div>
-                            <div>
-                                <p class="font-medium text-charcoal dark:text-white">Track Progress</p>
-                                <p class="text-sm text-muted dark:text-gray-400">Monitor your contributions in your dashboard.</p>
-                            </div>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <div class="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">4</div>
-                            <div>
-                                <p class="font-medium text-charcoal dark:text-white">Receive Product</p>
-                                <p class="text-sm text-muted dark:text-gray-400">Get your TV after completing all payments.</p>
-                            </div>
-                        </li>
-                    </ul>
+                    <h3 class="font-display text-xl font-bold text-charcoal dark:text-white mb-4">Rules & Guidelines</h3>
+                    <div class="prose prose-sm dark:prose-invert max-w-none text-muted dark:text-gray-300">
+                        {{ chama.rules | safe }}
+                    </div>
                 </div>
+                {% endif %}
 
                 <!-- Actions -->
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <button class="flex-1 py-3.5 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-accent-dark transition-colors flex items-center justify-center gap-2">
+                    {% if chama.status == 'open' %}
+                    <!-- UPDATED: Changed button to an anchor tag linking to the join page -->
+                    <a href="{{ url_for('main.join_chama', chama_id=chama.id) }}" class="flex-1 py-3.5 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-accent-dark transition-colors flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                         Join This Chama
+                    </a>
+                    {% else %}
+                    <button disabled class="flex-1 py-3.5 bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 font-bold rounded-xl shadow-lg cursor-not-allowed flex items-center justify-center gap-2">
+                        {{ chama.status|capitalize }}
                     </button>
-                    <a href="/product/smart-tv" class="flex-1 py-3.5 border border-gray-200 dark:border-gray-600 text-charcoal dark:text-white font-medium rounded-xl text-center hover:bg-sand dark:hover:bg-gray-700 transition-colors">
+                    {% endif %}
+                    
+                    {% if chama.product %}
+                    <a href="{{ url_for('main.product_detail', id=chama.product.id) }}" class="flex-1 py-3.5 border border-gray-200 dark:border-gray-600 text-charcoal dark:text-white font-medium rounded-xl text-center hover:bg-sand dark:hover:bg-gray-700 transition-colors">
                         View Product
                     </a>
+                    {% endif %}
                 </div>
 
                 <!-- Delivery Info -->
@@ -222,73 +231,13 @@
     </div>
 </section>
 
-<!-- 8. Related Products / Chamas Section -->
-<section class="py-12 bg-sand dark:bg-gray-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white">Other Active Chamas</h2>
-            <a href="/chamas" class="text-accent font-semibold hover:underline text-sm">View All &rarr;</a>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <!-- Chama Card 1 -->
-            <div class="group bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden">
-                <div class="relative overflow-hidden">
-                    <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Sofa" alt="Sofa" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
-                    <span class="absolute top-2 left-2 px-2 py-1 bg-primary text-white text-xs font-bold rounded">Chama</span>
-                </div>
-                <div class="p-4">
-                    <h3 class="font-bold text-charcoal dark:text-white truncate">Sofa Set Chama</h3>
-                    <p class="text-sm text-muted dark:text-gray-400">KES 2,000/mo</p>
-                </div>
-            </div>
-
-            <!-- Chama Card 2 -->
-            <div class="group bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden">
-                <div class="relative overflow-hidden">
-                    <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Phone" alt="Phone" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
-                    <span class="absolute top-2 left-2 px-2 py-1 bg-primary text-white text-xs font-bold rounded">Chama</span>
-                </div>
-                <div class="p-4">
-                    <h3 class="font-bold text-charcoal dark:text-white truncate">Smartphone Chama</h3>
-                    <p class="text-sm text-muted dark:text-gray-400">KES 5,000/mo</p>
-                </div>
-            </div>
-
-            <!-- Chama Card 3 -->
-            <div class="group bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden">
-                <div class="relative overflow-hidden">
-                    <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Speaker" alt="Speaker" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
-                    <span class="absolute top-2 left-2 px-2 py-1 bg-primary text-white text-xs font-bold rounded">Chama</span>
-                </div>
-                <div class="p-4">
-                    <h3 class="font-bold text-charcoal dark:text-white truncate">Sound System Chama</h3>
-                    <p class="text-sm text-muted dark:text-gray-400">KES 1,500/mo</p>
-                </div>
-            </div>
-
-            <!-- Chama Card 4 -->
-            <div class="group bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden">
-                <div class="relative overflow-hidden">
-                    <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Fridge" alt="Fridge" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
-                    <span class="absolute top-2 left-2 px-2 py-1 bg-primary text-white text-xs font-bold rounded">Chama</span>
-                </div>
-                <div class="p-4">
-                    <h3 class="font-bold text-charcoal dark:text-white truncate">Fridge Chama</h3>
-                    <p class="text-sm text-muted dark:text-gray-400">KES 4,000/mo</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
 <!-- 9. Call to Action -->
-<section class="py-12 bg-white dark:bg-gray-900">
+<section class="py-12 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
     <div class="max-w-4xl mx-auto px-4 text-center">
         <h2 class="font-display text-2xl lg:text-3xl font-bold text-charcoal dark:text-white mb-4">Questions About This Chama?</h2>
         <p class="text-muted dark:text-gray-400 mb-6">Our team is ready to help you understand the process and get started.</p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="https://wa.me/254700000000?text=Hi,%20I'm%20interested%20in%20the%20TV%20Chama" target="_blank" class="px-8 py-3 bg-green-500 text-white font-bold rounded-full shadow-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
+            <a href="https://wa.me/254700000000?text=Hi,%20I'm%20interested%20in%20the%20{{ chama.name }}" target="_blank" class="px-8 py-3 bg-green-500 text-white font-bold rounded-full shadow-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 Chat on WhatsApp
             </a>
@@ -299,4 +248,8 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+{# Removed the old joinChama script as it is now a direct link #}
 {% endblock %}

@@ -155,22 +155,36 @@ class Order(db.Model):
 
     order_number = db.Column(db.String(100), unique=True)
 
+    # Customer info (ADD THIS)
+    full_name = db.Column(db.String(150))
+    email = db.Column(db.String(150))
+    phone = db.Column(db.String(20))
+
+    # Pricing
     total_amount = db.Column(db.Float)
+    delivery_fee = db.Column(db.Float, default=0)
 
+    # Status
     status = db.Column(db.String(50), default="pending")
-    # pending, processing, shipped, delivered, cancelled
-
     payment_status = db.Column(db.String(50), default="pending")
 
+    # Delivery
     shipping_address = db.Column(db.Text)
     city = db.Column(db.String(100))
     country = db.Column(db.String(100))
+    delivery_method = db.Column(db.String(50))  # ADD THIS
+    delivery_location = db.Column(db.String(150))  # e.g. nairobi-cbd
+    delivery_fee = db.Column(db.Float, default=0)
+    total_amount = db.Column(db.Float)
+
+    # Extra
+    notes = db.Column(db.Text)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
     items = db.relationship("OrderItem", backref="order", lazy=True)
     payments = db.relationship("Payment", backref="order", lazy=True)
-
 
 # ===============================
 # ORDER ITEMS

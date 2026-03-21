@@ -30,8 +30,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Form Action -->
-        <form action="/checkout/process" method="POST" id="checkout-form">
-            
+        <form action="{{ url_for('main.checkout_process') }}" method="POST" id="checkout-form">
+
             <div class="grid lg:grid-cols-3 gap-8 lg:gap-12">
                 
                 <!-- Left Column: Forms -->
@@ -54,25 +54,11 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Phone Number *</label>
-                                <input type="tel" name="phone" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="0712345678">
+                                <input type="tel" name="phone" id="phone-input" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="0712345678">
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Delivery Address *</label>
                                 <input type="text" name="address" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="Street name, Building, House No.">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">City / Region *</label>
-                                <select name="city" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-charcoal dark:text-white">
-                                    <option value="">Select Location</option>
-                                    <option value="Nairobi">Nairobi</option>
-                                    <option value="Kericho">Kericho</option>
-                                    <option value="Bomet">Bomet</option>
-                                    <option value="Nakuru">Nakuru</option>
-                                    <option value="Eldoret">Eldoret</option>
-                                    <option value="Mombasa">Mombasa</option>
-                                    <option value="Kisumu">Kisumu</option>
-                                    <option value="Other">Other (Specify in Notes)</option>
-                                </select>
                             </div>
                         </div>
                     </div>
@@ -81,45 +67,123 @@
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-6 flex items-center gap-2">
                             <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-                            Delivery Method
+                            Delivery Location
                         </h2>
                         
-                        <div class="space-y-3">
-                            <!-- Option 1 -->
-                            <label class="relative flex items-center justify-between p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 border-transparent hover:border-accent transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <input type="radio" name="delivery_method" value="pickup" class="w-5 h-5 text-accent focus:ring-primary" checked onchange="updateDeliveryFee(0)">
-                                    <div>
-                                        <span class="font-medium text-charcoal dark:text-white">Pickup (Nairobi)</span>
-                                        <p class="text-xs text-muted dark:text-gray-400">Pick up from our Nairobi point</p>
-                                    </div>
-                                </div>
-                                <span class="font-bold text-green-600">FREE</span>
-                            </label>
+                        <div class="space-y-4">
+                            <!-- Location Dropdown -->
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Select Your Town / Location *</label>
+                                <select name="delivery_location" id="delivery-location" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-charcoal dark:text-white" onchange="fetchCalculation()">
+                                    <option value="">Select Location</option>
+                                    
+                                    <!-- Shop Pickup (Free) -->
+                                    <optgroup label="--- SHOP PICKUP (FREE) ---">
+                                        <option value="pickup-kericho">Kericho Town (Pickup at Shop)</option>
+                                        <option value="pickup-bomet">Bomet Town (Pickup at Shop)</option>
+                                    </optgroup>
 
-                            <!-- Option 2 -->
-                            <label class="relative flex items-center justify-between p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 border-transparent hover:border-accent transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <input type="radio" name="delivery_method" value="local" class="w-5 h-5 text-accent focus:ring-primary" onchange="updateDeliveryFee(300)">
-                                    <div>
-                                        <span class="font-medium text-charcoal dark:text-white">Local Delivery (Kericho/Bomet)</span>
-                                        <p class="text-xs text-muted dark:text-gray-400">Delivered to your doorstep</p>
-                                    </div>
-                                </div>
-                                <span class="font-bold text-charcoal dark:text-white">KES 300</span>
-                            </label>
+                                    <!-- Nairobi -->
+                                    <optgroup label="--- NAIROBI AREA ---">
+                                        <option value="nairobi-cbd">Nairobi CBD</option>
+                                        <option value="nairobi-westlands">Westlands</option>
+                                        <option value="nairobi-kilimani">Kilimani</option>
+                                        <option value="nairobi-karen">Karen</option>
+                                        <option value="nairobi-langata">Langata</option>
+                                        <option value="nairobi-embakasi">Embakasi</option>
+                                        <option value="nairobi-juja">Juja</option>
+                                        <option value="nairobi-ruiru">Ruiru</option>
+                                        <option value="nairobi-kitengela">Kitengela</option>
+                                        <option value="nairobi-athiriver">Athi River</option>
+                                        <option value="nairobi-syokimau">Syokimau</option>
+                                    </optgroup>
 
-                            <!-- Option 3 -->
-                            <label class="relative flex items-center justify-between p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 border-transparent hover:border-accent transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <input type="radio" name="delivery_method" value="countrywide" class="w-5 h-5 text-accent focus:ring-primary" onchange="updateDeliveryFee(500)">
-                                    <div>
-                                        <span class="font-medium text-charcoal dark:text-white">Countrywide Delivery</span>
-                                        <p class="text-xs text-muted dark:text-gray-400">Outside local areas (1-3 days)</p>
-                                    </div>
-                                </div>
-                                <span class="font-bold text-charcoal dark:text-white">KES 500</span>
-                            </label>
+                                    <!-- Central Region -->
+                                    <optgroup label="--- CENTRAL REGION ---">
+                                        <option value="thika">Thika</option>
+                                        <option value="kiambu">Kiambu</option>
+                                        <option value="nyeri">Nyeri</option>
+                                        <option value="muranga">Murang'a</option>
+                                        <option value="kieni">Kieni</option>
+                                        <option value="karatina">Karatina</option>
+                                        <option value="kerugoya">Kerugoya</option>
+                                        <option value="nanyuki">Nanyuki</option>
+                                        <option value="nyahururu">Nyahururu</option>
+                                        <option value="maragua">Maragua</option>
+                                    </optgroup>
+
+                                    <!-- Rift Valley -->
+                                    <optgroup label="--- RIFT VALLEY ---">
+                                        <option value="nakuru">Nakuru</option>
+                                        <option value="eldoret">Eldoret</option>
+                                        <option value="naivasha">Naivasha</option>
+                                        <option value="narok">Narok</option>
+                                        <option value="kapsabet">Kapsabet</option>
+                                        <option value="kitale">Kitale</option>
+                                        <option value="litein">Litein</option>
+                                        <option value="sotik">Sotik</option>
+                                        <option value="kaplong">Kaplong</option>
+                                        <option value="tenwek">Tenwek</option>
+                                    </optgroup>
+
+                                    <!-- Nyanza -->
+                                    <optgroup label="--- NYANZA ---">
+                                        <option value="kisumu">Kisumu</option>
+                                        <option value="kisii">Kisii</option>
+                                        <option value="homa-bay">Homa Bay</option>
+                                        <option value="migori">Migori</option>
+                                        <option value="siaya">Siaya</option>
+                                        <option value="bondoe">Bondo</option>
+                                        <option value="oyugis">Oyugis</option>
+                                    </optgroup>
+
+                                    <!-- Western -->
+                                    <optgroup label="--- WESTERN ---">
+                                        <option value="kakamega">Kakamega</option>
+                                        <option value="bungoma">Bungoma</option>
+                                        <option value="busia">Busia</option>
+                                        <option value="vihiga">Vihiga</option>
+                                        <option value="webuye">Webuye</option>
+                                        <option value="mumias">Mumias</option>
+                                    </optgroup>
+
+                                    <!-- Coast -->
+                                    <optgroup label="--- COAST ---">
+                                        <option value="mombasa">Mombasa</option>
+                                        <option value="malindi">Malindi</option>
+                                        <option value="diani">Diani</option>
+                                        <option value="ukunda">Ukunda</option>
+                                        <option value="kwale">Kwale</option>
+                                        <option value="kilifi">Kilifi</option>
+                                        <option value="voi">Voi</option>
+                                    </optgroup>
+
+                                    <!-- Eastern -->
+                                    <optgroup label="--- EASTERN ---">
+                                        <option value="machakos">Machakos</option>
+                                        <option value="makueni">Makueni (Wote)</option>
+                                        <option value="kitui">Kitui</option>
+                                        <option value="meru">Meru</option>
+                                        <option value="embu">Embu</option>
+                                        <option value="chuka">Chuka</option>
+                                    </optgroup>
+
+                                    <!-- North Eastern -->
+                                    <optgroup label="--- NORTH EASTERN ---">
+                                        <option value="garissa">Garissa</option>
+                                        <option value="wajir">Wajir</option>
+                                        <option value="mandera">Mandera</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <!-- Delivery Info Note -->
+                            <div id="delivery-notes-section" class="hidden">
+                                <p class="text-sm text-green-600 dark:text-green-400 font-medium p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                    <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    You have selected <strong>Pickup at Shop</strong>. No delivery fee will be charged.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -131,42 +195,44 @@
                         </h2>
 
                         <div class="space-y-4">
-                            <!-- Payment Option 1 -->
+                            <!-- Payment Option 1: STK Push -->
                             <div>
-                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" onclick="showPaymentDetails('shop')">
-                                    <input type="radio" name="payment_method" value="shop" checked class="w-5 h-5 text-accent">
-                                    <span class="font-medium text-charcoal dark:text-white">Shop Payment</span>
+                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" onclick="showPaymentDetails('stk')">
+                                    <input type="radio" name="payment_method" value="stk_push" checked class="w-5 h-5 text-accent">
+                                    <span class="font-medium text-charcoal dark:text-white">M-Pesa STK Push (Lipa Na M-Pesa)</span>
                                 </label>
-                                <div id="shop-details" class="mt-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                                    <p class="font-bold text-green-800 dark:text-green-300">Pay via M-Pesa Paybill</p>
-                                    <p class="text-sm text-green-700 dark:text-green-400">Paybill: <span class="font-mono font-bold">714888</span></p>
-                                    <p class="text-sm text-green-700 dark:text-green-400">Account: <span class="font-mono font-bold">196856</span></p>
-                                    <p class="text-sm text-green-700 dark:text-green-400">Name: Cliphine Chepkoech</p>
+                                <div id="stk-details" class="mt-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                                    <p class="font-bold text-green-800 dark:text-green-300 mb-3">Instant Payment</p>
+                                    
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm text-green-700 dark:text-green-400 mb-1">Phone Number</label>
+                                            <input type="tel" name="stk_phone" id="stk-phone-input" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="0712345678">
+                                        </div>
+                                        
+                                        <button type="button" id="stk-push-btn" onclick="sendStkPush()" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                            <span id="stk-btn-text">Pay Now</span>
+                                        </button>
+
+                                        <div id="stk-status" class="text-sm text-center hidden"></div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Payment Option 2 -->
+                            <!-- Payment Option 2: Paybill -->
                             <div>
-                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" onclick="showPaymentDetails('chama')">
-                                    <input type="radio" name="payment_method" value="chama" class="w-5 h-5 text-accent">
-                                    <span class="font-medium text-charcoal dark:text-white">Chama Payment</span>
+                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" onclick="showPaymentDetails('manual')">
+                                    <input type="radio" name="payment_method" value="manual" class="w-5 h-5 text-accent">
+                                    <span class="font-medium text-charcoal dark:text-white">M-Pesa Paybill (Manual)</span>
                                 </label>
-                                <div id="chama-details" class="mt-2 p-4 bg-accent/10 border border-accent/30 rounded-lg hidden">
-                                    <p class="font-bold text-primary dark:text-white">Pay Chama Contribution</p>
-                                    <p class="text-sm text-muted dark:text-gray-300">Paybill: <span class="font-mono font-bold text-charcoal dark:text-white">522522</span></p>
-                                    <p class="text-sm text-muted dark:text-gray-300">Account: <span class="font-mono font-bold text-charcoal dark:text-white">6339086</span></p>
-                                </div>
-                            </div>
-
-                            <!-- Payment Option 3 -->
-                            <div>
-                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" onclick="showPaymentDetails('lipa')">
-                                    <input type="radio" name="payment_method" value="lipa" class="w-5 h-5 text-accent">
-                                    <span class="font-medium text-charcoal dark:text-white">Lipa Pole Pole</span>
-                                </label>
-                                <div id="lipa-details" class="mt-2 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hidden">
-                                    <p class="font-bold text-blue-800 dark:text-blue-300">Pay Installment</p>
-                                    <p class="text-sm text-blue-700 dark:text-blue-400">Buy Goods Till: <span class="font-mono font-bold">4106106</span></p>
+                                <div id="manual-details" class="mt-2 p-4 bg-accent/10 border border-accent/30 rounded-lg hidden">
+                                    <p class="font-bold text-primary dark:text-white">Pay via M-Pesa Paybill</p>
+                                    <div class="mt-3 space-y-1">
+                                        <p class="text-sm text-muted dark:text-gray-300">Business Number: <span class="font-mono font-bold text-charcoal dark:text-white">714888</span></p>
+                                        <p class="text-sm text-muted dark:text-gray-300">Account Number: <span class="font-mono font-bold text-charcoal dark:text-white">196856</span></p>
+                                    </div>
+                                    <p class="text-xs text-red-500 mt-3 font-medium">Note: Order will be processed after payment confirmation.</p>
                                 </div>
                             </div>
                         </div>
@@ -175,7 +241,7 @@
                     <!-- 7. Order Notes -->
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-4">Order Notes (Optional)</h2>
-                        <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="Special instructions for delivery, e.g., 'Please call before arriving'"></textarea>
+                        <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="Special instructions for delivery..."></textarea>
                     </div>
 
                     <!-- 9. Terms and Conditions -->
@@ -195,44 +261,39 @@
                         
                         <!-- Items List -->
                         <div class="space-y-4 mb-6">
-                            <!-- Item 1 -->
-                            <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img src="https://placehold.co/100x100/581C87/FFFFFF?text=TV" alt="Product" class="w-full h-full object-cover">
+                            {% if products %}
+                                {% for product in products %}
+                                <div class="flex items-center gap-4">
+                                    <div class="w-16 h-16 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+                                        <img src="{{ product.image if product.image else 'https://placehold.co/100x100/581C87/FFFFFF?text=Item' }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-medium text-charcoal dark:text-white text-sm">{{ product.name }}</h3>
+                                        <p class="text-xs text-muted">Qty: 1</p>
+                                    </div>
+                                   <span class="font-bold text-charcoal dark:text-white text-sm">
+                                    KES {{ "{:,.0f}".format(product.price) }}
+                                   </span>
                                 </div>
-                                <div class="flex-1">
-                                    <h3 class="font-medium text-charcoal dark:text-white text-sm">43" Smart Android TV</h3>
-                                    <p class="text-xs text-muted">Qty: 1</p>
-                                </div>
-                                <span class="font-bold text-charcoal dark:text-white text-sm">KES 32,500</span>
-                            </div>
-
-                            <!-- Item 2 -->
-                            <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img src="https://placehold.co/100x100/3B0D5D/D4AF37?text=Bag" alt="Product" class="w-full h-full object-cover">
-                                </div>
-                                <div class="flex-1">
-                                    <h3 class="font-medium text-charcoal dark:text-white text-sm">Leather Handbag</h3>
-                                    <p class="text-xs text-muted">Qty: 1</p>
-                                </div>
-                                <span class="font-bold text-charcoal dark:text-white text-sm">KES 4,200</span>
-                            </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-sm text-muted text-center py-4">Your cart is empty.</p>
+                            {% endif %}
                         </div>
 
                         <!-- Totals -->
                         <div class="space-y-3 border-t border-gray-100 dark:border-gray-700 pt-4">
                             <div class="flex justify-between text-muted dark:text-gray-300 text-sm">
                                 <span>Subtotal</span>
-                                <span>KES 36,700</span>
+                                <span id="subtotal-display">KES {{ "{:,.0f}".format(subtotal) }}</span>
                             </div>
                             <div class="flex justify-between text-muted dark:text-gray-300 text-sm">
                                 <span>Delivery Fee</span>
-                                <span id="delivery-fee-display">KES 0</span>
+                                <span id="delivery-fee-display">Calculating...</span>
                             </div>
                             <div class="flex justify-between text-lg font-bold text-charcoal dark:text-white border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
                                 <span>Total</span>
-                                <span id="total-amount">KES 36,700</span>
+                                <span id="total-amount">KES {{ "{:,.0f}".format(subtotal) }}</span>
                             </div>
                         </div>
 
@@ -256,40 +317,116 @@
 
 {% block scripts %}
 <script>
-    // Initial subtotal (calculated from items)
-    const subtotal = 36700;
-    let deliveryFee = 0;
+    // Variables to store current state
+    let currentTotal = {{ subtotal if subtotal else 0 }};
+    let currentDelivery = 0;
 
-    // Function to update delivery fee
-    function updateDeliveryFee(amount) {
-        deliveryFee = amount;
-        updateTotals();
-    }
+    // Function to request calculation from Backend
+    async function fetchCalculation() {
+        const locationSelect = document.getElementById('delivery-location');
+        const selectedLocation = locationSelect.value;
+        const deliveryNotesSection = document.getElementById('delivery-notes-section');
 
-    // Function to update totals display
-    function updateTotals() {
-        const total = subtotal + deliveryFee;
-        
-        // Update text content
-        document.getElementById('delivery-fee-display').textContent = deliveryFee === 0 ? 'FREE' : `KES ${deliveryFee}`;
-        document.getElementById('total-amount').textContent = `KES ${total.toLocaleString()}`;
+        // Show pickup note if applicable
+        if (selectedLocation.startsWith('pickup-')) {
+            deliveryNotesSection.classList.remove('hidden');
+        } else {
+            deliveryNotesSection.classList.add('hidden');
+        }
+
+        // If no location selected, reset
+        if (!selectedLocation) {
+            document.getElementById('delivery-fee-display').textContent = 'KES 0';
+            document.getElementById('total-amount').textContent = document.getElementById('subtotal-display').textContent;
+            return;
+        }
+
+        // Call Backend API
+        try {
+            const response = await fetch("/api/calculate_delivery", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ location: selectedLocation })
+            });
+
+            const data = await response.json();
+
+            // Update Frontend Display with Backend Data
+            currentDelivery = data.delivery_fee;
+            currentTotal = data.total;
+
+            document.getElementById('delivery-fee-display').textContent = data.delivery_fee === 0 ? 'FREE' : `KES ${data.delivery_fee.toLocaleString()}`;
+            document.getElementById('total-amount').textContent = `KES ${data.total.toLocaleString()}`;
+            
+            // Also update subtotal in case backend re-calculated it
+            document.getElementById('subtotal-display').textContent = `KES ${data.subtotal.toLocaleString()}`;
+
+        } catch (error) {
+            console.error("Error fetching calculation:", error);
+            document.getElementById('delivery-fee-display').textContent = "Error";
+        }
     }
 
     // Function to toggle payment details visibility
     function showPaymentDetails(type) {
-        // Hide all details first
-        document.getElementById('shop-details').classList.add('hidden');
-        document.getElementById('chama-details').classList.add('hidden');
-        document.getElementById('lipa-details').classList.add('hidden');
+        document.getElementById('stk-details').classList.add('hidden');
+        document.getElementById('manual-details').classList.add('hidden');
 
-        // Show selected details
-        if(type === 'shop') {
-            document.getElementById('shop-details').classList.remove('hidden');
-        } else if(type === 'chama') {
-            document.getElementById('chama-details').classList.remove('hidden');
-        } else if(type === 'lipa') {
-            document.getElementById('lipa-details').classList.remove('hidden');
+        if(type === 'stk') {
+            document.getElementById('stk-details').classList.remove('hidden');
+            const stkPhone = document.getElementById('stk-phone-input');
+            const mainPhone = document.getElementById('phone-input').value;
+            if(stkPhone.value === "" && mainPhone) {
+                stkPhone.value = mainPhone;
+            }
+        } else if(type === 'manual') {
+            document.getElementById('manual-details').classList.remove('hidden');
         }
     }
+
+    // Function to simulate sending STK Push
+    function sendStkPush() {
+        const phoneInput = document.getElementById('stk-phone-input');
+        const btn = document.getElementById('stk-push-btn');
+        const btnText = document.getElementById('stk-btn-text');
+        const statusDiv = document.getElementById('stk-status');
+        const phone = phoneInput.value;
+
+        if(!phone || phone.length < 10) {
+            alert("Please enter a valid phone number.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.classList.add('opacity-75');
+        btnText.innerHTML = 'Processing...';
+
+        // Simulate API call to initiate STK (you would create a backend route for this)
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-75');
+            btnText.innerHTML = 'Pay Now';
+            
+            statusDiv.classList.remove('hidden');
+            statusDiv.className = "text-sm text-center text-green-600 font-medium mt-2";
+            statusDiv.innerHTML = "✓ Request sent to " + phone + ". Check your phone.";
+        }, 2000);
+    }
+
+    // Sync phone numbers
+    document.getElementById('phone-input').addEventListener('change', function() {
+        const stkPhone = document.getElementById('stk-phone-input');
+        if(stkPhone.value === "") {
+            stkPhone.value = this.value;
+        }
+    });
+    
+    // Initialize on Load
+    document.addEventListener('DOMContentLoaded', function() {
+        showPaymentDetails('stk');
+        fetchCalculation(); // Run once in case location is pre-filled or to set initial state
+    });
 </script>
 {% endblock %}

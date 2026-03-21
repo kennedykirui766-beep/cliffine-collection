@@ -95,6 +95,7 @@ def add_product():
             slug = generate_unique_slug(name)
 
         category_id = request.form.get("category_id")
+        category_id = int(category_id) if category_id and category_id.isdigit() else None
         sku = request.form.get("sku")
         short_description = request.form.get("short_description")
         description = request.form.get("description")

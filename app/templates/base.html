@@ -121,14 +121,22 @@
             transform: rotate(-45deg) translate(5px, -5px);
         }
 
-        /* Announcement Bar Animation */
-        @keyframes slideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(-100%); }
+        /* Announcement Bar Animation (Right to Left Loop) */
+        /* UPDATED KEYFRAMES */
+        @keyframes slideLoop {
+            0% { transform: translateX(100%); } /* Start off-screen right */
+            100% { transform: translateX(-100%); } /* End off-screen left */
         }
         
         .announcement-slide {
-            animation: slideIn 40s linear infinite;
+            display: flex;
+            width: max-content; /* Allows the content to determine width */
+            animation: slideLoop 20s linear infinite;
+        }
+        
+        /* Pause on hover */
+        .announcement-wrapper:hover .announcement-slide {
+            animation-play-state: paused;
         }
         
         @media (prefers-reduced-motion: reduce) {
@@ -143,28 +151,12 @@
         }
         
         .sidebar-link:hover {
-            background-color: rgba(88, 28, 135, 0.1); /* Light purple opacity */
+            background-color: rgba(88, 28, 135, 0.1);
             padding-left: 1.5rem;
         }
         
         .dark .sidebar-link:hover {
             background-color: rgba(124, 58, 237, 0.2);
-        }
-
-        /* Flash Message Animation */
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        .flash-message {
-            animation: slideDown 0.4s ease forwards;
         }
 
         /* Cart Badge Pulse */
@@ -190,22 +182,17 @@
 </head>
 <body class="min-h-screen flex flex-col">
     
-    <!-- Flash Messages -->
+    <!-- Flash Messages (Static) -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div id="flash-container" class="fixed top-0 left-0 right-0 z-[100] p-4 mt-16">
-                {% for category, message in messages %}
-                    <div class="flash-message max-w-md mx-auto mb-2 px-6 py-4 rounded-lg shadow-lg {% if category == 'success' %}bg-primary text-white{% elif category == 'error' %}bg-red-600 text-white{% elif category == 'warning' %}bg-accent text-charcoal{% else %}bg-white dark:bg-gray-800 text-charcoal dark:text-white border-l-4 border-accent{% endif %}">
-                        <div class="flex items-center justify-between">
-                            <p class="font-medium">{{ message }}</p>
-                            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 opacity-70 hover:opacity-100" aria-label="Close message">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
+            <div id="flash-container" class="fixed top-0 left-0 right-0 z-[100] py-2 mt-16 shadow-lg flex justify-center items-center {% if messages[0][0] == 'success' %}bg-primary text-white{% elif messages[0][0] == 'error' %}bg-red-600 text-white{% elif messages[0][0] == 'warning' %}bg-accent text-charcoal{% else %}bg-white dark:bg-gray-800 text-charcoal dark:text-white border-b border-accent{% endif %}">
+                <div class="flex gap-4 items-center whitespace-nowrap px-4">
+                    {% for category, message in messages %}
+                        <div class="flash-message inline-flex items-center px-4 py-1 rounded-full border border-white/20">
+                            <p class="font-medium text-sm">{{ message }}</p>
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
         {% endif %}
     {% endwith %}
@@ -218,8 +205,8 @@
         <!-- Sidebar Header -->
         <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                    <span class="font-display text-accent text-xl font-bold">CC</span>
+                <div class="w-10 h-10 rounded-full overflow-hidden border border-accent/30 flex-shrink-0">
+                    <img src="https://z-cdn-media.chatglm.cn/files/dfc81dd3-3f24-40d7-a2c7-5be5e32709cd.png?auth_key=1873993718-04b59f0f58214cd999032b8ffc4fe7d7-0-afbaf455d9cdea0565b8dd7a0325efe0" alt="Cliffine Collection" class="w-full h-full object-cover">
                 </div>
                 <span class="font-display text-xl font-semibold text-primary dark:text-white">Menu</span>
             </div>
@@ -316,7 +303,7 @@
                 <li>
                     <a href="/faq" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-lg text-charcoal dark:text-white hover:text-primary dark:hover:text-accent">
                         <svg class="w-5 h-5 text-primary dark:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549 1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <span class="font-medium">FAQ</span>
                     </a>
@@ -339,11 +326,15 @@
     </aside>
     
     <!-- Announcement Bar -->
-    <div class="bg-primary text-white py-2.5 overflow-hidden relative">
+    <div class="announcement-wrapper bg-primary text-white py-2.5 overflow-hidden relative">
         <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary-dark to-primary"></div>
+        <!-- Container uses flex to align items, overflow-hidden hides the duplicate content off-screen -->
         <div class="relative flex items-center">
-            <div class="whitespace-nowrap announcement-slide">
-                <span class="inline-flex items-center gap-8 px-4 text-sm font-medium">
+            <!-- The sliding content -->
+            <div class="announcement-slide">
+                
+                <!-- Single Set of Content (Duplicate removed to work correctly with 100% to -100% keyframes) -->
+                <span class="inline-flex items-center gap-8 px-4 text-sm font-medium flex-shrink-0">
                     <span class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
@@ -380,6 +371,7 @@
                         <span>Lipa Pole Pole Available</span>
                     </span>
                 </span>
+
             </div>
         </div>
     </div>
@@ -389,7 +381,7 @@
         <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 lg:h-20">
                 
-                <!-- Left Side: Hamburger (Mobile & Desktop) -->
+                <!-- Left Side: Hamburger -->
                 <div class="flex items-center">
                     <button 
                         id="hamburger-btn"
@@ -404,9 +396,9 @@
                 </div>
                 
                 <!-- Center: Logo -->
-                <a href="/" class="flex items-center gap-3 group absolute left-1/2 transform -translate-x-1/2" aria-label="Cliffine Collection Home">
-                    <div class="w-10 h-10 lg:w-12 lg:h-12 bg-primary rounded-full flex items-center justify-center group-hover:bg-primary-dark transition-colors duration-300">
-                        <span class="font-display text-accent text-xl lg:text-2xl font-bold">CC</span>
+                <a href="/" class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full overflow-hidden border border-accent/30 shadow-sm flex-shrink-0">
+                        <img src="https://z-cdn-media.chatglm.cn/files/dfc81dd3-3f24-40d7-a2c7-5be5e32709cd.png?auth_key=1873993718-04b59f0f58214cd999032b8ffc4fe7d7-0-afbaf455d9cdea0565b8dd7a0325efe0" alt="Cliffine Collection" class="w-full h-full object-cover">
                     </div>
                     <div class="hidden sm:block">
                         <h1 class="font-display text-xl lg:text-2xl font-semibold text-primary dark:text-white leading-tight">Cliffine Collection</h1>
@@ -424,23 +416,21 @@
                         class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-charcoal dark:text-white"
                         aria-label="Toggle dark mode"
                     >
-                        <!-- Sun Icon (Visible in Dark Mode) -->
                         <svg class="w-5 h-5 hidden dark:block text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>
-                        <!-- Moon Icon ( Visible in Light Mode) -->
                         <svg class="w-5 h-5 block dark:hidden text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                         </svg>
                     </button>
 
                     <!-- Cart Button -->
-                    <a href="/cart" class="relative p-2 text-charcoal dark:text-white hover:text-primary dark:hover:text-accent transition-colors" aria-label="Shopping Cart">
+                    <a href="{{ url_for('main.cart') }}" class="relative p-2 text-charcoal dark:text-white hover:text-primary dark:hover:text-accent transition-colors" aria-label="Shopping Cart">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                         </svg>
-                        <span class="cart-badge absolute -top-1 -right-1 w-5 h-5 bg-accent text-white text-xs font-bold rounded-full flex items-center justify-center">
-                            <span id="cart-count">0</span>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full px-2">
+                            {{ cart_count if cart_count else 0 }}
                         </span>
                     </a>
                     
@@ -462,15 +452,14 @@
     
     <!-- Footer -->
     <footer class="bg-primary text-white mt-auto">
-        <!-- Main Footer -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
                 
                 <!-- Business Info -->
                 <div>
                     <div class="flex items-center gap-3 mb-6">
-                        <div class="w-12 h-12 bg-accent rounded-full flex items-center justify-center">
-                            <span class="font-display text-primary text-2xl font-bold">CC</span>
+                        <div class="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0">
+                            <img src="https://z-cdn-media.chatglm.cn/files/dfc81dd3-3f24-40d7-a2c7-5be5e32709cd.png?auth_key=1873993718-04b59f0f58214cd999032b8ffc4fe7d7-0-afbaf455d9cdea0565b8dd7a0325efe0" alt="Cliffine Collection" class="w-full h-full object-cover">
                         </div>
                         <div>
                             <h3 class="font-display text-2xl font-semibold text-white">Cliffine Collection</h3>
@@ -513,7 +502,6 @@
                 <div>
                     <h4 class="font-display text-xl font-semibold mb-6 text-accent">Payment Information</h4>
                     <div class="space-y-4">
-                        <!-- Shop Payments -->
                         <div class="bg-white/5 rounded-lg p-4 border border-accent/20">
                             <p class="text-sm text-accent font-medium mb-2">Shop Payments</p>
                             <div class="space-y-1 text-sm text-gray-200">
@@ -522,7 +510,6 @@
                                 <p>Name: Cliphine Chepkoech</p>
                             </div>
                         </div>
-                        <!-- Chama Payments -->
                         <div class="bg-white/5 rounded-lg p-4 border border-accent/20">
                             <p class="text-sm text-accent font-medium mb-2">Chama Payments</p>
                             <div class="space-y-1 text-sm text-gray-200">
@@ -530,7 +517,6 @@
                                 <p>Account: <span class="font-mono text-white">6339086</span></p>
                             </div>
                         </div>
-                        <!-- Lipa Pole Pole -->
                         <div class="bg-white/5 rounded-lg p-4 border border-accent/20">
                             <p class="text-sm text-accent font-medium mb-2">Lipa Pole Pole</p>
                             <p class="text-sm text-gray-200">Till: <span class="font-mono text-white">4106106</span></p>
@@ -542,7 +528,6 @@
                 <div>
                     <h4 class="font-display text-xl font-semibold mb-6 text-accent">Connect With Us</h4>
                     
-                    <!-- Social Media Links -->
                     <div class="flex gap-4 mb-6">
                         <a href="https://wa.me/254700000000" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent hover:text-primary transition-colors text-white" aria-label="WhatsApp">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -566,7 +551,6 @@
                         </a>
                     </div>
                     
-                    <!-- Quick Links -->
                     <div class="space-y-2.5">
                         <a href="/about" class="footer-link block text-gray-200 hover:text-accent">About Us</a>
                         <a href="/contact" class="footer-link block text-gray-200 hover:text-accent">Contact Us</a>
@@ -610,14 +594,14 @@
             sidebar.classList.add('open');
             overlay.classList.add('active');
             hamburgerBtn.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            document.body.style.overflow = 'hidden';
         }
 
         function closeSidebar() {
             sidebar.classList.remove('open');
             overlay.classList.remove('active');
             hamburgerBtn.classList.remove('active');
-            document.body.style.overflow = ''; // Re-enable scrolling
+            document.body.style.overflow = '';
         }
 
         function toggleSidebar() {
@@ -628,7 +612,6 @@
             }
         }
 
-        // Close sidebar when pressing Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && sidebar.classList.contains('open')) {
                 closeSidebar();
@@ -646,7 +629,6 @@
             }
         }
 
-        // Check for saved theme preference or system preference on load
         const savedTheme = localStorage.getItem('theme');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -657,28 +639,65 @@
         }
 
         // --- Miscellaneous ---
-        
-        // Auto-hide flash messages after 5 seconds
         const flashContainer = document.getElementById('flash-container');
         if (flashContainer) {
             setTimeout(() => {
-                flashContainer.style.transition = 'opacity 0.3s ease';
+                flashContainer.style.transition = 'opacity 0.5s ease';
                 flashContainer.style.opacity = '0';
-                setTimeout(() => flashContainer.remove(), 300);
-            }, 5000);
+                setTimeout(() => flashContainer.remove(), 500);
+            }, 10000);
         }
         
-        // Update cart count dynamically (can be called from other scripts)
         function updateCartCount(count) {
             const cartCountEl = document.getElementById('cart-count');
             if (cartCountEl) {
                 cartCountEl.textContent = count;
-                // Add a small animation
                 cartCountEl.parentElement.style.transform = 'scale(1.2)';
                 setTimeout(() => {
                     cartCountEl.parentElement.style.transform = 'scale(1)';
                 }, 200);
             }
+        }
+
+        function addToCart(productId, buttonElement) {
+            const originalText = buttonElement.innerHTML;
+            buttonElement.innerHTML = 'Adding...';
+            buttonElement.disabled = true;
+
+            fetch("{{ url_for('main.add_to_cart') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    const cartBadge = document.getElementById('cart-count');
+                    if(cartBadge) cartBadge.textContent = data.cart_count;
+
+                    buttonElement.innerHTML = 'Added';
+                    buttonElement.classList.remove('bg-primary');
+                    buttonElement.classList.add('bg-green-600');
+
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalText;
+                        buttonElement.classList.add('bg-primary');
+                        buttonElement.classList.remove('bg-green-600');
+                        buttonElement.disabled = false;
+                    }, 1500);
+                } else {
+                    alert(data.message || "Error adding to cart");
+                    buttonElement.innerHTML = originalText;
+                    buttonElement.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                buttonElement.innerHTML = originalText;
+                buttonElement.disabled = false;
+            });
         }
     </script>
     

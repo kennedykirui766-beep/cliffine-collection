@@ -27,7 +27,7 @@
                 <div>
                     <h3 class="text-sm font-bold text-charcoal dark:text-white uppercase tracking-wider mb-4">Search</h3>
                     <div class="relative">
-                        <input type="text" id="search-input" placeholder="Search products..." class="w-full pl-4 pr-10 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent focus:border-transparent transition">
+                        <input type="text" id="search-input-desktop" placeholder="Search products..." class="w-full pl-4 pr-10 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent focus:border-transparent transition">
                         <button class="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </button>
@@ -38,12 +38,12 @@
                 <div>
                     <h3 class="text-sm font-bold text-charcoal dark:text-white uppercase tracking-wider mb-4">Categories</h3>
                     <div class="space-y-2">
-                        <a href="/products" class="block w-full text-left px-4 py-2.5 rounded-lg bg-primary text-white font-medium">All Products</a>
-                        <a href="/categories/electronics" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition">Electronics</a>
-                        <a href="/categories/tv-stands" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition">TV Stands</a>
-                        <a href="/categories/mens-shoes" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition">Men's Shoes</a>
-                        <a href="/categories/handbags" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition">Ladies Handbags</a>
-                        <a href="/categories/household" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition">Household Items</a>
+                        <a href="#" onclick="filterProducts('all', this); return false;" class="block w-full text-left px-4 py-2.5 rounded-lg bg-primary text-white font-medium filter-btn active">All Products</a>
+                        <a href="#" onclick="filterProducts('Electronics', this); return false;" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition filter-btn">Electronics</a>
+                        <a href="#" onclick="filterProducts('TV Stands', this); return false;" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition filter-btn">TV Stands</a>
+                        <a href="#" onclick="filterProducts('Men\'s Shoes', this); return false;" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition filter-btn">Men's Shoes</a>
+                        <a href="#" onclick="filterProducts('Ladies Handbags', this); return false;" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition filter-btn">Ladies Handbags</a>
+                        <a href="#" onclick="filterProducts('Households', this); return false;" class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition filter-btn">Household Items</a>
                     </div>
                 </div>
 
@@ -70,7 +70,7 @@
             <div class="lg:hidden mb-6 space-y-4">
                 <!-- Mobile Search -->
                 <div class="relative">
-                    <input type="text" placeholder="Search products..." class="w-full pl-4 pr-10 py-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent">
+                    <input type="text" id="search-input-mobile" placeholder="Search products..." class="w-full pl-4 pr-10 py-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent">
                     <button class="absolute right-3 top-1/2 -translate-y-1/2 text-muted">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </button>
@@ -78,51 +78,66 @@
                 
                 <!-- Mobile Categories Horizontal Scroll -->
                 <div class="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                    <button class="flex-shrink-0 px-4 py-2 bg-primary text-white rounded-full text-sm font-medium">All</button>
-                    <button class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300">Electronics</button>
-                    <button class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300">TV Stands</button>
-                    <button class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300">Shoes</button>
-                    <button class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300">Handbags</button>
+                    <button onclick="filterProducts('all', this)" class="flex-shrink-0 px-4 py-2 bg-primary text-white rounded-full text-sm font-medium filter-btn-mobile active">All</button>
+                    <button onclick="filterProducts('Electronics', this)" class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300 filter-btn-mobile">Electronics</button>
+                    <button onclick="filterProducts('TV Stands', this)" class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300 filter-btn-mobile">TV Stands</button>
+                    <button onclick="filterProducts('Men\'s Shoes', this)" class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300 filter-btn-mobile">Shoes</button>
+                    <button onclick="filterProducts('Ladies Handbags', this)" class="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-muted dark:text-gray-300 filter-btn-mobile">Handbags</button>
                 </div>
 
                 <!-- Sort Dropdown -->
                 <div class="flex justify-between items-center">
-                    <p class="text-sm text-muted">Showing {{ products|length }} results</p>
-                    <select class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-accent">
-                        <option>Sort by: Newest</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
-                        <option>Most Popular</option>
+                    <p class="text-sm text-muted">Showing <span class="result-count">{{ products|length }}</span> results</p>
+                    <select id="sort-select-mobile" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-accent">
+                        <option value="default">Sort by: Default</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="newest">Newest First</option>
+                        <option value="name-asc">Name: A-Z</option>
                     </select>
                 </div>
             </div>
 
             <!-- Desktop Sort Bar -->
             <div class="hidden lg:flex justify-between items-center mb-8 border-b border-gray-100 dark:border-gray-700 pb-4">
-                <p class="text-muted dark:text-gray-300">Showing <span class="font-bold text-charcoal dark:text-white">{{ products|length }}</span> results</p>
+                <p class="text-muted dark:text-gray-300">Showing <span class="font-bold text-charcoal dark:text-white result-count">{{ products|length }}</span> results</p>
                 <div class="flex items-center gap-4">
-                    <select class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-accent text-muted">
-                        <option>Sort by: Default</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
-                        <option>Newest First</option>
-                        <option>Most Popular</option>
+                    <select id="sort-select-desktop" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-accent text-muted">
+                        <option value="default">Sort by: Default</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="newest">Newest First</option>
+                        <option value="name-asc">Name: A-Z</option>
                     </select>
                 </div>
             </div>
 
+            <!-- No Results Message (Hidden by default) -->
+            <div id="no-results-message" class="hidden col-span-full py-12 text-center">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <h3 class="text-lg font-semibold text-gray-600 dark:text-white mb-1">No Products Found</h3>
+                <p class="text-sm text-gray-400">Try adjusting your search or filter criteria.</p>
+            </div>
+
             <!-- 5. Product Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6" id="product-grid">
                 
                 {% if products %}
                     {% for product in products %}
                         <!-- Product Card Loop -->
-                        <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col {% if product.stock == 0 %}opacity-75{% endif %}">
+                        <!-- Added data-name, data-price, data-date, data-description for JS logic -->
+                        <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col product-card {% if product.stock == 0 %}opacity-75{% endif %}" 
+                            data-category="{{ product.category.name if product.category else 'General' }}"
+                            data-name="{{ product.name }}"
+                            data-price="{{ product.discount_price if product.discount_price else product.price }}"
+                            data-date="{{ product.created_at.strftime('%Y%m%d%H%M%S') if product.created_at else '0' }}"
+                            data-description="{{ product.description }}">
+                            
                             <div class="relative overflow-hidden">
                                 <!-- Image Logic -->
-                                <img src="{% if product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://placehold.co/400x400/581C87/FFFFFF?text=No+Image{% endif %}" 
-                                     alt="{{ product.name }}" 
-                                     class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                                <img src="{{ url_for('static', filename='uploads/' ~ product.images[0].image_url) if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
+     alt="{{ product.name }}"
+     class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
                                 
                                 <!-- Badges Logic -->
                                 <div class="absolute top-2 left-2 flex flex-col gap-1">
@@ -154,7 +169,7 @@
                                     <button onclick="openQuickView('{{ product.name }}', 'KES {{ product.price }}', '{{ product.description }}')" class="p-2 bg-white rounded-full shadow hover:bg-accent hover:text-white transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     </button>
-                                    <button class="p-2 bg-white rounded-full shadow hover:bg-red-500 hover:text-white transition-colors">
+                                    <button onclick="toggleLike(this)" class="p-2 bg-white rounded-full shadow hover:bg-red-500 hover:text-white transition-colors like-btn">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                                     </button>
                                 </div>
@@ -181,7 +196,7 @@
                                     </div>
                                     
                                     {% if product.stock > 0 %}
-                                        <button class="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors text-sm flex items-center justify-center gap-2">
+                                        <button onclick="addToCart({{ product.id }}, this)" class="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors text-sm flex items-center justify-center gap-2 add-to-cart-btn">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                                             Add to Cart
                                         </button>
@@ -204,10 +219,9 @@
 
             </div>
 
-            <!-- 7. Pagination (Static placeholder, requires backend logic to be functional) -->
+            <!-- 7. Pagination -->
             <div class="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p class="text-sm text-muted dark:text-gray-400">Showing {{ products|length }} result(s)</p>
-                <!-- Pagination controls can be added here if pagination object is passed -->
+                <p class="text-sm text-muted dark:text-gray-400">Showing <span class="result-count">{{ products|length }}</span> result(s)</p>
             </div>
         </main>
     </div>
@@ -283,7 +297,174 @@
 
 {% block scripts %}
 <script>
-    // Quick View Modal Logic
+    // --- State Management ---
+    let currentCategory = 'all';
+    let currentSearchQuery = '';
+
+    // --- DOM Elements ---
+    const grid = document.getElementById('product-grid');
+    const cards = Array.from(document.querySelectorAll('.product-card'));
+    const noResultsMsg = document.getElementById('no-results-message');
+    const resultCounts = document.querySelectorAll('.result-count');
+
+    const searchDesktop = document.getElementById('search-input-desktop');
+    const searchMobile = document.getElementById('search-input-mobile');
+    const sortDesktop = document.getElementById('sort-select-desktop');
+    const sortMobile = document.getElementById('sort-select-mobile');
+
+    // --- 1. Fuzzy Search Logic ---
+    // Returns true if characters in 'pattern' appear in 'str' in order
+    function fuzzyMatch(str, pattern) {
+        str = str.toLowerCase();
+        pattern = pattern.toLowerCase();
+        
+        let patternIdx = 0;
+        let strIdx = 0;
+        
+        while (patternIdx < pattern.length && strIdx < str.length) {
+            if (pattern[patternIdx] === str[strIdx]) {
+                patternIdx++;
+            }
+            strIdx++;
+        }
+        return patternIdx === pattern.length; 
+    }
+
+    // --- 2. Filtering Logic ---
+    function applyFilters() {
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name');
+            const category = card.getAttribute('data-category');
+            const description = card.getAttribute('data-description');
+            
+            // Check Category
+            const categoryMatch = 
+                currentCategory === 'all' || 
+                category.toLowerCase().includes(currentCategory.toLowerCase()) ||
+                currentCategory.toLowerCase().includes(category.toLowerCase());
+
+            // Check Search (Fuzzy)
+            // We search in Name + Description + Category
+            const searchText = `${name} ${description} ${category}`;
+            const searchMatch = currentSearchQuery === '' || fuzzyMatch(searchText, currentSearchQuery);
+
+            // Final Decision
+            if (categoryMatch && searchMatch) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Update UI Counts
+        resultCounts.forEach(el => el.textContent = visibleCount);
+        
+        if (visibleCount === 0) {
+            noResultsMsg.classList.remove('hidden');
+            // We need to append it to the grid if it's not already there or just show it
+            if (!grid.contains(noResultsMsg)) {
+                grid.parentNode.insertBefore(noResultsMsg, grid.nextSibling);
+            }
+        } else {
+            noResultsMsg.classList.add('hidden');
+        }
+
+        // Re-apply sorting after filtering (sorts only visible items)
+        sortProducts();
+    }
+
+    // --- 3. Sorting Logic ---
+    function sortProducts() {
+        const sortValue = sortDesktop.value; // Use desktop as master
+        
+        // Get visible cards only for sorting
+        const visibleCards = cards.filter(c => c.style.display !== 'none');
+        
+        visibleCards.sort((a, b) => {
+            const priceA = parseFloat(a.getAttribute('data-price'));
+            const priceB = parseFloat(b.getAttribute('data-price'));
+            const nameA = a.getAttribute('data-name').toLowerCase();
+            const nameB = b.getAttribute('data-name').toLowerCase();
+            const dateA = a.getAttribute('data-date');
+            const dateB = b.getAttribute('data-date');
+
+            switch(sortValue) {
+                case 'price-asc': return priceA - priceB;
+                case 'price-desc': return priceB - priceA;
+                case 'name-asc': return nameA.localeCompare(nameB);
+                case 'newest': return dateB.localeCompare(dateA); // Higher date string is newer
+                default: return 0; // Keep original order
+            }
+        });
+
+        // Re-append sorted elements to the grid
+        visibleCards.forEach(card => grid.appendChild(card));
+    }
+
+    // --- 4. Event Listeners ---
+    
+    // Search Inputs
+    searchDesktop.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value;
+        searchMobile.value = currentSearchQuery; // Sync
+        applyFilters();
+    });
+
+    searchMobile.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value;
+        searchDesktop.value = currentSearchQuery; // Sync
+        applyFilters();
+    });
+
+    // Sort Selects
+    sortDesktop.addEventListener('change', (e) => {
+        sortMobile.value = e.target.value; // Sync
+        sortProducts();
+    });
+
+    sortMobile.addEventListener('change', (e) => {
+        sortDesktop.value = e.target.value; // Sync
+        sortProducts();
+    });
+
+    // Category Buttons (Existing function updated to call applyFilters)
+    function filterProducts(category, element) {
+        currentCategory = category;
+        currentSearchQuery = ''; // Reset search when category changes? 
+        // Optional: Keep search. User might want to search within category.
+        // If we reset search:
+        // searchDesktop.value = '';
+        // searchMobile.value = '';
+
+        // Update Active States (Desktop)
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('bg-primary', 'text-white', 'font-medium');
+            btn.classList.add('hover:bg-sand', 'dark:hover:bg-gray-700', 'text-muted', 'dark:text-gray-300');
+            const btnCat = btn.textContent.trim().toLowerCase();
+            if(btnCat.includes(category.toLowerCase()) || (category === 'all' && btnCat.includes('all'))) {
+                btn.classList.add('bg-primary', 'text-white', 'font-medium');
+                btn.classList.remove('hover:bg-sand', 'dark:hover:bg-gray-700', 'text-muted', 'dark:text-gray-300');
+            }
+        });
+
+        // Update Active States (Mobile)
+        document.querySelectorAll('.filter-btn-mobile').forEach(btn => {
+            btn.classList.remove('bg-primary', 'text-white');
+            btn.classList.add('bg-white', 'dark:bg-gray-800', 'text-muted');
+            const btnCat = btn.textContent.trim().toLowerCase();
+             if(btnCat.includes(category.toLowerCase()) || (category === 'all' && btnCat.includes('all'))) {
+                btn.classList.add('bg-primary', 'text-white');
+                btn.classList.remove('bg-white', 'dark:bg-gray-800', 'text-muted');
+            }
+        });
+
+        applyFilters();
+    }
+
+    // --- Quick View Modal Logic ---
     const modal = document.getElementById('quick-view-modal');
 
     function openQuickView(name, price, description) {
@@ -291,7 +472,6 @@
         document.getElementById('modal-price').textContent = price;
         document.getElementById('modal-description').textContent = description;
         
-        // Update image alt text and src based on name (simple simulation)
         const imgSrc = `https://placehold.co/600x600/581C87/FFFFFF?text=${encodeURIComponent(name)}`;
         document.getElementById('modal-image').src = imgSrc;
         
@@ -306,11 +486,73 @@
         document.body.style.overflow = '';
     }
     
-    // Close modal on escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
             closeQuickView();
         }
     });
+
+    // --- Add to Cart Logic ---
+    function addToCart(productId, buttonElement) {
+        const originalText = buttonElement.innerHTML;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Adding...';
+
+        fetch("{{ url_for('main.add_to_cart') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ product_id: productId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                const cartBadge = document.getElementById('cart-count');
+                if(cartBadge) {
+                    cartBadge.textContent = data.cart_count;
+                    cartBadge.classList.add('scale-125');
+                    setTimeout(() => cartBadge.classList.remove('scale-125'), 200);
+                }
+
+                buttonElement.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Added';
+                buttonElement.classList.remove('bg-primary');
+                buttonElement.classList.add('bg-green-600');
+
+                setTimeout(() => {
+                    buttonElement.innerHTML = originalText;
+                    buttonElement.classList.add('bg-primary');
+                    buttonElement.classList.remove('bg-green-600');
+                    buttonElement.disabled = false;
+                }, 1500);
+            } else {
+                alert(data.message || "Error adding to cart");
+                buttonElement.innerHTML = originalText;
+                buttonElement.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error adding to cart");
+            buttonElement.innerHTML = originalText;
+            buttonElement.disabled = false;
+        });
+    }
+
+    // --- Like Button Logic ---
+    function toggleLike(button) {
+        const svg = button.querySelector('svg');
+        const isLiked = button.classList.contains('text-red-500');
+
+        if (isLiked) {
+            button.classList.remove('text-red-500');
+            button.classList.add('text-charcoal', 'dark:text-white');
+            svg.setAttribute('fill', 'none');
+        } else {
+            button.classList.add('text-red-500');
+            button.classList.remove('text-charcoal', 'dark:text-white', 'hover:text-red-500');
+            svg.setAttribute('fill', 'currentColor');
+        }
+    }
 </script>
 {% endblock %}
