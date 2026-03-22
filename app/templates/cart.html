@@ -220,7 +220,6 @@
             <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <form id="deleteForm" action="" method="POST">
                     <input type="hidden" name="product_id" id="deleteProductId" value="">
-                    <!-- CSRF token would go here if needed: <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> -->
                     <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
                         Delete
                     </button>
@@ -260,8 +259,6 @@
         if(value < 1) value = 1;
         
         input.value = value;
-        
-        // Ideally, here you would also update the backend cart quantity via fetch/AJAX
     }
 
     // Modal Logic
@@ -275,8 +272,7 @@
         itemIdInput.value = id;
         itemNameDisplay.textContent = name;
 
-        // Set the form action URL. 
-        // Adjust '/cart/remove' to match your actual Flask route for removing items.
+        // Set the form action URL
         deleteForm.action = '/cart/remove'; 
 
         // Show the modal
