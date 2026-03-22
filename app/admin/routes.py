@@ -9,6 +9,8 @@ from werkzeug.utils import secure_filename
 import os
 from sqlalchemy.exc import IntegrityError
 from app.utils.helpers import generate_unique_slug
+import cloudinary.uploader
+import uuid
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -178,9 +180,17 @@ def add_product():
             path = os.path.join(upload_folder, filename)
             image_file.save(path)
 
+            # 🔥 Upload to Cloudinary
+            result = cloudinary.uploader.upload(
+                image_file,
+                folder="cliffine/products",
+                public_id=str(uuid.uuid4())
+            )
+            image_url = result.get("secure_url")
+
             image = ProductImage(
                 product_id=product.id,
-                image_url=filename,
+                image_url=image_url,  # ✅ store Cloudinary URL
                 is_main=True
             )
             
@@ -229,8 +239,10 @@ def add_category():
         is_active = True if request.form.get("is_active") else False
 
         # Handle image upload
+        # Handle image upload
         image_file = request.files.get("image")
         filename = None
+        image_url = None  # ✅ NEW
 
         if image_file and image_file.filename != "":
             filename = secure_filename(image_file.filename)
@@ -241,11 +253,19 @@ def add_category():
             path = os.path.join(upload_folder, filename)
             image_file.save(path)
 
+            # 🔥 Upload to Cloudinary
+            result = cloudinary.uploader.upload(
+                image_file,
+                folder="cliffine/categories",
+                public_id=str(uuid.uuid4())
+            )
+            image_url = result.get("secure_url")  # ✅ NEW
+
         category = Category(
             name=name,
             slug=slug,
             description=description,
-            image=filename,
+            image=image_url if image_url else filename,
             is_active=is_active
         )
 
