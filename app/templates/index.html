@@ -96,7 +96,7 @@
             {% if categories %}
                 {% for category in categories %}
                 <a href="/categories/{{ category.slug }}" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
-                    <img src="{{ url_for('static', filename='uploads/categories/' + category.image) }}">
+                    <img src="{{ category.image }}">
                     <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
                         <h3 class="text-white font-bold text-lg">{{ category.name }}</h3>
                         <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>

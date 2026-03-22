@@ -180,7 +180,10 @@ def add_product():
             path = os.path.join(upload_folder, filename)
             image_file.save(path)
 
-            # 🔥 Upload to Cloudinary
+            # Reset stream pointer before uploading to Cloudinary
+            image_file.stream.seek(0)
+
+            # Upload to Cloudinary
             result = cloudinary.uploader.upload(
                 image_file,
                 folder="cliffine/products",
@@ -190,7 +193,7 @@ def add_product():
 
             image = ProductImage(
                 product_id=product.id,
-                image_url=image_url,  # ✅ store Cloudinary URL
+                image_url=image_url,  # store Cloudinary URL
                 is_main=True
             )
             
@@ -205,9 +208,18 @@ def add_product():
                 path = os.path.join(upload_folder, filename)
                 file.save(path)
 
+                # Reset stream pointer for Cloudinary
+                file.stream.seek(0)
+                result = cloudinary.uploader.upload(
+                    file,
+                    folder="cliffine/products/gallery",
+                    public_id=str(uuid.uuid4())
+                )
+                cloud_url = result.get("secure_url")
+
                 gallery_image = ProductImage(
                     product_id=product.id,
-                    image_url=filename
+                    image_url=cloud_url  # store Cloudinary URL
                 )
                 db.session.add(gallery_image)
         db.session.commit()
