@@ -163,9 +163,11 @@
                 {% for product in featured_products %}
                 <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden group">
                     <div class="relative overflow-hidden">
-                        <a href="{{ url_for('main.product_detail', product_id=product.id) }}">
-                            <img src="{{ product.images[0].image_url if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
-     alt="{{ product.name }}"" alt="{{ product.name }}" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                       <a href="{{ url_for('main.product_detail', product_id=product.id) }}">
+                            <img 
+                                src="{{ product.images[0].image_url if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
+                                alt="{{ product.name }}"
+                                class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
                         </a>
                         <div class="absolute top-2 right-2">
                             <button class="p-2 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-accent hover:text-white transition-colors">
