@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from app.utils.helpers import generate_unique_slug
 import cloudinary.uploader
 import uuid
+from sqlalchemy.orm import joinedload
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -48,12 +49,14 @@ def admin_dashboard():
         recent_messages=recent_messages
     )
     
+
 @admin_bp.route("/products")
 def all_products():
-    # Load all products and their categories
-    products = Product.query.order_by(Product.created_at.desc()).all()
-    return render_template("admin/products/all_products.html", products=products)
+    products = Product.query.options(
+        joinedload(Product.images)
+    ).order_by(Product.created_at.desc()).all()
 
+    return render_template("admin/products/all_products.html", products=products)
 @admin_bp.route("/products/<int:product_id>/edit")
 def edit_product(product_id):
     # Fetch product by ID
