@@ -165,7 +165,7 @@
                     <div class="relative overflow-hidden">
                        <a href="{{ url_for('main.product_detail', product_id=product.id) }}">
                             <img 
-                                src="{{ {{ product.images[0].image_url if product.images else  'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
+                                src=" {{ product.images[0].image_url if product.images else  'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
                                 alt="{{ product.name }}"
                                 class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
                         </a>
