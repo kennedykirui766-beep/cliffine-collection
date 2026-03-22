@@ -138,7 +138,9 @@
                         <td class="p-4">
                             <div class="flex items-center gap-3">
                                 {% if product.images %}
-                                    <img src="{{ url_for('static', filename='uploads/' ~ product.images[0].image_url) }}"
+                                    <img 
+                                        src="{{ product.images[0].image_url if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
+
                                          class="w-14 h-14 rounded-lg object-cover border border-slate-100" 
                                          alt="{{ product.name }}"
                                          onerror="this.src='https://placehold.co/100x100/cccccc/ffffff?text=Error'">
