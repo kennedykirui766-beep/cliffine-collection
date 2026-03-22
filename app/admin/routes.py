@@ -239,7 +239,6 @@ def add_category():
         is_active = True if request.form.get("is_active") else False
 
         # Handle image upload
-        # Handle image upload
         image_file = request.files.get("image")
         filename = None
         image_url = None  # ✅ NEW
@@ -252,6 +251,9 @@ def add_category():
 
             path = os.path.join(upload_folder, filename)
             image_file.save(path)
+
+            # ✅ VERY IMPORTANT FIX
+            image_file.seek(0)
 
             # 🔥 Upload to Cloudinary
             result = cloudinary.uploader.upload(
