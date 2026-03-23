@@ -237,20 +237,21 @@ def add_to_cart():
     return jsonify({"success": True, "cart_count": len(cart)})
 
 
-
 @main_bp.route("/cart/remove", methods=["POST"])
 def remove_from_cart():
     product_id = request.form.get("product_id")
 
     cart = session.get("cart", [])
 
-    # remove item
-    cart = [item for item in cart if str(item.get("id")) != str(product_id)]
+    # remove item (simple list)
+    cart = [item for item in cart if str(item) != str(product_id)]
 
     session["cart"] = cart
 
     flash("Item removed from cart", "success")
     return redirect(url_for("main.cart"))
+
+
 # Account
 @main_bp.route("/account")
 def account():
