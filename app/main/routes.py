@@ -2,7 +2,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from datetime import datetime
 from flask import session
 from flask_login import current_user
-from app.models import Category, Chama, ChamaMember, Order, OrderItem, Product, Cart
+from app.models import Category, Chama, ChamaMember, Order, OrderItem, Product
 from app import db
 
 from app.models import Product
@@ -238,20 +238,19 @@ def add_to_cart():
 
 
 
-
 @main_bp.route("/cart/remove", methods=["POST"])
 def remove_from_cart():
     product_id = request.form.get("product_id")
 
-    cart_item = Cart.query.filter_by(product_id=product_id).first()
+    cart = session.get("cart", [])
 
-    if cart_item:
-        db.session.delete(cart_item)
-        db.session.commit()
+    # remove item
+    cart = [item for item in cart if str(item.get("id")) != str(product_id)]
+
+    session["cart"] = cart
 
     flash("Item removed from cart", "success")
     return redirect(url_for("main.cart"))
-
 # Account
 @main_bp.route("/account")
 def account():
