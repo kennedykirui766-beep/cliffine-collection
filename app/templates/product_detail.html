@@ -29,9 +29,9 @@
                 <!-- Main Image -->
                 <div class="relative aspect-square bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg border border-gray-100 dark:border-gray-700">
                     <img id="main-image" 
-                        src="{{ product.images[0].image_url if product.images else 'https://placehold.co/800x800/581C87/FFFFFF?text=No+Image' }}" 
-                        alt="{{ product.name }}" 
-                        class="w-full h-full object-contain transition-transform duration-500 hover:scale-105">
+                         src="{{ product.images[0].image_url if product.images else 'https://placehold.co/800x800/581C87/FFFFFF?text=No+Image' }}" 
+                         alt="{{ product.name }}" 
+                         class="w-full h-full object-contain transition-transform duration-500 hover:scale-105">
                     
                     <!-- Badges -->
                     <div class="absolute top-4 left-4 flex flex-col gap-2">
@@ -54,8 +54,6 @@
                                 <img src="{{ image.image_url }}" alt="Thumbnail {{ loop.index }}" class="w-full h-full object-cover">
                             </button>
                         {% endfor %}
-                    {% endif %}
-                </div>
                     {% else %}
                         <!-- Placeholder thumbnails if no images -->
                         <div class="aspect-square bg-sand dark:bg-gray-700 rounded-lg"></div>
@@ -313,6 +311,8 @@
         // Update active thumbnail border
         const thumbs = document.querySelectorAll('.grid-cols-4 button');
         thumbs.forEach(btn => {
+            // Simple check to see if the button's onclick contains the src
+            // Note: In production, using data attributes is cleaner than parsing onclick
             if(btn.getAttribute('onclick').includes(src)){
                 btn.classList.add('border-accent');
                 btn.classList.remove('border-transparent');

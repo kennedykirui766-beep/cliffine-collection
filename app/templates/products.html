@@ -125,7 +125,6 @@
                 {% if products %}
                     {% for product in products %}
                         <!-- Product Card Loop -->
-                        <!-- Added data-name, data-price, data-date, data-description for JS logic -->
                         <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col product-card {% if product.stock == 0 %}opacity-75{% endif %}" 
                             data-category="{{ product.category.name if product.category else 'General' }}"
                             data-name="{{ product.name }}"
@@ -134,10 +133,12 @@
                             data-description="{{ product.description }}">
                             
                             <div class="relative overflow-hidden">
-                                <!-- Image Logic -->
-                                <img src="{{ product.images[0].image_url if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
-                                alt="{{ product.name }}"
-                                class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                                <!-- Image Logic: Wrapped in Link -->
+                                <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="block">
+                                    <img src="{{ product.images[0].image_url if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
+                                    alt="{{ product.name }}"
+                                    class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                                </a>
                                 
                                 <!-- Badges Logic -->
                                 <div class="absolute top-2 left-2 flex flex-col gap-1">
@@ -166,9 +167,10 @@
 
                                 <!-- Quick Actions -->
                                 <div class="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                    <button onclick="openQuickView('{{ product.name }}', 'KES {{ product.price }}', '{{ product.description }}')" class="p-2 bg-white rounded-full shadow hover:bg-accent hover:text-white transition-colors">
+                                    <!-- Eye Icon: Now a link to detail page -->
+                                    <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="p-2 bg-white rounded-full shadow hover:bg-accent hover:text-white transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    </button>
+                                    </a>
                                     <button onclick="toggleLike(this)" class="p-2 bg-white rounded-full shadow hover:bg-red-500 hover:text-white transition-colors like-btn">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                                     </button>
@@ -263,6 +265,7 @@
 </section>
 
 <!-- 9. Quick View Modal -->
+<!-- Note: The modal is kept in the code, but no longer triggered by the eye icon. You may remove this block if not used elsewhere. -->
 <div id="quick-view-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeQuickView()"></div>
     <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-auto">
@@ -313,7 +316,6 @@
     const sortMobile = document.getElementById('sort-select-mobile');
 
     // --- 1. Fuzzy Search Logic ---
-    // Returns true if characters in 'pattern' appear in 'str' in order
     function fuzzyMatch(str, pattern) {
         str = str.toLowerCase();
         pattern = pattern.toLowerCase();
@@ -339,18 +341,14 @@
             const category = card.getAttribute('data-category');
             const description = card.getAttribute('data-description');
             
-            // Check Category
             const categoryMatch = 
                 currentCategory === 'all' || 
                 category.toLowerCase().includes(currentCategory.toLowerCase()) ||
                 currentCategory.toLowerCase().includes(category.toLowerCase());
 
-            // Check Search (Fuzzy)
-            // We search in Name + Description + Category
             const searchText = `${name} ${description} ${category}`;
             const searchMatch = currentSearchQuery === '' || fuzzyMatch(searchText, currentSearchQuery);
 
-            // Final Decision
             if (categoryMatch && searchMatch) {
                 card.style.display = 'flex';
                 visibleCount++;
@@ -359,12 +357,10 @@
             }
         });
 
-        // Update UI Counts
         resultCounts.forEach(el => el.textContent = visibleCount);
         
         if (visibleCount === 0) {
             noResultsMsg.classList.remove('hidden');
-            // We need to append it to the grid if it's not already there or just show it
             if (!grid.contains(noResultsMsg)) {
                 grid.parentNode.insertBefore(noResultsMsg, grid.nextSibling);
             }
@@ -372,15 +368,12 @@
             noResultsMsg.classList.add('hidden');
         }
 
-        // Re-apply sorting after filtering (sorts only visible items)
         sortProducts();
     }
 
     // --- 3. Sorting Logic ---
     function sortProducts() {
-        const sortValue = sortDesktop.value; // Use desktop as master
-        
-        // Get visible cards only for sorting
+        const sortValue = sortDesktop.value; 
         const visibleCards = cards.filter(c => c.style.display !== 'none');
         
         visibleCards.sort((a, b) => {
@@ -395,51 +388,41 @@
                 case 'price-asc': return priceA - priceB;
                 case 'price-desc': return priceB - priceA;
                 case 'name-asc': return nameA.localeCompare(nameB);
-                case 'newest': return dateB.localeCompare(dateA); // Higher date string is newer
-                default: return 0; // Keep original order
+                case 'newest': return dateB.localeCompare(dateA); 
+                default: return 0; 
             }
         });
 
-        // Re-append sorted elements to the grid
         visibleCards.forEach(card => grid.appendChild(card));
     }
 
     // --- 4. Event Listeners ---
     
-    // Search Inputs
     searchDesktop.addEventListener('input', (e) => {
         currentSearchQuery = e.target.value;
-        searchMobile.value = currentSearchQuery; // Sync
+        searchMobile.value = currentSearchQuery; 
         applyFilters();
     });
 
     searchMobile.addEventListener('input', (e) => {
         currentSearchQuery = e.target.value;
-        searchDesktop.value = currentSearchQuery; // Sync
+        searchDesktop.value = currentSearchQuery; 
         applyFilters();
     });
 
-    // Sort Selects
     sortDesktop.addEventListener('change', (e) => {
-        sortMobile.value = e.target.value; // Sync
+        sortMobile.value = e.target.value; 
         sortProducts();
     });
 
     sortMobile.addEventListener('change', (e) => {
-        sortDesktop.value = e.target.value; // Sync
+        sortDesktop.value = e.target.value; 
         sortProducts();
     });
 
-    // Category Buttons (Existing function updated to call applyFilters)
     function filterProducts(category, element) {
         currentCategory = category;
-        currentSearchQuery = ''; // Reset search when category changes? 
-        // Optional: Keep search. User might want to search within category.
-        // If we reset search:
-        // searchDesktop.value = '';
-        // searchMobile.value = '';
-
-        // Update Active States (Desktop)
+        
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('bg-primary', 'text-white', 'font-medium');
             btn.classList.add('hover:bg-sand', 'dark:hover:bg-gray-700', 'text-muted', 'dark:text-gray-300');
@@ -450,7 +433,6 @@
             }
         });
 
-        // Update Active States (Mobile)
         document.querySelectorAll('.filter-btn-mobile').forEach(btn => {
             btn.classList.remove('bg-primary', 'text-white');
             btn.classList.add('bg-white', 'dark:bg-gray-800', 'text-muted');
@@ -464,7 +446,7 @@
         applyFilters();
     }
 
-    // --- Quick View Modal Logic ---
+    // --- Quick View Modal Logic (Kept for reference, but triggers removed from UI) ---
     const modal = document.getElementById('quick-view-modal');
 
     function openQuickView(name, price, description) {
