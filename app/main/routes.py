@@ -163,7 +163,7 @@ def join_chama(chama_id):
     except Exception as e:
         db.session.rollback()
         flash(f"Error joining chama: {str(e)}", "error")
-        return redirect(url_for("main.chamas"))
+        return redirect(url_for("main.chama"))
 
 
 # Lipa Pole Pole
@@ -235,6 +235,19 @@ def add_to_cart():
     session["cart"] = cart
 
     return jsonify({"success": True, "cart_count": len(cart)})
+
+
+@main_bp.route("/cart/remove", methods=["POST"])
+def remove_from_cart():
+    product_id = request.form.get("product_id")
+
+    cart_item = cart.query.filter_by(product_id=product_id).first()
+    if cart_item:
+        db.session.delete(cart_item)
+        db.session.commit()
+
+    flash("Item removed from cart", "success")
+    return redirect(url_for("main.cart"))
 
 # Account
 @main_bp.route("/account")
