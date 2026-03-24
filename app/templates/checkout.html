@@ -265,7 +265,7 @@
                                 {% for product in products %}
                                 <div class="flex items-center gap-4">
                                     <div class="w-16 h-16 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                        <img src="{{ product.image if product.image else 'https://placehold.co/100x100/581C87/FFFFFF?text=Item' }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                                        <img src="{{ product.images[0].image_url if product.images else 'https://placehold.co/100x100/581C87/FFFFFF?text=Item' }}" alt="{{ product.name }}" class="w-full h-full object-cover">
                                     </div>
                                     <div class="flex-1">
                                         <h3 class="font-medium text-charcoal dark:text-white text-sm">{{ product.name }}</h3>
