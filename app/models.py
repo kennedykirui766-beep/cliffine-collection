@@ -141,7 +141,18 @@ class Inventory(db.Model):
     low_stock_threshold = db.Column(db.Integer, default=5)
 
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    
+class Cart(db.Model):
+    __tablename__ = "carts"
 
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)  # optional for guest carts
+    session_id = db.Column(db.String(100), nullable=True)  # optional for guests
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    items = db.relationship("CartItem", backref="cart", lazy=True, cascade="all, delete-orphan")
 
 # ===============================
 # ORDERS

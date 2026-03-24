@@ -252,33 +252,51 @@ def cart():
 
 @main_bp.route("/add-to-cart", methods=["POST"])
 def add_to_cart():
-    from flask import request, session, jsonify
+    from flask import request, jsonify
+    from flask_login import current_user
+    from app import db
+    from app.models import Cart, CartItem, Product
+
+    if not current_user.is_authenticated:
+        return jsonify({"success": False, "message": "Login required"}), 403
 
     data = request.get_json()
     product_id = data.get("product_id")
+    quantity = int(data.get("quantity", 1))
 
     if not product_id:
         return jsonify({"success": False, "message": "No product ID provided"}), 400
 
-    # Get cart as dictionary
-    cart = session.get("cart", {})
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({"success": False, "message": "Product not found"}), 404
 
-    # Convert to int (important)
-    product_id = int(product_id)
+    # Get or create cart for current user
+    cart = Cart.query.filter_by(user_id=current_user.id).first()
+    if not cart:
+        cart = Cart(user_id=current_user.id)
+        db.session.add(cart)
+        db.session.commit()  # commit to get cart.id
 
-    # Add or update quantity
-    if product_id in cart:
-        cart[product_id] += 1
+    # Check if item already in cart
+    cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product.id).first()
+    if cart_item:
+        cart_item.quantity += quantity
     else:
-        cart[product_id] = 1
+        cart_item = CartItem(
+            cart_id=cart.id,
+            product_id=product.id,
+            quantity=quantity,
+            price=product.price
+        )
+        db.session.add(cart_item)
 
-    session["cart"] = cart
-    session.modified = True
+    db.session.commit()
 
-    return jsonify({
-        "success": True,
-        "cart_count": sum(cart.values())
-    })
+    # Count total items
+    total_items = sum(item.quantity for item in cart.items)
+
+    return jsonify({"success": True, "cart_count": total_items})
 
 
 @main_bp.route("/cart/remove", methods=["POST"])
@@ -342,16 +360,21 @@ import uuid
 
 @main_bp.route("/checkout/process", methods=["POST"])
 def checkout_process():
-    from flask import request, session, redirect, url_for, flash
+    from flask import request, redirect, url_for, flash
+    from flask_login import current_user
     from app import db
+    from app.models import Cart, CartItem, Order, OrderItem
     import uuid
     from datetime import datetime
 
-    # Get cart from session
-    cart = session.get("cart", {})
+    if not current_user.is_authenticated:
+        flash("Login required to checkout.", "danger")
+        return redirect(url_for("auth.login"))
 
-    if not cart:
-        flash("Cart is empty", "danger")
+    # Get user's cart
+    cart = Cart.query.filter_by(user_id=current_user.id).first()
+    if not cart or not cart.items:
+        flash("Your cart is empty.", "danger")
         return redirect(url_for("main.cart"))
 
     # --- Form data ---
@@ -361,20 +384,12 @@ def checkout_process():
     address = request.form.get("address")
     city = request.form.get("city")
     delivery_method = request.form.get("delivery_method")
-    delivery_location = request.form.get("delivery_location")  # new field
+    delivery_location = request.form.get("delivery_location")
     notes = request.form.get("notes")
 
-    # --- Calculate subtotal ---
-    subtotal = 0
-    for item in cart.values():  # .values() if cart is a dict
-        try:
-            price = float(item.get("price", 0))
-            quantity = int(item.get("quantity", 1))
-            subtotal += price * quantity
-        except Exception:
-            continue
+    # --- Calculate subtotal and total ---
+    subtotal = sum(item.price * item.quantity for item in cart.items)
 
-    # --- Delivery fee ---
     delivery_fee = 0
     if delivery_method == "local":
         delivery_fee = 300
@@ -385,6 +400,7 @@ def checkout_process():
 
     # --- Create order ---
     order = Order(
+        user_id=current_user.id,
         order_number=str(uuid.uuid4())[:8],
         full_name=full_name,
         email=email,
@@ -402,32 +418,24 @@ def checkout_process():
         created_at=datetime.utcnow()
     )
     db.session.add(order)
+    db.session.commit()  # commit to get order.id
 
     # --- Add order items ---
-    for item in cart.values():
-        try:
-            product_id = item.get("id")
-            quantity = int(item.get("quantity", 1))
-            price = float(item.get("price", 0))
+    for item in cart.items:
+        order_item = OrderItem(
+            order_id=order.id,
+            product_id=item.product_id,
+            quantity=item.quantity,
+            price=item.price,
+            total_price=item.price * item.quantity
+        )
+        db.session.add(order_item)
 
-            order_item = OrderItem(
-                order=order,  # link via relationship
-                product_id=product_id,
-                quantity=quantity,
-                price=price,
-                total_price=price * quantity
-            )
-            db.session.add(order_item)
-
-        except Exception as e:
-            print("Skipping item due to error:", e)
-            continue
-
-    # --- Commit everything ---
     db.session.commit()
 
     # --- Clear cart ---
-    session.pop("cart", None)
+    db.session.delete(cart)
+    db.session.commit()
 
     flash("Order placed successfully!", "success")
     return redirect(url_for("main.index"))
