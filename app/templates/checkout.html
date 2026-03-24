@@ -262,10 +262,10 @@
                         <!-- Items List -->
                         <div class="space-y-4 mb-6">
                             {% if products %}
-                                {% for product in products %}
+                                {% for item in items %}
                                 <div class="flex items-center gap-4">
                                     <div class="w-16 h-16 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                        <img src="{{ item.product.images[0].image_url if item.product.images else 'https://placehold.co/100x100/581C87/FFFFFF?text=Item' }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                                        <img src="{{ item.product.images[0].image_url if item.product.images else 'https://placehold.co/100x100/581C87/FFFFFF?text=Item' }}" alt="{{ item.product.name }}" class="w-full h-full object-cover">
                                     </div>
                                     <div class="flex-1">
                                         <h3 class="font-medium text-charcoal dark:text-white text-sm">{{ item.product.name }}</h3>
