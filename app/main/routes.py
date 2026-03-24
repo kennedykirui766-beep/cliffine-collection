@@ -199,54 +199,55 @@ def faq():
 # Cart
 @main_bp.route("/cart")
 def cart():
-    cart = session.get("cart", {})
-
-    # Standardize cart to dictionary: {product_id: quantity}
-    standardized_cart = {}
-
-    if isinstance(cart, dict):
-        standardized_cart = {str(k): v for k, v in cart.items()}
-
-    elif isinstance(cart, list):
-        # List could be IDs or dicts
-        for item in cart:
-            if isinstance(item, dict) and "product_id" in item:
-                pid = str(item["product_id"])
-                qty = item.get("quantity", 1)
-                standardized_cart[pid] = qty
-            else:
-                # assume item is product ID as str/int
-                pid = str(item)
-                standardized_cart[pid] = standardized_cart.get(pid, 0) + 1
-
-    # Save standardized cart back in session
-    session["cart"] = standardized_cart
+    from flask import session, render_template
+    from flask_login import current_user
+    from app.models import Cart, CartItem, Product
+    from datetime import datetime
+    from app import db
 
     products_in_cart = []
     total_price = 0
+    cart_count = 0
 
-    for product_id_str, quantity in standardized_cart.items():
-        try:
-            product_id = int(product_id_str)
-        except ValueError:
-            continue
-
-        product = Product.query.get(product_id)
-        if product:
-            item_total = product.price * quantity
-            total_price += item_total
-
-            products_in_cart.append({
-                "product": product,
-                "quantity": quantity,
-                "total": item_total
-            })
+    if current_user.is_authenticated:
+        # --- Logged-in user: fetch cart from database ---
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+        if cart and cart.items:
+            for item in cart.items:
+                product = Product.query.get(item.product_id)
+                if product:
+                    item_total = item.price * item.quantity
+                    total_price += item_total
+                    cart_count += item.quantity
+                    products_in_cart.append({
+                        "product": product,
+                        "quantity": item.quantity,
+                        "total": item_total
+                    })
+    else:
+        # --- Guest user: fetch cart from session ---
+        session_cart = session.get("cart", {})
+        for product_id_str, quantity in session_cart.items():
+            try:
+                product_id = int(product_id_str)
+            except ValueError:
+                continue
+            product = Product.query.get(product_id)
+            if product:
+                item_total = product.price * quantity
+                total_price += item_total
+                cart_count += quantity
+                products_in_cart.append({
+                    "product": product,
+                    "quantity": quantity,
+                    "total": item_total
+                })
 
     return render_template(
         "cart.html",
         products=products_in_cart,
         total_price=total_price,
-        cart_count=sum(standardized_cart.values()),
+        cart_count=cart_count,
         current_year=datetime.now().year
     )
 
