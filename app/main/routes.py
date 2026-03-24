@@ -207,6 +207,7 @@ def cart():
     total_price = 0
     cart_count = 0
 
+    # Get cart (user or session)
     if current_user.is_authenticated:
         cart = Cart.query.filter_by(user_id=current_user.id).first()
     else:
@@ -216,14 +217,21 @@ def cart():
     if cart and cart.items:
         for item in cart.items:
             product = Product.query.get(item.product_id)
+
             if product:
-                item_total = product.price * item.quantity
+                # ✅ Use discount price if available
+                unit_price = product.discount_price if product.discount_price else product.price
+
+                item_total = unit_price * item.quantity
+
                 total_price += item_total
                 cart_count += item.quantity
+
                 products_in_cart.append({
                     "product": product,
                     "quantity": item.quantity,
-                    "total": item_total
+                    "total": item_total,
+                    "unit_price": unit_price  # optional (good for future use)
                 })
 
     return render_template(
