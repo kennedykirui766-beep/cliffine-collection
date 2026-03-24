@@ -150,12 +150,11 @@ class Order(db.Model):
     __tablename__ = "orders"
 
     id = db.Column(db.Integer, primary_key=True)
-
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
 
     order_number = db.Column(db.String(100), unique=True)
 
-    # Customer info (ADD THIS)
+    # Customer info
     full_name = db.Column(db.String(150))
     email = db.Column(db.String(150))
     phone = db.Column(db.String(20))
@@ -172,10 +171,8 @@ class Order(db.Model):
     shipping_address = db.Column(db.Text)
     city = db.Column(db.String(100))
     country = db.Column(db.String(100))
-    delivery_method = db.Column(db.String(50))  # ADD THIS
-    delivery_location = db.Column(db.String(150))  # e.g. nairobi-cbd
-    delivery_fee = db.Column(db.Float, default=0)
-    total_amount = db.Column(db.Float)
+    delivery_method = db.Column(db.String(50))
+    delivery_location = db.Column(db.String(150))
 
     # Extra
     notes = db.Column(db.Text)

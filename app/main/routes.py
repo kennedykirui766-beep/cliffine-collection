@@ -197,44 +197,62 @@ def faq():
     return render_template("faq.html", current_year=datetime.now().year)
 
 # Cart
-  # your Product model
-
 @main_bp.route("/cart")
 def cart():
-    # Get cart from session
-    cart_ids = session.get("cart", [])
+    cart = session.get("cart", {})
 
-    # Fetch product objects from DB
-    products_in_cart = Product.query.filter(Product.id.in_(cart_ids)).all() if cart_ids else []
+    products_in_cart = []
+    total_price = 0
 
-    # Optionally calculate total price
-    total_price = sum([p.price for p in products_in_cart])
+    for product_id, quantity in cart.items():
+        product = Product.query.get(product_id)
+        if product:
+            item_total = product.price * quantity
+            total_price += item_total
+
+            products_in_cart.append({
+                "product": product,
+                "quantity": quantity,
+                "total": item_total
+            })
 
     return render_template(
         "cart.html",
         products=products_in_cart,
         total_price=total_price,
-        cart_count=len(cart_ids),
+        cart_count=sum(cart.values()),
         current_year=datetime.now().year
     )
 
 @main_bp.route("/add-to-cart", methods=["POST"])
 def add_to_cart():
+    from flask import request, session, jsonify
+
     data = request.get_json()
     product_id = data.get("product_id")
-    
+
     if not product_id:
         return jsonify({"success": False, "message": "No product ID provided"}), 400
 
-    cart = session.get("cart", [])
+    # Get cart as dictionary
+    cart = session.get("cart", {})
 
-    # Optional: avoid duplicates
-    if product_id not in cart:
-        cart.append(product_id)
-    
+    # Convert to int (important)
+    product_id = int(product_id)
+
+    # Add or update quantity
+    if product_id in cart:
+        cart[product_id] += 1
+    else:
+        cart[product_id] = 1
+
     session["cart"] = cart
+    session.modified = True
 
-    return jsonify({"success": True, "cart_count": len(cart)})
+    return jsonify({
+        "success": True,
+        "cart_count": sum(cart.values())
+    })
 
 
 @main_bp.route("/cart/remove", methods=["POST"])
@@ -303,7 +321,7 @@ def checkout_process():
     import uuid
 
     # Cart is a LIST
-    cart = session.get("cart", [])
+    cart = session.get("cart", {})
 
     if not cart:
         flash("Cart is empty", "danger")
@@ -369,15 +387,25 @@ def checkout_process():
     db.session.commit()
 
     # Save items
-    for item in valid_items:
-        order_item = OrderItem(
-            order_id=order.id,
-            product_name=item["name"],
-            price=item["price"],
-            quantity=item["quantity"],
-            image=item["image"]
-        )
-        db.session.add(order_item)
+    for item in cart:
+        try:
+            product_id = item.get("id")
+            quantity = int(item.get("quantity", 1))
+            price = float(item.get("price", 0))
+
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=product_id,
+                quantity=quantity,
+                price=price,
+                total_price=price * quantity
+            )
+
+            db.session.add(order_item)
+
+        except Exception:
+            continue
+        
 
     db.session.commit()
 
