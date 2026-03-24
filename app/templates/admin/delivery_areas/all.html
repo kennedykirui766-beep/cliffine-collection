@@ -1,0 +1,171 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Manage Delivery Areas - Admin{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <!-- Breadcrumb -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+        <nav class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+            <a href="{{ url_for('admin.dashboard') }}" class="hover:text-accent transition-colors">Dashboard</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="font-medium text-charcoal dark:text-white">Delivery Areas</span>
+        </nav>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-2xl font-display font-bold text-charcoal dark:text-white">Delivery Areas</h1>
+                <p class="text-muted dark:text-gray-400 mt-1">Manage locations and delivery fees.</p>
+            </div>
+            <a href="{{ url_for('admin.add_delivery_area') }}" class="px-5 py-2.5 bg-accent text-white font-bold rounded-lg shadow-sm hover:bg-accent-dark transition-colors flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add New Area
+            </a>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-lg {% if category == 'error' %} bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 {% else %} bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 {% endif %}" role="alert">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Table Card -->
+        <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-charcoal dark:text-gray-300 uppercase bg-sand dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 font-semibold">ID</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Area Name</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Delivery Fee</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Status</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        {% for area in areas %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                            <td class="px-6 py-4 text-muted dark:text-gray-400 font-mono">{{ area.id }}</td>
+                            <td class="px-6 py-4 font-medium text-charcoal dark:text-white">{{ area.name }}</td>
+                            <td class="px-6 py-4 text-charcoal dark:text-white">
+                                KES {{ "{:,.2f}".format(area.fee) }}
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if area.is_active %}
+                                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                                        Active
+                                    </span>
+                                {% else %}
+                                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                                        Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-right space-x-2">
+                                <!-- Edit Button (Placeholder) -->
+                                <a href="#" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-center text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors">
+                                    Edit
+                                </a>
+                                <!-- Delete Button -->
+                                <button onclick="openDeleteModal('{{ area.id }}', '{{ area.name }}')" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-12">
+                                <svg class="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <h3 class="text-lg font-medium text-charcoal dark:text-white mb-1">No Delivery Areas Found</h3>
+                                <p class="text-muted dark:text-gray-400 mb-4">Start by adding your first delivery location.</p>
+                                <a href="{{ url_for('admin.add_delivery_area') }}" class="inline-flex items-center px-4 py-2 bg-accent text-white text-sm font-bold rounded-lg hover:bg-accent-dark">
+                                    Add First Area
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal ("Pop Page") -->
+<div id="deleteModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 transition-opacity bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75" onclick="closeDeleteModal()"></div>
+
+        <!-- Modal Panel -->
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10">
+                        <!-- Warning Icon -->
+                        <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-charcoal dark:text-white" id="modal-title">
+                            Delete Delivery Area
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-muted dark:text-gray-400">
+                                Are you sure you want to delete <strong id="deleteAreaName" class="font-medium text-charcoal dark:text-white"></strong>? This action cannot be undone.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <form id="deleteForm" action="" method="POST">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Delete Area
+                    </button>
+                </form>
+                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-charcoal dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Modal Logic
+    function openDeleteModal(id, name) {
+        const modal = document.getElementById('deleteModal');
+        const deleteForm = document.getElementById('deleteForm');
+        const areaNameDisplay = document.getElementById('deleteAreaName');
+
+        // Populate modal text
+        areaNameDisplay.textContent = name;
+
+        // Construct the URL dynamically
+        // Note: Ensure your URL scheme matches your Flask route
+        deleteForm.action = `/admin/delivery-areas/delete/${id}`;
+
+        // Show the modal
+        modal.classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.classList.add('hidden');
+    }
+</script>
+{% endblock %}

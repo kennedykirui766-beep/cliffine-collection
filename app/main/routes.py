@@ -2,7 +2,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from datetime import datetime
 from flask import session
 from flask_login import current_user
-from app.models import Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product
+from app.models import Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea
 from app import db
 
 from app.models import Product

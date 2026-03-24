@@ -1,0 +1,106 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Edit Delivery Area - Admin{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <!-- Breadcrumb -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+        <nav class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+            <a href="{{ url_for('admin.dashboard') }}" class="hover:text-accent transition-colors">Dashboard</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <a href="{{ url_for('admin.delivery_areas') }}" class="hover:text-accent transition-colors">Delivery Areas</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="font-medium text-charcoal dark:text-white">Edit Area</span>
+        </nav>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-display font-bold text-charcoal dark:text-white">Edit Delivery Area</h1>
+            <p class="text-muted dark:text-gray-400 mt-1">Update details for <strong>{{ area.name }}</strong>.</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-lg {% if category == 'error' %} bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 {% else %} bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 {% endif %}" role="alert">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form Card -->
+        <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+            <form action="{{ url_for('admin.edit_delivery_area', id=area.id) }}" method="POST">
+                
+                <div class="p-6 sm:p-8 space-y-6">
+                    <!-- Area Name -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-charcoal dark:text-white mb-2">
+                            Area Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" 
+                               name="name" 
+                               id="name" 
+                               value="{{ area.name }}"
+                               class="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-charcoal dark:text-white"
+                               required>
+                    </div>
+
+                    <!-- Delivery Fee -->
+                    <div>
+                        <label for="fee" class="block text-sm font-medium text-charcoal dark:text-white mb-2">
+                            Delivery Fee (KES) <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400 pointer-events-none">KES</span>
+                            <input type="number" 
+                                   name="fee" 
+                                   id="fee" 
+                                   step="0.01" 
+                                   min="0"
+                                   value="{{ area.fee }}"
+                                   class="w-full pl-12 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-charcoal dark:text-white"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Active Status -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" 
+                                   name="is_active" 
+                                   id="is_active" 
+                                   class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-accent focus:ring-accent bg-sand dark:bg-gray-700 cursor-pointer"
+                                   {% if area.is_active %} checked {% endif %}>
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="is_active" class="font-medium text-charcoal dark:text-white cursor-pointer">Active Status</label>
+                            <p class="text-muted dark:text-gray-400">If unchecked, this area will not be available for selection during checkout.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="px-6 sm:px-8 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                    <a href="{{ url_for('admin.delivery_areas') }}" class="px-5 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg text-charcoal dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors font-medium">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-2.5 bg-primary text-white font-bold rounded-lg shadow-sm hover:bg-primary-dark transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Update Area
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import current_app, redirect, render_template, url_for
 from flask import Blueprint, render_template
 from app import db
-from app.models import User, Product, Order, Coupon, Message, Category, ProductImage, Chama
+from app.models import User, Product, Order, Coupon, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
 from flask import render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import os
@@ -623,3 +623,85 @@ def admin_logout():
 @admin_bp.route("/analytics")
 def analytics():
     return render_template("admin/analytics/index.html")  
+
+
+
+# ===============================
+# VIEW ALL DELIVERY AREAS
+# ===============================
+@admin_bp.route("/delivery-areas")
+def delivery_areas():
+    areas = DeliveryArea.query.order_by(DeliveryArea.id.desc()).all()
+    return render_template("admin/delivery_areas/all.html", areas=areas)
+
+
+# ===============================
+# ADD DELIVERY AREA
+# ===============================
+@admin_bp.route("/delivery-areas/add", methods=["GET", "POST"])
+def add_delivery_area():
+    if request.method == "POST":
+        name = request.form.get("name")
+        fee = request.form.get("fee")
+
+        # validation
+        if not name or not fee:
+            flash("All fields are required", "error")
+            return redirect(url_for("admin.add_delivery_area"))
+
+        # check duplicate
+        existing = DeliveryArea.query.filter_by(name=name).first()
+        if existing:
+            flash("Area already exists", "error")
+            return redirect(url_for("admin.add_delivery_area"))
+
+        area = DeliveryArea(
+            name=name,
+            fee=float(fee)
+        )
+
+        db.session.add(area)
+        db.session.commit()
+
+        flash("Delivery area added successfully", "success")
+        return redirect(url_for("admin.delivery_areas"))
+
+    return render_template("admin/delivery_areas/add.html")
+
+
+# ===============================
+# EDIT DELIVERY AREA
+# ===============================
+@admin_bp.route("/delivery-areas/edit/<int:id>", methods=["GET", "POST"])
+def edit_delivery_area(id):
+    area = DeliveryArea.query.get_or_404(id)
+
+    if request.method == "POST":
+        name = request.form.get("name")
+        fee = request.form.get("fee")
+        is_active = request.form.get("is_active")
+
+        area.name = name
+        area.fee = float(fee)
+        area.is_active = True if is_active == "on" else False
+
+        db.session.commit()
+
+        flash("Delivery area updated", "success")
+        return redirect(url_for("admin.delivery_areas"))
+
+    return render_template("admin/delivery_areas/edit.html", area=area)
+
+
+# ===============================
+# DELETE DELIVERY AREA
+# ===============================
+@admin_bp.route("/delivery-areas/delete/<int:id>", methods=["POST"])
+def delete_delivery_area(id):
+    area = DeliveryArea.query.get_or_404(id)
+
+    db.session.delete(area)
+    db.session.commit()
+
+    flash("Delivery area deleted", "success")
+    return redirect(url_for("admin.delivery_areas"))
