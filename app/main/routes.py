@@ -302,8 +302,8 @@ def checkout_process():
     from app import db
     import uuid
 
-    # Get cart (as dictionary)
-    cart = session.get("cart", {})
+    # Cart is a LIST
+    cart = session.get("cart", [])
 
     if not cart:
         flash("Cart is empty", "danger")
@@ -319,23 +319,27 @@ def checkout_process():
     payment_method = request.form.get("payment_method")
     notes = request.form.get("notes")
 
-    # ✅ Calculate subtotal from DB (SAFE & CORRECT)
+    # ✅ Calculate subtotal safely
     subtotal = 0
     valid_items = []
 
-    for product_id, quantity in cart.items():
-        product = Product.query.get(product_id)
-        if product:
-            item_total = product.price * quantity
-            subtotal += item_total
+    for item in cart:
+        try:
+            price = float(item.get("price", 0))
+            quantity = int(item.get("quantity", 1))
 
-            # Store valid items for later use
+            subtotal += price * quantity
+
             valid_items.append({
-                "product": product,
-                "quantity": quantity
+                "name": item.get("name"),
+                "price": price,
+                "quantity": quantity,
+                "image": item.get("image")
             })
+        except Exception:
+            continue  # skip bad data
 
-    # Delivery fee logic
+    # Delivery fee
     delivery_fee = 0
     if delivery_method == "local":
         delivery_fee = 300
@@ -344,7 +348,7 @@ def checkout_process():
 
     total = subtotal + delivery_fee
 
-    # ✅ Create order
+    # Create order
     order = Order(
         order_number=str(uuid.uuid4())[:8],
         full_name=full_name,
@@ -364,17 +368,14 @@ def checkout_process():
     db.session.add(order)
     db.session.commit()
 
-    # ✅ Save order items (from DB, not session)
+    # Save items
     for item in valid_items:
-        product = item["product"]
-        quantity = item["quantity"]
-
         order_item = OrderItem(
             order_id=order.id,
-            product_name=product.name,
-            price=product.price,
-            quantity=quantity,
-            image=product.image  # adjust if your field name differs
+            product_name=item["name"],
+            price=item["price"],
+            quantity=item["quantity"],
+            image=item["image"]
         )
         db.session.add(order_item)
 
