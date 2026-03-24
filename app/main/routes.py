@@ -300,8 +300,10 @@ import uuid
 def checkout_process():
     from flask import request, session, redirect, url_for, flash
     from app import db
+    import uuid
 
-    cart = session.get("cart", [])
+    # Get cart (as dictionary)
+    cart = session.get("cart", {})
 
     if not cart:
         flash("Cart is empty", "danger")
@@ -317,9 +319,23 @@ def checkout_process():
     payment_method = request.form.get("payment_method")
     notes = request.form.get("notes")
 
-    # Calculate totals
-    subtotal = sum(item['price'] * item['quantity'] for item in cart)
+    # ✅ Calculate subtotal from DB (SAFE & CORRECT)
+    subtotal = 0
+    valid_items = []
 
+    for product_id, quantity in cart.items():
+        product = Product.query.get(product_id)
+        if product:
+            item_total = product.price * quantity
+            subtotal += item_total
+
+            # Store valid items for later use
+            valid_items.append({
+                "product": product,
+                "quantity": quantity
+            })
+
+    # Delivery fee logic
     delivery_fee = 0
     if delivery_method == "local":
         delivery_fee = 300
@@ -328,7 +344,7 @@ def checkout_process():
 
     total = subtotal + delivery_fee
 
-    # Create order
+    # ✅ Create order
     order = Order(
         order_number=str(uuid.uuid4())[:8],
         full_name=full_name,
@@ -348,19 +364,23 @@ def checkout_process():
     db.session.add(order)
     db.session.commit()
 
-    # Save items
-    for item in cart:
+    # ✅ Save order items (from DB, not session)
+    for item in valid_items:
+        product = item["product"]
+        quantity = item["quantity"]
+
         order_item = OrderItem(
             order_id=order.id,
-            product_name=item['name'],
-            price=item['price'],
-            quantity=item['quantity'],
-            image=item.get('image')
+            product_name=product.name,
+            price=product.price,
+            quantity=quantity,
+            image=product.image  # adjust if your field name differs
         )
         db.session.add(order_item)
 
     db.session.commit()
 
+    # Clear cart
     session.pop("cart", None)
 
     flash("Order placed successfully!", "success")
