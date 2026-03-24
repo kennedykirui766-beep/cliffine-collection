@@ -43,17 +43,21 @@ def create_app():
 
     @app.context_processor
     def inject_cart_count():
-        # If user is logged in, get their cart from DB
+        from flask_login import current_user
+        from flask import session
+        from app.models import Cart
+
+        cart_count = 0
+
         if current_user.is_authenticated:
             cart = Cart.query.filter_by(user_id=current_user.id).first()
-            if cart and cart.items:
-                return dict(cart_count=sum(item.quantity for item in cart.items))
-        # Otherwise, use session cart for guest
         else:
-            cart = session.get("cart", {})
-            return dict(cart_count=sum(cart.values()) if cart else 0)
+            session_id = session.get("cart_session")
+            cart = Cart.query.filter_by(session_id=session_id).first() if session_id else None
 
-        # Default fallback
-        return dict(cart_count=0)
+        if cart and cart.items:
+            cart_count = sum(item.quantity for item in cart.items)
+
+        return dict(cart_count=cart_count)
 
     return app

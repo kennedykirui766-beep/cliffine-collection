@@ -251,53 +251,41 @@ def cart():
         current_year=datetime.now().year
     )
 
-@main_bp.route("/add-to-cart", methods=["POST"])
-def add_to_cart():
-    from flask import request, jsonify, session
+@main_bp.route("/cart")
+def cart():
+    from flask import session, render_template
     from flask_login import current_user
-    from app import db
-    from app.models import Cart, CartItem, Product
-    import uuid
+    from app.models import Cart, Product
 
-    data = request.get_json()
-    product_id = int(data.get("product_id"))
-    quantity = int(data.get("quantity", 1))
+    products_in_cart = []
+    total_price = 0
+    cart_count = 0
 
-    product = Product.query.get(product_id)
-    if not product:
-        return jsonify({"success": False, "message": "Product not found"}), 404
-
-    # --- Determine cart owner ---
     if current_user.is_authenticated:
         cart = Cart.query.filter_by(user_id=current_user.id).first()
-        if not cart:
-            cart = Cart(user_id=current_user.id)
-            db.session.add(cart)
     else:
-        # Guest cart
         session_id = session.get("cart_session")
-        if not session_id:
-            session_id = str(uuid.uuid4())
-            session["cart_session"] = session_id
-        cart = Cart.query.filter_by(session_id=session_id).first()
-        if not cart:
-            cart = Cart(session_id=session_id)
-            db.session.add(cart)
+        cart = Cart.query.filter_by(session_id=session_id).first() if session_id else None
 
-    db.session.commit()  # ensure cart.id exists
+    if cart and cart.items:
+        for item in cart.items:
+            product = Product.query.get(item.product_id)
+            if product:
+                item_total = product.price * item.quantity
+                total_price += item_total
+                cart_count += item.quantity
+                products_in_cart.append({
+                    "product": product,
+                    "quantity": item.quantity,
+                    "total": item_total
+                })
 
-    # --- Add or update item ---
-    cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product.id).first()
-    if cart_item:
-        cart_item.quantity += quantity
-    else:
-        cart_item = CartItem(cart_id=cart.id, product_id=product.id, quantity=quantity, price=product.price)
-        db.session.add(cart_item)
-
-    db.session.commit()
-
-    total_items = sum(item.quantity for item in cart.items)
-    return jsonify({"success": True, "cart_count": total_items})
+    return render_template(
+        "cart.html",
+        products=products_in_cart,
+        total_price=total_price,
+        cart_count=cart_count
+    )
 
 
 @main_bp.route("/cart/remove", methods=["POST"])
