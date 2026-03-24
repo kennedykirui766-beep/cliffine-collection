@@ -386,7 +386,7 @@ def checkout_process():
 
     # --- Create order ---
     order = Order(
-        user_id=current_user.id if current_user.is_authenticated else None,
+        user_id=None,
         order_number=str(uuid.uuid4())[:8],
         full_name=full_name,
         email=email,
