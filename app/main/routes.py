@@ -201,60 +201,6 @@ def faq():
 def cart():
     from flask import session, render_template
     from flask_login import current_user
-    from app.models import Cart, CartItem, Product
-    from datetime import datetime
-    from app import db
-
-    products_in_cart = []
-    total_price = 0
-    cart_count = 0
-
-    if current_user.is_authenticated:
-        # --- Logged-in user: fetch cart from database ---
-        cart = Cart.query.filter_by(user_id=current_user.id).first()
-        if cart and cart.items:
-            for item in cart.items:
-                product = Product.query.get(item.product_id)
-                if product:
-                    item_total = item.price * item.quantity
-                    total_price += item_total
-                    cart_count += item.quantity
-                    products_in_cart.append({
-                        "product": product,
-                        "quantity": item.quantity,
-                        "total": item_total
-                    })
-    else:
-        # --- Guest user: fetch cart from session ---
-        session_cart = session.get("cart", {})
-        for product_id_str, quantity in session_cart.items():
-            try:
-                product_id = int(product_id_str)
-            except ValueError:
-                continue
-            product = Product.query.get(product_id)
-            if product:
-                item_total = product.price * quantity
-                total_price += item_total
-                cart_count += quantity
-                products_in_cart.append({
-                    "product": product,
-                    "quantity": quantity,
-                    "total": item_total
-                })
-
-    return render_template(
-        "cart.html",
-        products=products_in_cart,
-        total_price=total_price,
-        cart_count=cart_count,
-        current_year=datetime.now().year
-    )
-
-@main_bp.route("/cart")
-def cart():
-    from flask import session, render_template
-    from flask_login import current_user
     from app.models import Cart, Product
 
     products_in_cart = []
@@ -286,6 +232,54 @@ def cart():
         total_price=total_price,
         cart_count=cart_count
     )
+
+@main_bp.route("/add-to-cart", methods=["POST"])
+def add_to_cart():
+    from flask import request, jsonify, session
+    from flask_login import current_user
+    from app import db
+    from app.models import Cart, CartItem, Product
+    import uuid
+
+    data = request.get_json()
+    product_id = int(data.get("product_id"))
+    quantity = int(data.get("quantity", 1))
+
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({"success": False, "message": "Product not found"}), 404
+
+    # --- Determine cart owner ---
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+        if not cart:
+            cart = Cart(user_id=current_user.id)
+            db.session.add(cart)
+    else:
+        # Guest cart
+        session_id = session.get("cart_session")
+        if not session_id:
+            session_id = str(uuid.uuid4())
+            session["cart_session"] = session_id
+        cart = Cart.query.filter_by(session_id=session_id).first()
+        if not cart:
+            cart = Cart(session_id=session_id)
+            db.session.add(cart)
+
+    db.session.commit()  # ensure cart.id exists
+
+    # --- Add or update item ---
+    cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product.id).first()
+    if cart_item:
+        cart_item.quantity += quantity
+    else:
+        cart_item = CartItem(cart_id=cart.id, product_id=product.id, quantity=quantity, price=product.price)
+        db.session.add(cart_item)
+
+    db.session.commit()
+
+    total_items = sum(item.quantity for item in cart.items)
+    return jsonify({"success": True, "cart_count": total_items})
 
 
 @main_bp.route("/cart/remove", methods=["POST"])
