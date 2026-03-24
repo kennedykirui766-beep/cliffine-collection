@@ -385,7 +385,7 @@ def checkout_process():
     session.pop("cart", None)
 
     flash("Order placed successfully!", "success")
-    return redirect(url_for("main.home"))
+    return redirect(url_for("main.index"))
 
 # Orders
 @main_bp.route("/orders")
