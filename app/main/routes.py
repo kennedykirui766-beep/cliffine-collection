@@ -345,7 +345,6 @@ def checkout_process():
     from flask import request, session, redirect, url_for, flash
     from app import db
     import uuid
-    from flask_login import current_user
     from datetime import datetime
 
     # Get cart from session
@@ -362,12 +361,12 @@ def checkout_process():
     address = request.form.get("address")
     city = request.form.get("city")
     delivery_method = request.form.get("delivery_method")
-    payment_method = request.form.get("payment_method")
+    delivery_location = request.form.get("delivery_location")  # new field
     notes = request.form.get("notes")
 
     # --- Calculate subtotal ---
     subtotal = 0
-    for item in cart.values():  # Use .values() if cart is a dict
+    for item in cart.values():  # .values() if cart is a dict
         try:
             price = float(item.get("price", 0))
             quantity = int(item.get("quantity", 1))
@@ -382,11 +381,10 @@ def checkout_process():
     elif delivery_method == "countrywide":
         delivery_fee = 500
 
-    total = subtotal + delivery_fee
+    total_amount = subtotal + delivery_fee
 
     # --- Create order ---
     order = Order(
-        user_id=None,
         order_number=str(uuid.uuid4())[:8],
         full_name=full_name,
         email=email,
@@ -395,17 +393,17 @@ def checkout_process():
         city=city,
         country="Kenya",
         delivery_method=delivery_method,
+        delivery_location=delivery_location,
         notes=notes,
-        total_amount=total,
+        total_amount=total_amount,
         delivery_fee=delivery_fee,
         status="pending",
         payment_status="pending",
         created_at=datetime.utcnow()
     )
-
     db.session.add(order)
 
-    # --- Save order items ---
+    # --- Add order items ---
     for item in cart.values():
         try:
             product_id = item.get("id")
@@ -413,19 +411,19 @@ def checkout_process():
             price = float(item.get("price", 0))
 
             order_item = OrderItem(
-                order=order,  # use relationship instead of order_id
+                order=order,  # link via relationship
                 product_id=product_id,
                 quantity=quantity,
                 price=price,
                 total_price=price * quantity
             )
-
             db.session.add(order_item)
 
-        except Exception:
+        except Exception as e:
+            print("Skipping item due to error:", e)
             continue
 
-    # --- Commit everything once ---
+    # --- Commit everything ---
     db.session.commit()
 
     # --- Clear cart ---
