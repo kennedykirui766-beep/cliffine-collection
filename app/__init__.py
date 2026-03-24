@@ -1,6 +1,11 @@
 from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_login import LoginManager
+
+login_manager = LoginManager()
+login_manager.login_view = "main.login"  # route name for login page
+login_manager.login_message_category = "info"
 
 # Initialize extensions (no circular imports here)
 db = SQLAlchemy()
@@ -20,6 +25,8 @@ def create_app():
 
     from app.main.routes import main_bp
     app.register_blueprint(main_bp)
+    
+    login_manager.init_app(app)
 
     # Import models here if needed for Alembic to detect them
     from app import models  # <-- ensures models are loaded for migrations
