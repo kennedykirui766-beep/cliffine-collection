@@ -35,10 +35,25 @@ def create_app():
     from app.main.routes import main_bp
     app.register_blueprint(main_bp)
 
-    # Context processor
+    # -----------------------------
+    # Context processor: cart count
+    # -----------------------------
+    from flask_login import current_user
+    from app.models import Cart
+
     @app.context_processor
     def inject_cart_count():
-        cart = session.get("cart", {})
-        return dict(cart_count=sum(cart.values()) if cart else 0)
+        # If user is logged in, get their cart from DB
+        if current_user.is_authenticated:
+            cart = Cart.query.filter_by(user_id=current_user.id).first()
+            if cart and cart.items:
+                return dict(cart_count=sum(item.quantity for item in cart.items))
+        # Otherwise, use session cart for guest
+        else:
+            cart = session.get("cart", {})
+            return dict(cart_count=sum(cart.values()) if cart else 0)
+
+        # Default fallback
+        return dict(cart_count=0)
 
     return app
