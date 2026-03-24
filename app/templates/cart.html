@@ -65,7 +65,7 @@
                                 <div>
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="font-bold text-charcoal dark:text-white hover:text-accent text-lg">{{ product.name }}</a>
+                                            <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="font-bold text-charcoal dark:text-white hover:text-accent text-lg">{{ product.product.name }}</a>
                                             <p class="text-sm text-muted dark:text-gray-400">{{ product.category.name if product.category else 'Uncategorized' }}</p>
                                         </div>
                                         <!-- Desktop Remove Button -->
