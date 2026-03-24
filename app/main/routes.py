@@ -201,21 +201,31 @@ def faq():
 def cart():
     cart = session.get("cart", {})
 
-    # If cart is a list (old format), convert to dict
-    if isinstance(cart, list):
-        new_cart = {}
+    # Standardize cart to dictionary: {product_id: quantity}
+    standardized_cart = {}
+
+    if isinstance(cart, dict):
+        standardized_cart = {str(k): v for k, v in cart.items()}
+
+    elif isinstance(cart, list):
+        # List could be IDs or dicts
         for item in cart:
-            # Assume each list item is a dict: {"product_id": 5, "quantity": 2}
-            product_id = str(item.get("product_id"))
-            quantity = item.get("quantity", 1)
-            new_cart[product_id] = quantity
-        cart = new_cart
-        session["cart"] = cart  # Save back in session
+            if isinstance(item, dict) and "product_id" in item:
+                pid = str(item["product_id"])
+                qty = item.get("quantity", 1)
+                standardized_cart[pid] = qty
+            else:
+                # assume item is product ID as str/int
+                pid = str(item)
+                standardized_cart[pid] = standardized_cart.get(pid, 0) + 1
+
+    # Save standardized cart back in session
+    session["cart"] = standardized_cart
 
     products_in_cart = []
     total_price = 0
 
-    for product_id_str, quantity in cart.items():
+    for product_id_str, quantity in standardized_cart.items():
         try:
             product_id = int(product_id_str)
         except ValueError:
@@ -236,7 +246,7 @@ def cart():
         "cart.html",
         products=products_in_cart,
         total_price=total_price,
-        cart_count=sum(cart.values()),
+        cart_count=sum(standardized_cart.values()),
         current_year=datetime.now().year
     )
 
