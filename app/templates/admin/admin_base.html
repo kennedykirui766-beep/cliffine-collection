@@ -329,15 +329,15 @@
                     </div>
 
                     <!-- Shipping (Updated) -->
-                    <div class="nav-item relative {% if request.endpoint and ('shipping' in request.endpoint or 'delivery_area' in request.endpoint) %}expanded{% endif %}">
+                    <div class="nav-item relative {% if request.endpoint and ('delivery_area' in request.endpoint) %}expanded{% endif %}">
                         <div class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer" onclick="toggleSubmenu(this)">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                             <span class="font-medium text-sm">Shipping</span>
                             <svg class="arrow ml-auto w-4 h-4 transform transition-transform opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
                         <div class="submenu bg-black/15 rounded-md mt-1 ml-4 overflow-hidden">
-                            <a href="{{ url_for('admin.shipping') }}" class="block py-2 px-4 text-sm text-white/60 hover:text-white hover:bg-white/5 border-l border-transparent hover:border-amber-500/50 transition-all {{ 'active text-amber-400 border-amber-500' if request.endpoint == 'admin.shipping' }}">Settings</a>
-                            <a href="{{ url_for('admin.delivery_areas') }}" class="block py-2 px-4 text-sm text-white/60 hover:text-white hover:bg-white/5 border-l border-transparent hover:border-amber-500/50 transition-all {{ 'active text-amber-400 border-amber-500' if request.endpoint and 'delivery_area' in request.endpoint }}">Delivery Areas</a>
+                            <a href="{{ url_for('admin.delivery_areas') }}" class="block py-2 px-4 text-sm text-white/60 hover:text-white hover:bg-white/5 border-l border-transparent hover:border-amber-500/50 transition-all {{ 'active text-amber-400 border-amber-500' if request.endpoint == 'admin.delivery_areas' }}">All Delivery Areas</a>
+                            <a href="{{ url_for('admin.add_delivery_area') }}" class="block py-2 px-4 text-sm text-white/60 hover:text-white hover:bg-white/5 border-l border-transparent hover:border-amber-500/50 transition-all {{ 'active text-amber-400 border-amber-500' if request.endpoint == 'admin.add_delivery_area' }}">Add Delivery Area</a>
                         </div>
                     </div>
 
