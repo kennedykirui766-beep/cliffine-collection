@@ -153,6 +153,24 @@ class Cart(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     items = db.relationship("CartItem", backref="cart", lazy=True, cascade="all, delete-orphan")
+    
+class CartItem(db.Model):
+    __tablename__ = "cart_items"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    cart_id = db.Column(db.Integer, db.ForeignKey("carts.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+
+    quantity = db.Column(db.Integer, default=1)
+    price = db.Column(db.Float, default=0)
+    total_price = db.Column(db.Float, default=0)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Optional: relationship to product if you want
+    product = db.relationship("Product", backref="cart_items", lazy=True)   
+    
 
 # ===============================
 # ORDERS
