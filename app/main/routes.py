@@ -345,15 +345,17 @@ def checkout_process():
     from flask import request, session, redirect, url_for, flash
     from app import db
     import uuid
+    from flask_login import current_user
+    from datetime import datetime
 
-    # Cart is a LIST
+    # Get cart from session
     cart = session.get("cart", {})
 
     if not cart:
         flash("Cart is empty", "danger")
         return redirect(url_for("main.cart"))
 
-    # Form data
+    # --- Form data ---
     full_name = request.form.get("full_name")
     email = request.form.get("email")
     phone = request.form.get("phone")
@@ -363,27 +365,17 @@ def checkout_process():
     payment_method = request.form.get("payment_method")
     notes = request.form.get("notes")
 
-    # ✅ Calculate subtotal safely
+    # --- Calculate subtotal ---
     subtotal = 0
-    valid_items = []
-
-    for item in cart:
+    for item in cart.values():  # Use .values() if cart is a dict
         try:
             price = float(item.get("price", 0))
             quantity = int(item.get("quantity", 1))
-
             subtotal += price * quantity
-
-            valid_items.append({
-                "name": item.get("name"),
-                "price": price,
-                "quantity": quantity,
-                "image": item.get("image")
-            })
         except Exception:
-            continue  # skip bad data
+            continue
 
-    # Delivery fee
+    # --- Delivery fee ---
     delivery_fee = 0
     if delivery_method == "local":
         delivery_fee = 300
@@ -392,8 +384,9 @@ def checkout_process():
 
     total = subtotal + delivery_fee
 
-    # Create order
+    # --- Create order ---
     order = Order(
+        user_id=current_user.id if current_user.is_authenticated else None,
         order_number=str(uuid.uuid4())[:8],
         full_name=full_name,
         email=email,
@@ -406,21 +399,21 @@ def checkout_process():
         total_amount=total,
         delivery_fee=delivery_fee,
         status="pending",
-        payment_status="pending"
+        payment_status="pending",
+        created_at=datetime.utcnow()
     )
 
     db.session.add(order)
-    db.session.commit()
 
-    # Save items
-    for item in cart:
+    # --- Save order items ---
+    for item in cart.values():
         try:
             product_id = item.get("id")
             quantity = int(item.get("quantity", 1))
             price = float(item.get("price", 0))
 
             order_item = OrderItem(
-                order_id=order.id,
+                order=order,  # use relationship instead of order_id
                 product_id=product_id,
                 quantity=quantity,
                 price=price,
@@ -431,11 +424,11 @@ def checkout_process():
 
         except Exception:
             continue
-        
 
+    # --- Commit everything once ---
     db.session.commit()
 
-    # Clear cart
+    # --- Clear cart ---
     session.pop("cart", None)
 
     flash("Order placed successfully!", "success")
