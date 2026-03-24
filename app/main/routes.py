@@ -289,19 +289,97 @@ def add_to_cart():
     total_items = sum(item.quantity for item in cart.items)
     return jsonify({"success": True, "cart_count": total_items})
 
+@main_bp.route("/cart/update", methods=["POST"])
+def update_cart():
+    from flask import request, jsonify, session
+    from flask_login import current_user
+    from app.models import Cart, CartItem
+
+    data = request.get_json()
+    updates = data.get("updates", [])
+
+    # Get cart
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+    else:
+        session_id = session.get("cart_session")
+        cart = Cart.query.filter_by(session_id=session_id).first()
+
+    if not cart:
+        return jsonify({"success": False, "message": "Cart not found"}), 404
+
+    for update in updates:
+        product_id = int(update.get("product_id"))
+        quantity = int(update.get("quantity"))
+
+        item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+
+        if item:
+            if quantity <= 0:
+                # Remove item
+                db.session.delete(item)
+            else:
+                item.quantity = quantity
+
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+@main_bp.route("/cart/coupon/apply", methods=["POST"])
+def apply_coupon():
+    from flask import request, jsonify
+
+    data = request.get_json()
+    code = data.get("code")
+
+    # Example logic (replace with DB later)
+    if code == "SAVE10":
+        return jsonify({
+            "success": True,
+            "message": "Coupon applied!",
+            "discount_amount": 100,
+            "new_total": 900  # you should calculate this dynamically
+        })
+
+    return jsonify({
+        "success": False,
+        "message": "Invalid coupon"
+    }), 400
+
 
 @main_bp.route("/cart/remove", methods=["POST"])
 def remove_from_cart():
+    from flask import request, redirect, url_for, session, flash
+    from flask_login import current_user
+    from app.models import Cart, CartItem
+    from app import db
+
     product_id = request.form.get("product_id")
 
-    cart = session.get("cart", [])
+    # Get correct cart
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+    else:
+        session_id = session.get("cart_session")
+        cart = Cart.query.filter_by(session_id=session_id).first()
 
-    # remove item (simple list)
-    cart = [item for item in cart if str(item) != str(product_id)]
+    if not cart:
+        flash("Cart not found", "error")
+        return redirect(url_for("main.cart"))
 
-    session["cart"] = cart
+    # Find item
+    item = CartItem.query.filter_by(
+        cart_id=cart.id,
+        product_id=product_id
+    ).first()
 
-    flash("Item removed from cart", "success")
+    if item:
+        db.session.delete(item)
+        db.session.commit()
+        flash("Item removed from cart", "success")
+    else:
+        flash("Item not found in cart", "error")
+
     return redirect(url_for("main.cart"))
 
 
