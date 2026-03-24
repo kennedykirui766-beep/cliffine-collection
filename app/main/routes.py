@@ -252,6 +252,12 @@ def cart():
 
 @main_bp.route("/add-to-cart", methods=["POST"])
 def add_to_cart():
+    from flask import request, jsonify, session
+    from flask_login import current_user
+    from app import db
+    from app.models import Cart, CartItem, Product
+    import uuid
+
     data = request.get_json()
     product_id = int(data.get("product_id"))
     quantity = int(data.get("quantity", 1))
@@ -267,7 +273,7 @@ def add_to_cart():
             cart = Cart(user_id=current_user.id)
             db.session.add(cart)
     else:
-        # Guest cart: use session_id
+        # Guest cart
         session_id = session.get("cart_session")
         if not session_id:
             session_id = str(uuid.uuid4())
