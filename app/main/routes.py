@@ -321,21 +321,46 @@ def search():
 
 @main_bp.route("/checkout", methods=["GET"])
 def checkout():
-    cart_ids = session.get("cart", [])
+    from flask_login import current_user
+    from flask import session, render_template
+    from app.models import Cart, Product
+    from datetime import datetime
 
-    # Fetch products from DB using IDs
-    products_in_cart = Product.query.filter(
-        Product.id.in_(cart_ids)
-    ).all() if cart_ids else []
+    products_in_cart = []
+    subtotal = 0
+    cart_count = 0
 
-    # Calculate subtotal
-    subtotal = sum(p.price for p in products_in_cart)
+    # -----------------------------
+    # Get cart (DB for both users)
+    # -----------------------------
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+    else:
+        session_id = session.get("cart_session")
+        cart = Cart.query.filter_by(session_id=session_id).first() if session_id else None
+
+    # -----------------------------
+    # Build cart items
+    # -----------------------------
+    if cart and cart.items:
+        for item in cart.items:
+            product = Product.query.get(item.product_id)
+            if product:
+                item_total = item.price * item.quantity
+                subtotal += item_total
+                cart_count += item.quantity
+
+                products_in_cart.append({
+                    "product": product,
+                    "quantity": item.quantity,
+                    "total": item_total
+                })
 
     return render_template(
         "checkout.html",
         products=products_in_cart,
         subtotal=subtotal,
-        cart_count=len(cart_ids),
+        cart_count=cart_count,
         current_year=datetime.now().year
     )
 
