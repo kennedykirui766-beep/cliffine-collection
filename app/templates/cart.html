@@ -56,7 +56,7 @@
                         <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
                             <!-- Image -->
                             <div class="w-full sm:w-24 h-48 sm:h-24 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                <img src="{{ product.images[0].image_url if product.images else  'https://placehold.co/400x400/581C87/FFFFFF?text=Product' }}" 
+                                <img src="{{ item.product.images[0].image_url if item.product.images else  'https://placehold.co/400x400/581C87/FFFFFF?text=Product' }}" 
                                     alt="{{ item.product.name }}" class="w-full h-full object-cover">
                             </div>
                             
