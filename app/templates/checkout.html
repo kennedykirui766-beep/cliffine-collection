@@ -63,7 +63,7 @@
                         </div>
                     </div>
 
-                    <!-- 6. Delivery Options -->
+                    <!-- 6. Delivery Options (Updated Dynamic Section) -->
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-6 flex items-center gap-2">
                             <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
@@ -74,106 +74,19 @@
                             <!-- Location Dropdown -->
                             <div>
                                 <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Select Your Town / Location *</label>
-                                <select name="delivery_location" id="delivery-location" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-charcoal dark:text-white" onchange="fetchCalculation()">
-                                    <option value="">Select Location</option>
+                                <select name="delivery_area_id" id="delivery-location" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-charcoal dark:text-white" onchange="updateOrderSummary()">
+                                    <option value="" data-fee="0">Select Location</option>
                                     
-                                    <!-- Shop Pickup (Free) -->
-                                    <optgroup label="--- SHOP PICKUP (FREE) ---">
-                                        <option value="pickup-kericho">Kericho Town (Pickup at Shop)</option>
-                                        <option value="pickup-bomet">Bomet Town (Pickup at Shop)</option>
-                                    </optgroup>
-
-                                    <!-- Nairobi -->
-                                    <optgroup label="--- NAIROBI AREA ---">
-                                        <option value="nairobi-cbd">Nairobi CBD</option>
-                                        <option value="nairobi-westlands">Westlands</option>
-                                        <option value="nairobi-kilimani">Kilimani</option>
-                                        <option value="nairobi-karen">Karen</option>
-                                        <option value="nairobi-langata">Langata</option>
-                                        <option value="nairobi-embakasi">Embakasi</option>
-                                        <option value="nairobi-juja">Juja</option>
-                                        <option value="nairobi-ruiru">Ruiru</option>
-                                        <option value="nairobi-kitengela">Kitengela</option>
-                                        <option value="nairobi-athiriver">Athi River</option>
-                                        <option value="nairobi-syokimau">Syokimau</option>
-                                    </optgroup>
-
-                                    <!-- Central Region -->
-                                    <optgroup label="--- CENTRAL REGION ---">
-                                        <option value="thika">Thika</option>
-                                        <option value="kiambu">Kiambu</option>
-                                        <option value="nyeri">Nyeri</option>
-                                        <option value="muranga">Murang'a</option>
-                                        <option value="kieni">Kieni</option>
-                                        <option value="karatina">Karatina</option>
-                                        <option value="kerugoya">Kerugoya</option>
-                                        <option value="nanyuki">Nanyuki</option>
-                                        <option value="nyahururu">Nyahururu</option>
-                                        <option value="maragua">Maragua</option>
-                                    </optgroup>
-
-                                    <!-- Rift Valley -->
-                                    <optgroup label="--- RIFT VALLEY ---">
-                                        <option value="nakuru">Nakuru</option>
-                                        <option value="eldoret">Eldoret</option>
-                                        <option value="naivasha">Naivasha</option>
-                                        <option value="narok">Narok</option>
-                                        <option value="kapsabet">Kapsabet</option>
-                                        <option value="kitale">Kitale</option>
-                                        <option value="litein">Litein</option>
-                                        <option value="sotik">Sotik</option>
-                                        <option value="kaplong">Kaplong</option>
-                                        <option value="tenwek">Tenwek</option>
-                                    </optgroup>
-
-                                    <!-- Nyanza -->
-                                    <optgroup label="--- NYANZA ---">
-                                        <option value="kisumu">Kisumu</option>
-                                        <option value="kisii">Kisii</option>
-                                        <option value="homa-bay">Homa Bay</option>
-                                        <option value="migori">Migori</option>
-                                        <option value="siaya">Siaya</option>
-                                        <option value="bondoe">Bondo</option>
-                                        <option value="oyugis">Oyugis</option>
-                                    </optgroup>
-
-                                    <!-- Western -->
-                                    <optgroup label="--- WESTERN ---">
-                                        <option value="kakamega">Kakamega</option>
-                                        <option value="bungoma">Bungoma</option>
-                                        <option value="busia">Busia</option>
-                                        <option value="vihiga">Vihiga</option>
-                                        <option value="webuye">Webuye</option>
-                                        <option value="mumias">Mumias</option>
-                                    </optgroup>
-
-                                    <!-- Coast -->
-                                    <optgroup label="--- COAST ---">
-                                        <option value="mombasa">Mombasa</option>
-                                        <option value="malindi">Malindi</option>
-                                        <option value="diani">Diani</option>
-                                        <option value="ukunda">Ukunda</option>
-                                        <option value="kwale">Kwale</option>
-                                        <option value="kilifi">Kilifi</option>
-                                        <option value="voi">Voi</option>
-                                    </optgroup>
-
-                                    <!-- Eastern -->
-                                    <optgroup label="--- EASTERN ---">
-                                        <option value="machakos">Machakos</option>
-                                        <option value="makueni">Makueni (Wote)</option>
-                                        <option value="kitui">Kitui</option>
-                                        <option value="meru">Meru</option>
-                                        <option value="embu">Embu</option>
-                                        <option value="chuka">Chuka</option>
-                                    </optgroup>
-
-                                    <!-- North Eastern -->
-                                    <optgroup label="--- NORTH EASTERN ---">
-                                        <option value="garissa">Garissa</option>
-                                        <option value="wajir">Wajir</option>
-                                        <option value="mandera">Mandera</option>
-                                    </optgroup>
+                                    {% if areas %}
+                                        {% for area in areas %}
+                                            <!-- Data attribute used for JS calculation -->
+                                            <option value="{{ area.id }}" data-fee="{{ area.fee }}">
+                                                {{ area.name }} - KES {{ "{:,.0f}".format(area.fee) }}
+                                            </option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option disabled>No delivery areas available</option>
+                                    {% endif %}
                                 </select>
                             </div>
 
@@ -181,7 +94,7 @@
                             <div id="delivery-notes-section" class="hidden">
                                 <p class="text-sm text-green-600 dark:text-green-400 font-medium p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                                     <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    You have selected <strong>Pickup at Shop</strong>. No delivery fee will be charged.
+                                    You have selected a location with <strong>Free Delivery</strong> or standard rates apply.
                                 </p>
                             </div>
                         </div>
@@ -262,7 +175,7 @@
                         <!-- Items List -->
                         <div class="space-y-4 mb-6">
                             {% if products %}
-                                {% for item in items %}
+                                {% for item in products %}
                                 <div class="flex items-center gap-4">
                                     <div class="w-16 h-16 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
                                         <img src="{{ item.product.images[0].image_url if item.product.images else 'https://placehold.co/100x100/581C87/FFFFFF?text=Item' }}" alt="{{ item.product.name }}" class="w-full h-full object-cover">
@@ -289,7 +202,7 @@
                             </div>
                             <div class="flex justify-between text-muted dark:text-gray-300 text-sm">
                                 <span>Delivery Fee</span>
-                                <span id="delivery-fee-display">Calculating...</span>
+                                <span id="delivery-fee-display">Select location</span>
                             </div>
                             <div class="flex justify-between text-lg font-bold text-charcoal dark:text-white border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
                                 <span>Total</span>
@@ -317,56 +230,32 @@
 
 {% block scripts %}
 <script>
-    // Variables to store current state
-    let currentTotal = {{ subtotal if subtotal else 0 }};
-    let currentDelivery = 0;
+    // Use Jinja to inject the subtotal safely into JS
+    const subtotal = {{ subtotal if subtotal else 0 }};
 
-    // Function to request calculation from Backend
-    async function fetchCalculation() {
-        const locationSelect = document.getElementById('delivery-location');
-        const selectedLocation = locationSelect.value;
+    // Function to update order summary instantly on client side
+    function updateOrderSummary() {
+        const select = document.getElementById('delivery-location');
+        const selectedOption = select.options[select.selectedIndex];
         const deliveryNotesSection = document.getElementById('delivery-notes-section');
+        
+        // Get fee from data attribute
+        const fee = parseFloat(selectedOption.dataset.fee) || 0;
+        const locationId = select.value;
 
-        // Show pickup note if applicable
-        if (selectedLocation.startsWith('pickup-')) {
+        // Logic for showing 'free delivery' note (if fee is 0 and location is selected)
+        if (locationId && fee === 0) {
             deliveryNotesSection.classList.remove('hidden');
         } else {
             deliveryNotesSection.classList.add('hidden');
         }
 
-        // If no location selected, reset
-        if (!selectedLocation) {
-            document.getElementById('delivery-fee-display').textContent = 'KES 0';
-            document.getElementById('total-amount').textContent = document.getElementById('subtotal-display').textContent;
-            return;
-        }
+        // Calculate total
+        const total = subtotal + fee;
 
-        // Call Backend API
-        try {
-            const response = await fetch("/api/calculate_delivery", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ location: selectedLocation })
-            });
-
-            const data = await response.json();
-
-            // Update Frontend Display with Backend Data
-            currentDelivery = data.delivery_fee;
-            currentTotal = data.total;
-
-            document.getElementById('delivery-fee-display').textContent = data.delivery_fee === 0 ? 'FREE' : `KES ${data.delivery_fee.toLocaleString()}`;
-            document.getElementById('total-amount').textContent = `KES ${data.total.toLocaleString()}`;
-            
-            // Also update subtotal in case backend re-calculated it
-            document.getElementById('subtotal-display').textContent = `KES ${data.subtotal.toLocaleString()}`;
-
-        } catch (error) {
-            console.error("Error fetching calculation:", error);
-            document.getElementById('delivery-fee-display').textContent = "Error";
-        }
+        // Update DOM
+        document.getElementById('delivery-fee-display').textContent = fee === 0 ? 'FREE' : `KES ${fee.toLocaleString()}`;
+        document.getElementById('total-amount').textContent = `KES ${total.toLocaleString()}`;
     }
 
     // Function to toggle payment details visibility
@@ -403,7 +292,7 @@
         btn.classList.add('opacity-75');
         btnText.innerHTML = 'Processing...';
 
-        // Simulate API call to initiate STK (you would create a backend route for this)
+        // Simulate API call
         setTimeout(() => {
             btn.disabled = false;
             btn.classList.remove('opacity-75');
@@ -426,7 +315,7 @@
     // Initialize on Load
     document.addEventListener('DOMContentLoaded', function() {
         showPaymentDetails('stk');
-        fetchCalculation(); // Run once in case location is pre-filled or to set initial state
+        updateOrderSummary(); // Run once to set initial state
     });
 </script>
 {% endblock %}

@@ -409,44 +409,47 @@ def search():
 def checkout():
     from flask_login import current_user
     from flask import session, render_template
-    from app.models import Cart, Product
+    from app.models import Cart, Product, DeliveryArea
     from datetime import datetime
 
     products_in_cart = []
     subtotal = 0
     cart_count = 0
 
-    # -----------------------------
-    # Get cart (DB for both users)
-    # -----------------------------
+    # Get cart
     if current_user.is_authenticated:
         cart = Cart.query.filter_by(user_id=current_user.id).first()
     else:
         session_id = session.get("cart_session")
         cart = Cart.query.filter_by(session_id=session_id).first() if session_id else None
 
-    # -----------------------------
     # Build cart items
-    # -----------------------------
     if cart and cart.items:
         for item in cart.items:
             product = Product.query.get(item.product_id)
             if product:
-                item_total = item.price * item.quantity
+                unit_price = product.discount_price if product.discount_price else product.price
+                item_total = unit_price * item.quantity
+
                 subtotal += item_total
                 cart_count += item.quantity
 
                 products_in_cart.append({
                     "product": product,
                     "quantity": item.quantity,
-                    "total": item_total
+                    "total": item_total,
+                    "unit_price": unit_price
                 })
+
+    # ✅ Fetch delivery areas
+    areas = DeliveryArea.query.filter_by(is_active=True).all()
 
     return render_template(
         "checkout.html",
         products=products_in_cart,
         subtotal=subtotal,
         cart_count=cart_count,
+        areas=areas,
         current_year=datetime.now().year
     )
 
