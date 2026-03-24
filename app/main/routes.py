@@ -2,7 +2,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from datetime import datetime
 from flask import session
 from flask_login import current_user
-from app.models import Category, Chama, ChamaMember, Order, OrderItem, Product
+from app.models import Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product
 from app import db
 
 from app.models import Product
@@ -252,50 +252,44 @@ def cart():
 
 @main_bp.route("/add-to-cart", methods=["POST"])
 def add_to_cart():
-    from flask import request, jsonify
-    from flask_login import current_user
-    from app import db
-    from app.models import Cart, CartItem, Product
-
-    if not current_user.is_authenticated:
-        return jsonify({"success": False, "message": "Login required"}), 403
-
     data = request.get_json()
-    product_id = data.get("product_id")
+    product_id = int(data.get("product_id"))
     quantity = int(data.get("quantity", 1))
-
-    if not product_id:
-        return jsonify({"success": False, "message": "No product ID provided"}), 400
 
     product = Product.query.get(product_id)
     if not product:
         return jsonify({"success": False, "message": "Product not found"}), 404
 
-    # Get or create cart for current user
-    cart = Cart.query.filter_by(user_id=current_user.id).first()
-    if not cart:
-        cart = Cart(user_id=current_user.id)
-        db.session.add(cart)
-        db.session.commit()  # commit to get cart.id
+    # --- Determine cart owner ---
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+        if not cart:
+            cart = Cart(user_id=current_user.id)
+            db.session.add(cart)
+    else:
+        # Guest cart: use session_id
+        session_id = session.get("cart_session")
+        if not session_id:
+            session_id = str(uuid.uuid4())
+            session["cart_session"] = session_id
+        cart = Cart.query.filter_by(session_id=session_id).first()
+        if not cart:
+            cart = Cart(session_id=session_id)
+            db.session.add(cart)
 
-    # Check if item already in cart
+    db.session.commit()  # ensure cart.id exists
+
+    # --- Add or update item ---
     cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product.id).first()
     if cart_item:
         cart_item.quantity += quantity
     else:
-        cart_item = CartItem(
-            cart_id=cart.id,
-            product_id=product.id,
-            quantity=quantity,
-            price=product.price
-        )
+        cart_item = CartItem(cart_id=cart.id, product_id=product.id, quantity=quantity, price=product.price)
         db.session.add(cart_item)
 
     db.session.commit()
 
-    # Count total items
     total_items = sum(item.quantity for item in cart.items)
-
     return jsonify({"success": True, "cart_count": total_items})
 
 
@@ -360,19 +354,13 @@ import uuid
 
 @main_bp.route("/checkout/process", methods=["POST"])
 def checkout_process():
-    from flask import request, redirect, url_for, flash
-    from flask_login import current_user
-    from app import db
-    from app.models import Cart, CartItem, Order, OrderItem
-    import uuid
-    from datetime import datetime
+    # --- Determine cart ---
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+    else:
+        session_id = session.get("cart_session")
+        cart = Cart.query.filter_by(session_id=session_id).first() if session_id else None
 
-    if not current_user.is_authenticated:
-        flash("Login required to checkout.", "danger")
-        return redirect(url_for("auth.login"))
-
-    # Get user's cart
-    cart = Cart.query.filter_by(user_id=current_user.id).first()
     if not cart or not cart.items:
         flash("Your cart is empty.", "danger")
         return redirect(url_for("main.cart"))
@@ -387,7 +375,6 @@ def checkout_process():
     delivery_location = request.form.get("delivery_location")
     notes = request.form.get("notes")
 
-    # --- Calculate subtotal and total ---
     subtotal = sum(item.price * item.quantity for item in cart.items)
 
     delivery_fee = 0
@@ -400,7 +387,7 @@ def checkout_process():
 
     # --- Create order ---
     order = Order(
-        user_id=current_user.id,
+        user_id=current_user.id if current_user.is_authenticated else None,
         order_number=str(uuid.uuid4())[:8],
         full_name=full_name,
         email=email,
@@ -418,7 +405,7 @@ def checkout_process():
         created_at=datetime.utcnow()
     )
     db.session.add(order)
-    db.session.commit()  # commit to get order.id
+    db.session.commit()
 
     # --- Add order items ---
     for item in cart.items:
@@ -436,6 +423,7 @@ def checkout_process():
     # --- Clear cart ---
     db.session.delete(cart)
     db.session.commit()
+    session.pop("cart_session", None)
 
     flash("Order placed successfully!", "success")
     return redirect(url_for("main.index"))
