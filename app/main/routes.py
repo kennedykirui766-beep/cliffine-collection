@@ -201,10 +201,26 @@ def faq():
 def cart():
     cart = session.get("cart", {})
 
+    # If cart is a list (old format), convert to dict
+    if isinstance(cart, list):
+        new_cart = {}
+        for item in cart:
+            # Assume each list item is a dict: {"product_id": 5, "quantity": 2}
+            product_id = str(item.get("product_id"))
+            quantity = item.get("quantity", 1)
+            new_cart[product_id] = quantity
+        cart = new_cart
+        session["cart"] = cart  # Save back in session
+
     products_in_cart = []
     total_price = 0
 
-    for product_id, quantity in cart.items():
+    for product_id_str, quantity in cart.items():
+        try:
+            product_id = int(product_id_str)
+        except ValueError:
+            continue
+
         product = Product.query.get(product_id)
         if product:
             item_total = product.price * quantity
