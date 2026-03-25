@@ -375,6 +375,22 @@ class Chama(db.Model):
     # ── Relationships ────────────────────────────────────────────────────
     members = db.relationship("ChamaMember", backref="chama", lazy=True)
     product = db.relationship("Product", backref="chamas", lazy=True)
+    
+    # ── Computed Properties ────────────────────────────────────────────────
+@property
+def slots_remaining(self):
+    if self.max_members is None:
+        return None  # unlimited members
+
+    return max(0, self.max_members - len(self.members))
+
+
+@property
+def is_full(self):
+    if self.max_members is None:
+        return False
+
+    return len(self.members) >= self.max_members
 
 
 # ===============================
