@@ -168,6 +168,26 @@
         .scroll-indicator svg { width: 24px; height: 24px; color: rgba(255,255,255,0.7); transition: transform 0.2s ease; }
         .scroll-indicator:hover svg { color: var(--gold); transform: scale(1.2); }
 
+        /* --- Responsive Table Fixes --- */
+        /* Allow table cells to wrap text on small screens to prevent overlap */
+        .admin-table-wrapper td, 
+        .admin-table-wrapper th {
+            white-space: normal !important;
+            vertical-align: middle;
+        }
+
+        /* Keep Action buttons (last column) on one line */
+        .admin-table-wrapper td:last-child, 
+        .admin-table-wrapper th:last-child {
+            white-space: nowrap !important;
+            min-width: 120px; /* Ensure enough space for Edit/Delete buttons */
+        }
+        
+        /* Force tables to be at least a readable width before wrapping kicks in */
+        table {
+            min-width: 600px; 
+        }
+
     </style>
     {% block head %}{% endblock %}
 </head>
@@ -465,7 +485,8 @@
             </header>
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+            <!-- Added overflow-x-auto to handle wide tables on mobile -->
+            <main class="flex-1 overflow-y-auto overflow-x-auto p-6 bg-slate-50/50">
                 
                 <!-- Flash Messages -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -485,9 +506,12 @@
                     {% endif %}
                 {% endwith %}
 
-                {% block content %}
-                <!-- Child content goes here -->
-                {% endblock %}
+                <!-- Added admin-table-wrapper class for global styling hook -->
+                <div class="admin-table-wrapper">
+                    {% block content %}
+                    <!-- Child content goes here -->
+                    {% endblock %}
+                </div>
             </main>
 
             <!-- Footer -->
