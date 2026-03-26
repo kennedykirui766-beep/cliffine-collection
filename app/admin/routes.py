@@ -575,6 +575,15 @@ def delete_chama(chama_id):
 
     return redirect(url_for("admin.all_chamas"))
 
+@admin_bp.route("/chama-members")
+def chama_members():
+    members = ChamaMember.query.order_by(ChamaMember.joined_at.desc()).all()
+    
+    return render_template(
+        "admin/chamas/members.html",
+        members=members
+    )
+
 
 @admin_bp.route("/messages")
 def messages():
