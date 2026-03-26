@@ -408,13 +408,16 @@ class ChamaMember(db.Model):
     __tablename__ = "chama_members"
 
     id = db.Column(db.Integer, primary_key=True)
-
     chama_id = db.Column(db.Integer, db.ForeignKey("chamas.id"))
-
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    
+    full_name = db.Column(db.String(200))
+    phone = db.Column(db.String(50))
+    email = db.Column(db.String(200))
+    location = db.Column(db.String(200))
+    address = db.Column(db.String(500))
 
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     payment_status = db.Column(db.String(50), default="pending")
 
 
