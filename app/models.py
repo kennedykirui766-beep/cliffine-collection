@@ -410,6 +410,7 @@ class ChamaMember(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     chama_id = db.Column(db.Integer, db.ForeignKey("chamas.id"))
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    position = db.Column(db.Integer)
     
     full_name = db.Column(db.String(200))
     phone = db.Column(db.String(50))
@@ -420,6 +421,7 @@ class ChamaMember(db.Model):
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
     payment_status = db.Column(db.String(50), default="pending")
     payment_method = db.Column(db.String(50))  # new column
+    status = db.Column(db.String(50), default="active")
 
 
 # ===============================
