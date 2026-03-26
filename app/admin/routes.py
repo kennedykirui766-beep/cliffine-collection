@@ -454,31 +454,33 @@ def create_chama():
         cover_image = request.files.get("cover_image")
         cover_filename = None
         
-        # Define upload folder (ensure this is configured in app config or use static path)
-        upload_folder = os.path.join(current_app.root_path, 'static/uploads/chama_covers')
-        
+        # ── Cover Image Handling (Cloudinary) ─────────────────────────
+        cover_image = request.files.get("cover_image")
+        cover_filename = None
+
         if cover_image and cover_image.filename:
-            filename = secure_filename(cover_image.filename)
-            # Add timestamp to filename to avoid conflicts
-            unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
-            save_path = os.path.join(upload_folder, unique_filename)
-            
             try:
-                os.makedirs(upload_folder, exist_ok=True)
-                cover_image.save(save_path)
-                cover_filename = f"uploads/chama_covers/{unique_filename}"
+                upload_result = cloudinary.uploader.upload(
+                    cover_image,
+                    folder="chama_covers",
+                    resource_type="image"
+                )
+
+                # Save Cloudinary URL
+                cover_filename = upload_result.get("secure_url")
+
             except Exception as e:
                 flash(f"Error uploading image: {str(e)}", "error")
-        
-        
-        start_date_str = request.form.get("start_date")
-        start_date = None
+                
+                
+                start_date_str = request.form.get("start_date")
+                start_date = None
 
-        if start_date_str:
-            try:
-                start_date = datetime.strptime(start_date_str, "%Y-%m-%dT%H:%M")
-            except ValueError:
-                print("Invalid start date format:", start_date_str)
+                if start_date_str:
+                    try:
+                        start_date = datetime.strptime(start_date_str, "%Y-%m-%dT%H:%M")
+                    except ValueError:
+                        print("Invalid start date format:", start_date_str)
         
         # ── Date Parsing ───────────────────────────────────────────
         deadline = None
