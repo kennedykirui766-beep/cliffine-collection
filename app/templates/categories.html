@@ -68,7 +68,7 @@
             <a href="{{ url_for('main.category_products', slug=category.slug) }}" class="group relative bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 <div class="aspect-[4/3] overflow-hidden">
                     <!-- Fallback image logic if category.image_url is missing -->
-                    <img src="{{ category.image_url if category.image_url else 'https://placehold.co/600x450/581C87/FFFFFF?text=' ~ category.name|urlencode }}" 
+                    <img src="{{ category.image if category.image else 'https://placehold.co/600x450/581C87/FFFFFF?text=' ~ category.name|urlencode }}" 
                          alt="{{ category.name }}" 
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                 </div>
