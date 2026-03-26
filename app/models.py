@@ -392,13 +392,13 @@ class Chama(db.Model):
 
         return len(self.members) >= self.max_members
     
-# ── Financial Computations ─────────────────────────────────────────────
-@property
-def total_amount(self):
-    if self.contribution_amount is None:
-        return 0
+    # ── Financial Computations ─────────────────────────────────────────────
+    @property
+    def total_amount(self):
+        if self.contribution_amount is None:
+            return 0
 
-    return float(self.contribution_amount) * len(self.members)    
+        return float(self.contribution_amount) * len(self.members)    
 
 
 # ===============================
