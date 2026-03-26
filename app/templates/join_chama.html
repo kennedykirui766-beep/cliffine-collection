@@ -23,7 +23,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden sticky top-24">
                 <!-- Product Image -->
                 <div class="aspect-video w-full bg-gray-100 dark:bg-gray-700 relative">
-                    <img src="{{ chama.cover_image or url_for('static', filename='images/default.png') }}" alt="{{ chama.product_name }}" class="w-full h-full object-cover">
+                    <img src="{{ chama.cover_image or url_for('static', filename='images/default.png') }}" alt="{{ chama.product_name }}"  class="w-full h-74 object-cover">">
                     <!-- Badges -->
                     <div class="absolute top-4 left-4 flex flex-col gap-2">
                         {% if chama.slots_remaining <= 3 %}
