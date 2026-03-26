@@ -407,11 +407,6 @@ def all_chamas():
         chamas=chamas
     )
 
-@admin_bp.route("/chamas/members")
-def chama_members():
-    return render_template("admin/chamas/members.html")
-
-
 
 @admin_bp.route("/create", methods=["GET", "POST"])
 def create_chama():
