@@ -419,6 +419,7 @@ class ChamaMember(db.Model):
 
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
     payment_status = db.Column(db.String(50), default="pending")
+    payment_method = db.Column(db.String(50))  # new column
 
 
 # ===============================
