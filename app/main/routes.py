@@ -61,14 +61,7 @@ def product_detail(product_id):
     product = Product.query.get_or_404(product_id)
     return render_template("product_detail.html", product=product)    
 
-# Categories
-@main_bp.route("/category/<category_slug>")
-def category_products(category_slug):
-    # Find category or 404
-    category = Category.query.filter_by(slug=category_slug).first_or_404()
-    # Get products for this category
-    products = Product.query.filter_by(category_id=category.id).all()
-    return render_template("category_products.html", category=category, products=products)
+
 
 # Offers
 @main_bp.route("/offers")
