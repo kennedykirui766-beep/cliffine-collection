@@ -450,11 +450,7 @@ def create_chama():
         notify_on_payment = bool(request.form.get("notify_payment"))
         notify_on_goal    = bool(request.form.get("notify_goal"))
 
-        # ── Cover Image Handling ───────────────────────────────────
-        cover_image = request.files.get("cover_image")
-        cover_filename = None
-        
-        # ── Cover Image Handling (Cloudinary) ─────────────────────────
+        # ── Cover Image Handling (Cloudinary) ──────────────────────
         cover_image = request.files.get("cover_image")
         cover_filename = None
 
@@ -466,37 +462,37 @@ def create_chama():
                     resource_type="image"
                 )
 
-                # Save Cloudinary URL
                 cover_filename = upload_result.get("secure_url")
 
             except Exception as e:
                 flash(f"Error uploading image: {str(e)}", "error")
-                
-                
-                start_date_str = request.form.get("start_date")
-                start_date = None
 
-                if start_date_str:
-                    try:
-                        start_date = datetime.strptime(start_date_str, "%Y-%m-%dT%H:%M")
-                    except ValueError:
-                        print("Invalid start date format:", start_date_str)
-        
-        # ── Date Parsing ───────────────────────────────────────────
+        # ── Start Date Parsing ─────────────────────────────────────
+        start_date_str = request.form.get("start_date")
+        start_date = None
+
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, "%Y-%m-%dT%H:%M")
+            except ValueError:
+                print("Invalid start date format:", start_date_str)
+
+        # ── Deadline Parsing ───────────────────────────────────────
         deadline = None
         if deadline_str:
             try:
                 deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date()
             except ValueError:
                 pass
-            
+
+        # ── Generate Invite Code ───────────────────────────────────
         import uuid
         invite_code = f"CHM-{uuid.uuid4().hex[:6].upper()}"
         existing = Chama.query.filter_by(invite_code=invite_code).first()
         while existing:
             invite_code = f"CHM-{uuid.uuid4().hex[:6].upper()}"
             existing = Chama.query.filter_by(invite_code=invite_code).first()
-      
+
         # ── Create model instance ──────────────────────────────────
         chama = Chama(
             name                  = name,
@@ -512,7 +508,7 @@ def create_chama():
             privacy               = privacy,
             invite_code           = invite_code,
             rules                 = rules,
-            
+
             # Payment flags
             accepts_mpesa         = accepts_mpesa,
             accepts_card          = accepts_card,
@@ -520,13 +516,13 @@ def create_chama():
             mpesa_type            = mpesa_type,
             mpesa_number          = mpesa_number,
             mpesa_account         = mpesa_account,
-            
+
             # Notifications
             notify_on_join        = notify_on_join,
             notify_on_payment     = notify_on_payment,
             notify_on_goal        = notify_on_goal,
-            
-            # Image path
+
+            # Image (Cloudinary URL)
             cover_image           = cover_filename,
         )
 
@@ -534,12 +530,11 @@ def create_chama():
             db.session.add(chama)
             db.session.commit()
             flash("Chama created successfully", "success")
-            return redirect(url_for('admin.all_chamas')) # Adjust endpoint as needed
+            return redirect(url_for('admin.all_chamas'))
         except Exception as e:
             db.session.rollback()
             flash(f"Error creating Chama: {str(e)}", "error")
 
-    # Handle GET request
     return render_template("admin/chamas/create.html")
 
 
