@@ -159,7 +159,7 @@ def join_chama(chama_id):
         db.session.commit()
 
         flash("Successfully joined the chama!", "success")
-        return redirect(url_for("main.chama_details", chama_id=chama.id))
+        return redirect(url_for("main.chama_detail", chama_id=chama.id))
 
     except Exception as e:
         db.session.rollback()
