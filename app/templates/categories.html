@@ -65,7 +65,7 @@
             
             {% for category in categories %}
             <!-- Dynamic Category Card -->
-            <a href="{{ url_for('main.category_detail', category_id=category.id) }}" class="group relative bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <a href="{{ url_for('main.category_products', category_id=category.id) }}" class="group relative bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 <div class="aspect-[4/3] overflow-hidden">
                     <!-- Fallback image logic if category.image_url is missing -->
                     <img src="{{ category.image_url if category.image_url else 'https://placehold.co/600x450/581C87/FFFFFF?text=' ~ category.name|urlencode }}" 
