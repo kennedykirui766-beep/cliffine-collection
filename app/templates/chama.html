@@ -79,7 +79,7 @@
             {% if chama.cover_image %}
                 {% set image_url = url_for('static', filename='uploads/' ~ chama.cover_image) %}
             {% elif chama.product and chama.product.images %}
-                {% set image_url = url_for('static', filename='uploads/' ~ chama.product.images[0].image_url) %}
+                {% set image_url = {{ chama.cover_image or url_for('static', filename='images/default.png') }} %}
             {% endif %}
 
             <!-- Chama Card -->

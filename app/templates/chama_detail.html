@@ -42,7 +42,7 @@
                 <!-- Main Image -->
                 <div class="aspect-square bg-sand dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-lg">
                     {% if chama.cover_image %}
-                        <img src="{{ url_for('static', filename=chama.cover_image) }}" alt="{{ chama.name }}" class="w-full h-full object-cover">
+                        <img src="{{ chama.cover_image or url_for('static', filename='images/default.png') }}" alt="{{ chama.name }}" class="w-full h-full object-cover">
                     {% elif chama.product and chama.product.images %}
                         <img src="{{ url_for('static', filename='uploads/' ~ chama.product.images[0].image_url) }}" alt="{{ chama.name }}" class="w-full h-full object-cover">
                     {% else %}

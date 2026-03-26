@@ -174,7 +174,7 @@
                                 <td class="p-4">
                                     <div class="flex items-center gap-3">
                                         {% if chama.cover_image %}
-                                            <img src="{{ url_for('static', filename=chama.cover_image) }}" class="w-10 h-10 rounded-lg object-cover" alt="{{ chama.name }}">
+                                            <img src="{{ chama.cover_image or url_for('static', filename='images/default.png') }}" class="w-10 h-10 rounded-lg object-cover" alt="{{ chama.name }}">
                                         {% else %}
                                             <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
                                                 {{ chama.name[0:1] }}
