@@ -68,6 +68,7 @@ def offers():
 from datetime import datetime
 
 @main_bp.route("/chama")
+@main_bp.route("/chamas")
 def chama():
     now = datetime.utcnow()
 
