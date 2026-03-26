@@ -27,6 +27,13 @@ def index():
         current_year=datetime.now().year
     )
 
+@main_bp.route("/categories")
+def categories():
+    categories = Category.query.filter_by(is_active=True).all()
+    return render_template("categories.html", categories=categories)
+
+
+
 @main_bp.route("/categories/<slug>")
 def category_products(slug):
     category = Category.query.filter_by(slug=slug, is_active=True).first_or_404()
