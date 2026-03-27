@@ -28,7 +28,7 @@ def index():
     )
 
 @main_bp.route("/categories")
-def category_products(slug):():
+def category_products(slug):
     categories = Category.query.filter_by(is_active=True).all()
     return render_template("categories.html", categories=categories)
 
