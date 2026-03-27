@@ -34,20 +34,21 @@ def categories():
 
 
 
-@main_bp.route("/categories/<slug>")
-def category_products(slug):
-    category = Category.query.filter_by(slug=slug, is_active=True).first_or_404()
+@main_bp.route("/categories")
+def all_categories():
+    categories = Category.query.filter_by(is_active=True).all()
 
-    products = Product.query.filter_by(
-        category_id=category.id,
-        is_trending=True,
-        is_active=True
+    # ✅ Fetch trending electronics
+    trending_products = Product.query.join(Category).filter(
+        Category.slug == "electronics",
+        Product.is_trending == True,
+        Product.is_active == True
     ).all()
 
     return render_template(
-        "category_products.html",
-        category=category,
-        products=products
+        "categories.html",
+        categories=categories,
+        products=trending_products   # ✅ THIS WAS MISSING
     )
 
 
