@@ -125,68 +125,36 @@
         <!-- Product Grid -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             
-            <!-- Product 1 -->
-            <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
-                <div class="relative overflow-hidden">
-                    <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Home+Theater" alt="Home Theater" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
-                    <button class="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full shadow hover:bg-accent hover:text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                    </button>
+            {% if products %}
+                {% for product in products %}
+                <!-- Dynamic Product Card -->
+                <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
+                    <div class="relative overflow-hidden">
+                        <img src="{{ product.image_url if product.image_url else 'https://placehold.co/400x400/581C87/FFFFFF?text=' ~ product.name|urlencode }}" 
+                             alt="{{ product.name }}" 
+                             class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        <button class="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full shadow hover:bg-accent hover:text-white transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-charcoal dark:text-white mb-1">{{ product.name }}</h3>
+                        <p class="text-primary dark:text-accent font-bold text-lg">KES {{ product.price }}</p>
+                        <button class="mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            Add to Cart
+                        </button>
+                    </div>
                 </div>
-                <div class="p-4">
-                    <h3 class="font-bold text-charcoal dark:text-white mb-1">Home Theater System</h3>
-                    <p class="text-primary dark:text-accent font-bold text-lg">KES 12,500</p>
-                    <button class="mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                        Add to Cart
-                    </button>
+                {% endfor %}
+            {% else %}
+                <!-- Empty State for Products -->
+                <div class="col-span-full text-center py-12">
+                    <svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <h3 class="text-lg font-semibold text-charcoal dark:text-white mb-1">No Trending Products</h3>
+                    <p class="text-sm text-muted">Check back later for trending items in Electronics.</p>
                 </div>
-            </div>
-
-            <!-- Product 2 -->
-            <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
-                <div class="relative overflow-hidden">
-                    <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Android+TV" alt="Android TV" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
-                </div>
-                <div class="p-4">
-                    <h3 class="font-bold text-charcoal dark:text-white mb-1">43" Android TV</h3>
-                    <p class="text-primary dark:text-accent font-bold text-lg">KES 32,500</p>
-                    <button class="mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                        Add to Cart
-                    </button>
-                </div>
-            </div>
-
-            <!-- Product 3 -->
-            <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
-                <div class="relative overflow-hidden">
-                    <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Decoder" alt="Decoder" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
-                </div>
-                <div class="p-4">
-                    <h3 class="font-bold text-charcoal dark:text-white mb-1">Digital Decoder</h3>
-                    <p class="text-primary dark:text-accent font-bold text-lg">KES 3,800</p>
-                    <button class="mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                        Add to Cart
-                    </button>
-                </div>
-            </div>
-
-            <!-- Product 4 -->
-            <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
-                <div class="relative overflow-hidden">
-                    <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Sound+Bar" alt="Sound Bar" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
-                </div>
-                <div class="p-4">
-                    <h3 class="font-bold text-charcoal dark:text-white mb-1">Bluetooth Sound Bar</h3>
-                    <p class="text-primary dark:text-accent font-bold text-lg">KES 6,500</p>
-                    <button class="mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                        Add to Cart
-                    </button>
-                </div>
-            </div>
+            {% endif %}
 
         </div>
         

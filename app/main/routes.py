@@ -38,10 +38,16 @@ def categories():
 def category_products(slug):
     category = Category.query.filter_by(slug=slug, is_active=True).first_or_404()
 
+    products = Product.query.filter_by(
+        category_id=category.id,
+        is_trending=True,
+        is_active=True
+    ).all()
+
     return render_template(
         "category_products.html",
         category=category,
-        products=category.products
+        products=products
     )
 
 
