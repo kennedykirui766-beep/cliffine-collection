@@ -27,10 +27,20 @@ def index():
         current_year=datetime.now().year
     )
 
-@main_bp.route("/categories")
+@main_bp.route("/categories/<slug>")
 def category_products(slug):
-    categories = Category.query.filter_by(is_active=True).all()
-    return render_template("categories.html", categories=categories)
+    category = Category.query.filter_by(slug=slug, is_active=True).first_or_404()
+
+    products = Product.query.filter_by(
+        category_id=category.id,
+        is_active=True
+    ).all()
+
+    return render_template(
+        "category_products.html",
+        category=category,
+        products=products
+    )
 
 
 
@@ -48,7 +58,7 @@ def all_categories():
     return render_template(
         "categories.html",
         categories=categories,
-        products=trending_products   # ✅ THIS WAS MISSING
+        products=trending_products
     )
 
 
