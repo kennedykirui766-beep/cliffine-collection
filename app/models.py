@@ -83,6 +83,7 @@ class Product(db.Model):
 
     is_featured = db.Column(db.Boolean, default=False)
     is_trending = db.Column(db.Boolean, default=False)
+    is_trending = db.Column(db.Boolean, default=False)
 
     allow_reviews = db.Column(db.Boolean, default=True)
 

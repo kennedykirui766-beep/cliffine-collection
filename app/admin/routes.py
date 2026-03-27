@@ -124,6 +124,7 @@ def add_product():
         allow_reviews = True if request.form.get("allow_reviews") else False
         lipa_pole_pole = True if request.form.get("lipa_pole_pole") else False
         chama_eligible = True if request.form.get("chama_eligible") else False
+        is_trending = True if request.form.get("is_trending") else False
 
         # --- Shipping ---
         weight = request.form.get("weight") or 0
@@ -153,6 +154,7 @@ def add_product():
             stock_status=stock_status,
             is_active=is_active,
             is_featured=is_featured,
+            is_trending=is_trending,
             allow_reviews=allow_reviews,
             lipa_pole_pole=lipa_pole_pole,
             chama_eligible=chama_eligible,
