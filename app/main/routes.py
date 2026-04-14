@@ -1,3 +1,5 @@
+from operator import and_
+
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from datetime import datetime
 from flask import session
@@ -90,7 +92,23 @@ def product_detail(product_id):
 # Offers
 @main_bp.route("/offers")
 def offers():
-    return render_template("offers.html", current_year=datetime.now().year)
+    now = datetime.utcnow()
+
+    products_on_offer = Product.query.filter(
+        Product.is_on_offer == True,
+        Product.offer_percentage.isnot(None),
+        Product.offer_percentage > 0,
+        and_(
+            (Product.offer_start == None) | (Product.offer_start <= now),
+            (Product.offer_end == None) | (Product.offer_end >= now)
+        )
+    ).all()
+
+    return render_template(
+        "offers.html",
+        products=products_on_offer,
+        current_year=datetime.now().year
+    )
 
 # Chamas
 from datetime import datetime
