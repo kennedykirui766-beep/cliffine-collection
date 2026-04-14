@@ -90,23 +90,17 @@ def product_detail(product_id):
 
 
 # Offers
-from datetime import datetime
-
 @main_bp.route("/offers")
 def offers():
     now = datetime.utcnow()
 
     products_on_offer = Product.query.filter(
-        Product.is_on_offer.is_(True),
+        Product.is_on_offer == True,
         Product.offer_percentage.isnot(None),
         Product.offer_percentage > 0,
-        (
-            (Product.offer_start.is_(None)) |
-            (Product.offer_start <= now)
-        ),
-        (
-            (Product.offer_end.is_(None)) |
-            (Product.offer_end >= now)
+        and_(
+            (Product.offer_start == None) | (Product.offer_start <= now),
+            (Product.offer_end == None) | (Product.offer_end >= now)
         )
     ).all()
 
