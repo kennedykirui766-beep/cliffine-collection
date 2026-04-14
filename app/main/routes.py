@@ -90,29 +90,23 @@ def product_detail(product_id):
 
 
 # Offers
-from datetime import datetime
-from sqlalchemy import and_
 
 @main_bp.route("/offers")
 def offers():
     now = datetime.utcnow()
 
     products = Product.query.filter(
+        Product.is_active == True,
         Product.is_on_offer == True,
-        Product.offer_percentage.isnot(None),
         Product.offer_percentage > 0,
-        and_(
-            (Product.offer_start == None) | (Product.offer_start <= now)
-        ),
-        and_(
-            (Product.offer_end == None) | (Product.offer_end >= now)
-        )
+        (Product.offer_start == None) | (Product.offer_start <= now),
+        (Product.offer_end == None) | (Product.offer_end >= now)
     ).all()
 
     return render_template(
         "offers.html",
         products=products,
-        current_year=datetime.now().year
+        current_year=now.year
     )
 
 # Chamas
