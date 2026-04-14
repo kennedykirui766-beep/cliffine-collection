@@ -97,12 +97,12 @@ def edit_product(product_id):
         offer_end = request.form.get("offer_end")
 
         product.offer_start = (
-            datetime.strptime(offer_start, "%Y-%m-%d %H:%M")
+            datetime.strptime(offer_start, "%Y-%m-%dT%H:%M")
             if offer_start else None
         )
 
         product.offer_end = (
-            datetime.strptime(offer_end, "%Y-%m-%d %H:%M")
+            datetime.strptime(offer_start, "%Y-%m-%dT%H:%M")
             if offer_end else None
         )
 
