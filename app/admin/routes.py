@@ -108,7 +108,18 @@ def add_product():
         # --- Pricing ---
         price = float(request.form.get("price") or 0)
         cost_price = float(request.form.get("cost_price") or 0)
+
         offer_percentage = float(request.form.get("offer_percentage") or 0)
+
+        # 🆕 OFFER DATES (NEW)
+        offer_start = request.form.get("offer_start")
+        offer_end = request.form.get("offer_end")
+
+        # convert to datetime if provided
+        from datetime import datetime
+
+        offer_start = datetime.strptime(offer_start, "%Y-%m-%d %H:%M") if offer_start else None
+        offer_end = datetime.strptime(offer_end, "%Y-%m-%d %H:%M") if offer_end else None
 
         # --- Inventory ---
         stock = request.form.get("stock") or 0
@@ -165,7 +176,12 @@ def add_product():
             meta_title=meta_title,
             meta_description=meta_description,
             meta_keywords=meta_keywords,
-            offer_percentage=offer_percentage
+
+            # 🆕 OFFER FIELDS ADDED
+            offer_percentage=offer_percentage,
+            offer_start=offer_start,
+            offer_end=offer_end,
+            is_on_offer=True if offer_percentage and offer_percentage > 0 else False
         )
 
         # ✅ Apply discount automatically
