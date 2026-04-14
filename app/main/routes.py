@@ -95,26 +95,27 @@ from datetime import datetime
 
 @main_bp.route("/offers")
 def offers():
-    now = datetime.now()
+    products = Product.query.all()
 
-    products = Product.query.filter(
-        Product.is_active == True,
-        Product.is_on_offer == True
-    ).all()
+    print("TOTAL PRODUCTS:", len(products))
 
-    # optional: filter time in Python (debug-safe)
-    active_products = []
-    for p in products:
-        if p.offer_start and p.offer_start > now:
-            continue
-        if p.offer_end and p.offer_end < now:
-            continue
-        active_products.append(p)
+    offer_products = Product.query.filter_by(is_on_offer=True).all()
+
+    print("ON OFFER COUNT:", len(offer_products))
+
+    for p in offer_products:
+        print(
+            p.name,
+            p.is_on_offer,
+            p.offer_start,
+            p.offer_end,
+            p.offer_percentage
+        )
 
     return render_template(
         "offers.html",
-        products=active_products,
-        current_year=now.year
+        products=offer_products,
+        current_year=datetime.now().year
     )
 
 # Chamas
