@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from flask import current_app, redirect, render_template, url_for
 from flask import Blueprint, render_template
 from app import db
@@ -57,6 +56,7 @@ def all_products():
     ).order_by(Product.created_at.desc()).all()
 
     return render_template("admin/products/all_products.html", products=products)
+
 @admin_bp.route("/products/<int:product_id>/edit")
 def edit_product(product_id):
     # Fetch product by ID
@@ -106,9 +106,9 @@ def add_product():
         description = request.form.get("description")
 
         # --- Pricing ---
-        price = request.form.get("price") or 0
-        discount_price = request.form.get("discount_price") or 0
-        cost_price = request.form.get("cost_price") or 0
+        price = float(request.form.get("price") or 0)
+        cost_price = float(request.form.get("cost_price") or 0)
+        offer_percentage = float(request.form.get("offer_percentage") or 0)
 
         # --- Inventory ---
         stock = request.form.get("stock") or 0
@@ -145,7 +145,6 @@ def add_product():
             description=description,
             short_description=short_description,
             price=price,
-            discount_price=discount_price,
             cost_price=cost_price,
             sku=sku,
             category_id=category_id,
@@ -165,8 +164,12 @@ def add_product():
             shipping_class=shipping_class,
             meta_title=meta_title,
             meta_description=meta_description,
-            meta_keywords=meta_keywords
+            meta_keywords=meta_keywords,
+            offer_percentage=offer_percentage
         )
+
+        # ✅ Apply discount automatically
+        product.apply_discount(offer_percentage)
 
         db.session.add(product)
         try:
@@ -198,10 +201,10 @@ def add_product():
 
             image = ProductImage(
                 product_id=product.id,
-                image_url=image_url,  # store Cloudinary URL
+                image_url=image_url,
                 is_main=True
             )
-            
+
             db.session.add(image)
             db.session.commit()
 
@@ -224,9 +227,10 @@ def add_product():
 
                 gallery_image = ProductImage(
                     product_id=product.id,
-                    image_url=cloud_url  # store Cloudinary URL
+                    image_url=cloud_url
                 )
                 db.session.add(gallery_image)
+
         db.session.commit()
 
         flash("Product added successfully!", "success")

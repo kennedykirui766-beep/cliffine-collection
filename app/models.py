@@ -1,4 +1,5 @@
 from datetime import datetime
+from itertools import product
 from app import db
 from flask_login import UserMixin
 
@@ -83,7 +84,6 @@ class Product(db.Model):
 
     is_featured = db.Column(db.Boolean, default=False)
     is_trending = db.Column(db.Boolean, default=False)
-    is_trending = db.Column(db.Boolean, default=False)
 
     allow_reviews = db.Column(db.Boolean, default=True)
 
@@ -105,9 +105,22 @@ class Product(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    is_on_offer = db.Column(db.Boolean, default=False)
+    offer_percentage = db.Column(db.Float)  # e.g. 10 for 10%
+    offer_start = db.Column(db.DateTime)
+    offer_end = db.Column(db.DateTime)
 
     images = db.relationship("ProductImage", backref="product", lazy=True)
     reviews = db.relationship("Review", backref="product", lazy=True)
+    
+    def apply_discount(product, percentage):
+        if percentage and percentage > 0:
+            product.discount_price = product.price - (product.price * (percentage / 100))
+            product.is_on_offer = True
+        else:
+            product.discount_price = None
+            product.is_on_offer = False
 
 
 # ===============================
