@@ -91,21 +91,29 @@ def product_detail(product_id):
 
 # Offers
 
+from datetime import datetime
+
 @main_bp.route("/offers")
 def offers():
     now = datetime.now()
 
     products = Product.query.filter(
         Product.is_active == True,
-        Product.is_on_offer == True,
-        Product.offer_percentage > 0,
-        (Product.offer_start == None) | (Product.offer_start <= now),
-        (Product.offer_end == None) | (Product.offer_end >= now)
+        Product.is_on_offer == True
     ).all()
+
+    # optional: filter time in Python (debug-safe)
+    active_products = []
+    for p in products:
+        if p.offer_start and p.offer_start > now:
+            continue
+        if p.offer_end and p.offer_end < now:
+            continue
+        active_products.append(p)
 
     return render_template(
         "offers.html",
-        products=products,
+        products=active_products,
         current_year=now.year
     )
 
