@@ -93,7 +93,7 @@ def product_detail(product_id):
 
 @main_bp.route("/offers")
 def offers():
-    now = datetime.utcnow()
+    now = datetime.now()
 
     products = Product.query.filter(
         Product.is_active == True,
