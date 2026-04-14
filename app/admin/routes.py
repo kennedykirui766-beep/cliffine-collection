@@ -57,12 +57,155 @@ def all_products():
 
     return render_template("admin/products/all_products.html", products=products)
 
-@admin_bp.route("/products/<int:product_id>/edit")
+
+@admin_bp.route("/products/<int:product_id>/edit", methods=["GET", "POST"])
 def edit_product(product_id):
-    # Fetch product by ID
     product = Product.query.get_or_404(product_id)
     categories = Category.query.all()
-    return render_template("admin/products/edit_product.html", product=product, categories=categories)
+
+    if request.method == "POST":
+
+        # --- Basic Info ---
+        product.name = request.form.get("name")
+        product.slug = request.form.get("slug") or generate_unique_slug(product.name)
+
+        if Product.query.filter(
+            Product.slug == product.slug,
+            Product.id != product.id
+        ).first():
+            product.slug = generate_unique_slug(product.name)
+
+        category_id = request.form.get("category_id")
+        product.category_id = int(category_id) if category_id and category_id.isdigit() else None
+
+        product.sku = request.form.get("sku")
+        product.short_description = request.form.get("short_description")
+        product.description = request.form.get("description")
+
+        # --- Pricing ---
+        product.price = float(request.form.get("price") or 0)
+        product.discount_price = float(request.form.get("discount_price") or 0)
+        product.cost_price = float(request.form.get("cost_price") or 0)
+
+        offer_percentage = request.form.get("offer_percentage") or 0
+        product.offer_percentage = float(offer_percentage)
+
+        # --- NEW OFFER FIELDS ---
+        product.is_on_offer = True if float(offer_percentage) > 0 else False
+
+        offer_start = request.form.get("offer_start")
+        offer_end = request.form.get("offer_end")
+
+        product.offer_start = (
+            datetime.strptime(offer_start, "%Y-%m-%d %H:%M")
+            if offer_start else None
+        )
+
+        product.offer_end = (
+            datetime.strptime(offer_end, "%Y-%m-%d %H:%M")
+            if offer_end else None
+        )
+
+        # --- Inventory ---
+        product.stock = request.form.get("stock") or 0
+        product.low_stock = request.form.get("low_stock") or 0
+        product.stock_status = request.form.get("stock_status") or "in_stock"
+
+        # --- Visibility ---
+        status = request.form.get("status") or "draft"
+        product.is_active = True if status.lower() == "published" else False
+
+        # --- Special Options ---
+        product.is_featured = True if request.form.get("featured") else False
+        product.allow_reviews = True if request.form.get("allow_reviews") else False
+        product.lipa_pole_pole = True if request.form.get("lipa_pole_pole") else False
+        product.chama_eligible = True if request.form.get("chama_eligible") else False
+        product.is_trending = True if request.form.get("is_trending") else False
+
+        # --- Shipping ---
+        product.weight = request.form.get("weight") or 0
+        product.length = request.form.get("length") or 0
+        product.width = request.form.get("width") or 0
+        product.height = request.form.get("height") or 0
+        product.shipping_class = request.form.get("shipping_class")
+
+        # --- SEO ---
+        product.meta_title = request.form.get("meta_title")
+        product.meta_description = request.form.get("meta_description")
+        product.meta_keywords = request.form.get("meta_keywords")
+
+        # --- Apply discount logic ---
+        product.apply_discount(float(offer_percentage) if offer_percentage else 0)
+
+        try:
+            db.session.commit()
+            flash("Product updated successfully!", "success")
+        except IntegrityError:
+            db.session.rollback()
+            flash("Error: Product slug already exists.", "error")
+            return redirect(url_for("admin.edit_product", product_id=product.id))
+
+        # --- Handle Main Image ---
+        image_file = request.files.get("main_image")
+        upload_folder = "app/static/uploads"
+        os.makedirs(upload_folder, exist_ok=True)
+
+        if image_file and image_file.filename != "":
+            filename = secure_filename(image_file.filename)
+            path = os.path.join(upload_folder, filename)
+            image_file.save(path)
+
+            image_file.stream.seek(0)
+
+            result = cloudinary.uploader.upload(
+                image_file,
+                folder="cliffine/products",
+                public_id=str(uuid.uuid4())
+            )
+
+            image_url = result.get("secure_url")
+
+            image = ProductImage(
+                product_id=product.id,
+                image_url=image_url,
+                is_main=True
+            )
+            db.session.add(image)
+            db.session.commit()
+
+        # --- Handle Gallery Images ---
+        gallery_files = request.files.getlist("images")
+        for file in gallery_files:
+            if file and file.filename != "":
+                filename = secure_filename(file.filename)
+                path = os.path.join(upload_folder, filename)
+                file.save(path)
+
+                file.stream.seek(0)
+
+                result = cloudinary.uploader.upload(
+                    file,
+                    folder="cliffine/products/gallery",
+                    public_id=str(uuid.uuid4())
+                )
+
+                cloud_url = result.get("secure_url")
+
+                gallery_image = ProductImage(
+                    product_id=product.id,
+                    image_url=cloud_url
+                )
+                db.session.add(gallery_image)
+
+        db.session.commit()
+
+        return redirect(url_for("admin.edit_product", product_id=product.id))
+
+    return render_template(
+        "admin/products/edit_product.html",
+        product=product,
+        categories=categories
+    )
 
 
 @admin_bp.route("/products/<int:product_id>/delete")

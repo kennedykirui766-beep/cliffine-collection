@@ -201,7 +201,7 @@
                                 {% if product.images %}
                                     {% for image in product.images %}
                                         <div class="relative group aspect-square rounded-lg overflow-hidden border {% if loop.first %}border-2 border-primary shadow-sm{% else %}border-slate-200{% endif %}">
-                                            <img src="{{ url_for('static', filename='uploads/' ~ image.image_url) }}" class="w-full h-full object-cover">
+                                            <img src="{{ image.image_url }}" class="w-full h-full object-cover">
                                             {% if loop.first %}
                                                 <div class="absolute top-1 left-1 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">MAIN</div>
                                             {% endif %}
