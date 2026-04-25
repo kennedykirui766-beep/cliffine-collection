@@ -10,7 +10,6 @@ from app import db
 
 from app.models import Product
 
-# Create blueprint
 main_bp = Blueprint("main", __name__)
 
 # Home
