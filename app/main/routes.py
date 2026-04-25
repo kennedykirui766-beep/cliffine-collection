@@ -224,7 +224,17 @@ def join_chama(chama_id):
 # Lipa Pole Pole
 @main_bp.route("/lipa-pole-pole")
 def lipa_pole_pole():
-    return render_template("offers.html", current_year=datetime.now().year)
+    # Fetch only active products that support Lipa Pole Pole
+    products = Product.query.filter_by(
+        lipa_pole_pole=True,
+        is_active=True
+    ).order_by(Product.created_at.desc()).all()
+
+    return render_template(
+        "lipa_pole_pole.html",
+        products=products,
+        current_year=datetime.now().year
+    )
 
 # Wishlist
 @main_bp.route("/wishlist")
