@@ -323,6 +323,17 @@ def add_to_wishlist(product_id):
     return jsonify({"status": "success", "message": "Added to wishlist"})
 
 
+@main_bp.route("/wishlist/remove/<int:item_id>", methods=["POST"])
+def remove_from_wishlist(item_id):
+
+    item = WishlistItem.query.get_or_404(item_id)
+
+    db.session.delete(item)
+    db.session.commit()
+
+    flash("Removed from wishlist", "success")
+    return redirect(url_for("main.wishlist"))
+
 # Blog list page
 @main_bp.route("/blog")
 def blog():
