@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<!-- 2. Breadcrumb Navigation -->
+<!-- Breadcrumb Navigation -->
 <div class="bg-sand dark:bg-gray-800 py-4 border-b border-gray-100 dark:border-gray-700">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav class="flex items-center space-x-2 text-sm text-muted dark:text-gray-400">
@@ -15,12 +15,11 @@
     </div>
 </div>
 
-<!-- 3. Hero / Banner Section -->
+<!-- Hero / Banner Section -->
 <section class="relative bg-primary dark:bg-gray-900 overflow-hidden">
     <div class="absolute inset-0 opacity-20">
         <img src="https://placehold.co/1920x600/581C87/FFFFFF?text=Sale+Background" alt="Sale" class="w-full h-full object-cover">
     </div>
-    <!-- Decorative circles -->
     <div class="absolute top-0 right-0 w-96 h-96 bg-accent rounded-full filter blur-3xl opacity-20 -mr-48 -mt-48"></div>
     
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 text-center">
@@ -47,9 +46,8 @@
 <section id="offers-grid" class="py-12 bg-sand dark:bg-gray-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <!-- 5. Filter, Search & Sorting Options -->
+        <!-- Filter, Search & Sorting -->
         <div class="flex flex-col lg:flex-row justify-between items-center mb-8 gap-4">
-            <!-- Left: Categories -->
             <div class="flex flex-wrap gap-2 w-full lg:w-auto justify-center lg:justify-start">
                 <button class="category-btn active-filter px-4 py-2 bg-primary text-white text-sm font-medium rounded-full shadow-sm transition-all" data-category="all">All Deals</button>
                 <button class="category-btn px-4 py-2 bg-white dark:bg-gray-700 text-charcoal dark:text-white text-sm font-medium rounded-full border border-gray-200 dark:border-gray-600 hover:border-accent transition-all" data-category="Electronics">Electronics</button>
@@ -57,14 +55,11 @@
                 <button class="category-btn px-4 py-2 bg-white dark:bg-gray-700 text-charcoal dark:text-white text-sm font-medium rounded-full border border-gray-200 dark:border-gray-600 hover:border-accent transition-all" data-category="Household">Household</button>
             </div>
             
-            <!-- Right: Search & Sort -->
             <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-center">
-                <!-- Professional Search Bar -->
                 <div class="relative w-full sm:w-64">
                     <input type="text" id="searchInput" placeholder="Search offers..." class="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-white dark:bg-gray-700 text-charcoal dark:text-white">
                     <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
-
                 <select class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-accent text-charcoal dark:text-white w-full sm:w-auto">
                     <option>Sort by: Newest</option>
                     <option>Sort by: Discount</option>
@@ -73,43 +68,38 @@
             </div>
         </div>
 
-        <!-- No Results Message (Hidden by default, shown by JS) -->
+        <!-- No Results Message -->
         <div id="no-results" class="hidden text-center py-16">
             <p class="text-muted dark:text-gray-400 text-lg">No offers found matching your criteria.</p>
             <button onclick="resetFilters()" class="mt-4 text-accent font-bold hover:underline">Clear Filters</button>
         </div>
 
         {% if products %}
-            <!-- 4. Dynamic Offers Grid -->
             <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 
                 {% for product in products %}
-                <!-- Added data attributes for JS filtering -->
                 <div class="product-card group bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden flex flex-col relative transition-all duration-300" 
                      data-name="{{ product.name|lower }}" 
                      data-category="{{ product.category.name if product.category else 'General' }}">
                     
-                    <!-- Discount Badges -->
+                    <!-- Badges -->
                     <div class="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
                         {% if product.offer_percentage and product.offer_percentage > 0 %}
                         <span class="px-3 py-1.5 bg-accent text-white text-xs font-bold rounded-full shadow-lg">
                             {{ product.offer_percentage|int }}% OFF
                         </span>
                         {% endif %}
-
                         {% if product.lipa_pole_pole %}
                         <span class="px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg">Lipa Pole Pole</span>
                         {% endif %}
-
                         {% if product.chama_eligible %}
                         <span class="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-full shadow-lg">Chama Deal</span>
                         {% endif %}
                     </div>
                     
-                    <!-- Clickable Area: Wraps Image and Text Info -->
+                    <!-- Clickable product area -->
                     <a href="/product/{{ product.slug }}" class="flex-1 flex flex-col block relative overflow-hidden">
                         <div class="relative overflow-hidden">
-                            <!-- Image Logic -->
                             {% if product.images and product.images|length > 0 %}
                                 {% set img_url = product.images[0].image_url %}
                                 {% if img_url.startswith('http') %}
@@ -156,14 +146,22 @@
                         </div>
                     </a>
                     
-                    <!-- Actions Area (Separated from link to prevent navigation) -->
+                    <!-- Actions -->
                     <div class="p-5 pt-0 mt-auto flex gap-2">
-                        <button onclick="addToCart(this)" class="flex-1 py-2.5 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent-dark transition-colors flex items-center justify-center gap-2 shadow-sm active:transform active:scale-95">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                            <span>Add to Cart</span>
+                        {# ── The product_id is embedded as a data attribute so JS can read it ── #}
+                        <button
+                            class="add-to-cart-btn flex-1 py-2.5 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent-dark transition-colors flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                            data-product-id="{{ product.id }}"
+                            data-product-name="{{ product.name }}">
+                            <svg class="w-4 h-4 cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <span class="btn-label">Add to Cart</span>
                         </button>
                         <button onclick="toggleWishlist(this)" class="p-2.5 border border-gray-200 dark:border-gray-600 rounded-lg text-muted hover:border-red-400 hover:text-red-500 transition-colors wishlist-btn">
-                            <svg class="w-5 h-5 heart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                            <svg class="w-5 h-5 heart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -171,7 +169,7 @@
 
             </div>
         {% else %}
-            <!-- 7. Empty State -->
+            <!-- Empty State -->
             <section class="py-16">
                 <div class="text-center max-w-md mx-auto">
                     <svg class="w-24 h-24 mx-auto text-gray-300 dark:text-gray-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 14l6-6m-5 .5a.5.5 0 11-1 0 .5.5 0 011 0zm6.5 6.5a.5.5 0 11-1 0 .5.5 0 011 0zM13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9l-5-7z"/></svg>
@@ -187,11 +185,10 @@
     </div>
 </section>
 
-<!-- 6. Call-to-Action Section -->
+<!-- Call-to-Action Section -->
 <section class="py-16 bg-white dark:bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid md:grid-cols-2 gap-8">
-            <!-- Lipa Pole Pole -->
             <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-8 border border-green-200 dark:border-green-800 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
                 <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -202,8 +199,6 @@
                     <a href="/lipa-pole-pole" class="text-green-700 dark:text-green-300 font-bold hover:underline">Learn More &rarr;</a>
                 </div>
             </div>
-
-            <!-- Join Chama -->
             <div class="bg-accent/10 rounded-xl p-8 border border-accent/30 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
                 <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -218,83 +213,204 @@
     </div>
 </section>
 
+<!-- ── Toast Notification ─────────────────────────────────────────── -->
+<div id="cart-toast"
+     class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl text-white text-sm font-medium
+            translate-y-20 opacity-0 transition-all duration-300 pointer-events-none max-w-xs"
+     style="background: linear-gradient(135deg, #5423E7 0%, #7C3AED 100%);">
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+    <span id="cart-toast-msg">Added to cart!</span>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const searchInput = document.getElementById('searchInput');
-        const categoryBtns = document.querySelectorAll('.category-btn');
-        const productCards = document.querySelectorAll('.product-card');
-        const noResults = document.getElementById('no-results');
+document.addEventListener('DOMContentLoaded', () => {
 
-        let activeCategory = 'all';
-        let searchQuery = '';
+    // ── 1. FILTER & SEARCH ──────────────────────────────────────────────
+    const searchInput    = document.getElementById('searchInput');
+    const categoryBtns   = document.querySelectorAll('.category-btn');
+    const productCards   = document.querySelectorAll('.product-card');
+    const noResults      = document.getElementById('no-results');
+    let activeCategory   = 'all';
+    let searchQuery      = '';
 
-        // 1. Filter Function
-        function filterProducts() {
-            let visibleCount = 0;
-            
-            productCards.forEach(card => {
-                const name = card.getAttribute('data-name');
-                const category = card.getAttribute('data-category');
+    function filterProducts() {
+        let visible = 0;
+        productCards.forEach(card => {
+            const matchCat    = activeCategory === 'all' || card.dataset.category === activeCategory;
+            const matchSearch = card.dataset.name.includes(searchQuery);
+            const show        = matchCat && matchSearch;
+            card.style.display = show ? 'flex' : 'none';
+            if (show) visible++;
+        });
+        noResults.classList.toggle('hidden', visible > 0);
+    }
 
-                // Filter Logic: Category & Search
-                const matchesCategory = activeCategory === 'all' || category === activeCategory;
-                const matchesSearch = name.includes(searchQuery);
+    if (searchInput) {
+        searchInput.addEventListener('input', e => {
+            searchQuery = e.target.value.toLowerCase().trim();
+            filterProducts();
+        });
+    }
 
-                if (matchesCategory && matchesSearch) {
-                    card.style.display = 'flex';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            categoryBtns.forEach(b => {
+                b.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+                b.classList.add('bg-white', 'dark:bg-gray-700', 'text-charcoal');
             });
-
-            // Toggle No Results Message
-            if (visibleCount === 0) {
-                noResults.classList.remove('hidden');
-            } else {
-                noResults.classList.add('hidden');
-            }
-        }
-
-        // 2. Search Listener
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                searchQuery = e.target.value.toLowerCase().trim();
-                filterProducts();
-            });
-        }
-
-        // 3. Category Button Listeners
-        categoryBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active class from all
-                categoryBtns.forEach(b => {
-                    b.classList.remove('bg-primary', 'text-white', 'shadow-sm');
-                    b.classList.add('bg-white', 'dark:bg-gray-700', 'text-charcoal', 'dark:text-white');
-                });
-                
-                // Add active class to clicked
-                btn.classList.remove('bg-white', 'dark:bg-gray-700', 'text-charcoal', 'dark:text-white');
-                btn.classList.add('bg-primary', 'text-white', 'shadow-sm');
-
-                activeCategory = btn.getAttribute('data-category');
-                filterProducts();
-            });
+            btn.classList.remove('bg-white', 'dark:bg-gray-700', 'text-charcoal');
+            btn.classList.add('bg-primary', 'text-white', 'shadow-sm');
+            activeCategory = btn.dataset.category;
+            filterProducts();
         });
     });
 
-    // 4. Wishlist Toggle (Love Button)
-    function toggleWishlist(btn) {
-        // Prevent bubbling if inside a link (though here it is separated in div)
+
+    // ── 2. ADD TO CART (real fetch) ─────────────────────────────────────
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            addToCart(btn);
+        });
+    });
+
+    async function addToCart(btn) {
+        const productId   = btn.dataset.productId;
+        const productName = btn.dataset.productName;
+        const label       = btn.querySelector('.btn-label');
+        const icon        = btn.querySelector('.cart-icon');
+
+        // ── Loading state ──
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        label.textContent = 'Adding…';
+        icon.innerHTML = `
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>`;
+        icon.classList.add('animate-spin');
+
+        try {
+            const res = await fetch('/add-to-cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId, quantity: 1 })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                // ── Success state ──
+                icon.classList.remove('animate-spin');
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>`;
+                label.textContent = 'Added!';
+                btn.classList.remove('bg-accent', 'hover:bg-accent-dark', 'opacity-75', 'cursor-not-allowed');
+                btn.classList.add('bg-green-600', 'hover:bg-green-700');
+
+                // Update every cart badge in the navbar that has id="cart-count" or class="cart-count"
+                updateCartBadge(data.cart_count);
+
+                // Show toast
+                showToast(`${productName} added to cart`);
+
+                // Reset button after 2.5 s
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    btn.classList.add('bg-accent', 'hover:bg-accent-dark');
+                    icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>`;
+                    label.textContent = 'Add to Cart';
+                }, 2500);
+
+            } else {
+                // ── Server returned success:false ──
+                handleError(btn, label, icon, data.message || 'Could not add item.');
+            }
+
+        } catch (err) {
+            handleError(btn, label, icon, 'Network error. Try again.');
+        }
+    }
+
+    function handleError(btn, label, icon, message) {
+        icon.classList.remove('animate-spin');
+        icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>`;
+        label.textContent = 'Failed';
+        btn.classList.remove('bg-accent', 'opacity-75', 'cursor-not-allowed');
+        btn.classList.add('bg-red-500', 'hover:bg-red-600');
+
+        showToast(message, true);
+
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            btn.classList.add('bg-accent', 'hover:bg-accent-dark');
+            icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>`;
+            label.textContent = 'Add to Cart';
+        }, 2500);
+    }
+
+
+    // ── 3. CART BADGE UPDATE ────────────────────────────────────────────
+    // Targets any element with id="cart-count" OR class="cart-count" in the navbar.
+    // Add either attribute to your navbar cart icon counter and it updates automatically.
+    function updateCartBadge(count) {
+        const badges = [
+            ...document.querySelectorAll('#cart-count'),
+            ...document.querySelectorAll('.cart-count')
+        ];
+        badges.forEach(badge => {
+            badge.textContent = count;
+
+            // Show/hide badge if count reaches 0
+            if (count > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            // Bump animation
+            badge.classList.add('scale-125');
+            setTimeout(() => badge.classList.remove('scale-125'), 300);
+        });
+    }
+
+
+    // ── 4. TOAST ────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('cart-toast');
+        const msg   = document.getElementById('cart-toast-msg');
+
+        msg.textContent = message;
+
+        // Swap colour for errors
+        toast.style.background = isError
+            ? 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)'
+            : 'linear-gradient(135deg, #5423E7 0%, #7C3AED 100%)';
+
+        // Slide up
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-20', 'opacity-0');
+        }, 3000);
+    }
+
+
+    // ── 5. WISHLIST TOGGLE ───────────────────────────────────────────────
+    window.toggleWishlist = function(btn) {
         event.stopPropagation();
-        
-        const icon = btn.querySelector('.heart-icon');
-        const isFilled = icon.getAttribute('fill') === 'red';
-        
-        if (isFilled) {
+        const icon   = btn.querySelector('.heart-icon');
+        const filled = icon.getAttribute('fill') === 'red';
+        if (filled) {
             icon.setAttribute('fill', 'none');
             icon.setAttribute('stroke', 'currentColor');
             btn.classList.remove('text-red-500', 'border-red-500', 'bg-red-50');
@@ -304,40 +420,20 @@
             icon.setAttribute('stroke', 'red');
             btn.classList.remove('text-muted', 'border-gray-200');
             btn.classList.add('text-red-500', 'border-red-500', 'bg-red-50');
-            
-            // Animation effect
             btn.style.transform = 'scale(1.2)';
             setTimeout(() => btn.style.transform = 'scale(1)', 200);
         }
-    }
+    };
 
-    // 5. Add to Cart Simulation
-    function addToCart(btn) {
-        event.stopPropagation();
-        const originalText = btn.innerHTML;
-        
-        btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Adding...`;
-        
-        setTimeout(() => {
-            btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> <span>Added!</span>`;
-            btn.classList.replace('bg-accent', 'bg-green-600');
-            btn.classList.replace('hover:bg-accent-dark', 'hover:bg-green-700');
-            
-            setTimeout(() => {
-                // Reset after 2 seconds
-                btn.innerHTML = originalText;
-                btn.classList.replace('bg-green-600', 'bg-accent');
-                btn.classList.replace('hover:bg-green-700', 'hover:bg-accent-dark');
-            }, 2000);
-        }, 800);
-    }
+});
 
-    // 6. Reset Filters (for no results link)
-    function resetFilters() {
-        document.getElementById('searchInput').value = '';
-        document.querySelector('.category-btn[data-category="all"]').click();
-        // Trigger input event manually to clear search
-        document.getElementById('searchInput').dispatchEvent(new Event('input'));
-    }
+
+// ── 6. RESET FILTERS ────────────────────────────────────────────────────
+function resetFilters() {
+    const input = document.getElementById('searchInput');
+    if (input) { input.value = ''; input.dispatchEvent(new Event('input')); }
+    const allBtn = document.querySelector('.category-btn[data-category="all"]');
+    if (allBtn) allBtn.click();
+}
 </script>
 {% endblock %}
