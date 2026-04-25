@@ -4,7 +4,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from datetime import datetime
 from flask import session
 from flask_login import current_user
-from app.models import Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist
+from app.models import Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist, WishlistItem
 from app import db
 
 from app.models import Product
@@ -265,6 +265,62 @@ def wishlist():
         items=items,
         current_year=datetime.now().year
     )
+
+
+@main_bp.route("/wishlist/add/<int:product_id>", methods=["POST"])
+def add_to_wishlist(product_id):
+
+    # ── Get product ─────────────────────────────
+    product = Product.query.get_or_404(product_id)
+
+    # ── Determine wishlist owner ────────────────
+    wishlist = None
+
+    if current_user.is_authenticated:
+        wishlist = Wishlist.query.filter_by(
+            user_id=current_user.id,
+            is_active=True
+        ).first()
+
+        if not wishlist:
+            wishlist = Wishlist(user_id=current_user.id)
+            db.session.add(wishlist)
+
+    else:
+        # Guest user → use session
+        if not session.get("wishlist_session_id"):
+            session["wishlist_session_id"] = str(uuid.uuid4())
+
+        wishlist = Wishlist.query.filter_by(
+            session_id=session["wishlist_session_id"],
+            is_active=True
+        ).first()
+
+        if not wishlist:
+            wishlist = Wishlist(session_id=session["wishlist_session_id"])
+            db.session.add(wishlist)
+
+    db.session.flush()  # ensures wishlist.id is available
+
+    # ── Prevent duplicates ──────────────────────
+    existing = WishlistItem.query.filter_by(
+        wishlist_id=wishlist.id,
+        product_id=product.id
+    ).first()
+
+    if existing:
+        return jsonify({"status": "exists", "message": "Already in wishlist"})
+
+    # ── Add item ───────────────────────────────
+    item = WishlistItem(
+        wishlist_id=wishlist.id,
+        product_id=product.id
+    )
+
+    db.session.add(item)
+    db.session.commit()
+
+    return jsonify({"status": "success", "message": "Added to wishlist"})
 
 # Blog
 @main_bp.route("/blog")

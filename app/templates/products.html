@@ -171,7 +171,9 @@
                                     <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="p-2 bg-white rounded-full shadow hover:bg-accent hover:text-white transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     </a>
-                                    <button onclick="toggleLike(this)" class="p-2 bg-white rounded-full shadow hover:bg-red-500 hover:text-white transition-colors like-btn">
+                                    
+                                    <!-- Wishlist Button Updated -->
+                                    <button onclick="toggleWishlist(this, {{ product.id }})" class="p-2 bg-white rounded-full shadow hover:bg-red-500 hover:text-white transition-colors like-btn">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                                     </button>
                                 </div>
@@ -265,7 +267,6 @@
 </section>
 
 <!-- 9. Quick View Modal -->
-<!-- Note: The modal is kept in the code, but no longer triggered by the eye icon. You may remove this block if not used elsewhere. -->
 <div id="quick-view-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeQuickView()"></div>
     <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-auto">
@@ -446,7 +447,7 @@
         applyFilters();
     }
 
-    // --- Quick View Modal Logic (Kept for reference, but triggers removed from UI) ---
+    // --- Quick View Modal Logic ---
     const modal = document.getElementById('quick-view-modal');
 
     function openQuickView(name, price, description) {
@@ -474,6 +475,43 @@
         }
     });
 
+    // --- Toast Notification Helper ---
+    function showToast(message, type = 'success') {
+        // Remove existing toasts to prevent stackup
+        const existingToast = document.querySelector('.toast-notification');
+        if (existingToast) existingToast.remove();
+
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-5 right-5 px-6 py-3 rounded-lg shadow-xl text-white transform transition-all duration-300 translate-y-10 opacity-0 z-[200] toast-message flex items-center gap-3`;
+        
+        // Icon based on type
+        let icon = '';
+        if (type === 'success') {
+            toast.classList.add('bg-gray-800', 'dark:bg-white', 'text-white', 'dark:text-gray-900');
+            icon = `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
+        } else if (type === 'error') {
+            toast.classList.add('bg-red-600');
+            icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+        } else {
+            toast.classList.add('bg-blue-600');
+            icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+        }
+
+        toast.innerHTML = `${icon}<span class="font-medium">${message}</span>`;
+        document.body.appendChild(toast);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            toast.classList.remove('translate-y-10', 'opacity-0');
+        });
+
+        // Remove after 3s
+        setTimeout(() => {
+            toast.classList.add('translate-y-10', 'opacity-0');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
     // --- Add to Cart Logic ---
     function addToCart(productId, buttonElement) {
         const originalText = buttonElement.innerHTML;
@@ -500,6 +538,7 @@
                 buttonElement.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Added';
                 buttonElement.classList.remove('bg-primary');
                 buttonElement.classList.add('bg-green-600');
+                showToast('Added to cart successfully');
 
                 setTimeout(() => {
                     buttonElement.innerHTML = originalText;
@@ -508,32 +547,64 @@
                     buttonElement.disabled = false;
                 }, 1500);
             } else {
-                alert(data.message || "Error adding to cart");
+                showToast(data.message || "Error adding to cart", "error");
                 buttonElement.innerHTML = originalText;
                 buttonElement.disabled = false;
             }
         })
         .catch(err => {
             console.error(err);
-            alert("Error adding to cart");
+            showToast("Error adding to cart", "error");
             buttonElement.innerHTML = originalText;
             buttonElement.disabled = false;
         });
     }
 
-    // --- Like Button Logic ---
-    function toggleLike(button) {
-        const svg = button.querySelector('svg');
-        const isLiked = button.classList.contains('text-red-500');
+    // --- Wishlist Logic ---
+    async function toggleWishlist(btn, productId) {
+        // Prevent API call if already visually active (assuming no remove route provided)
+        if (btn.classList.contains('text-red-500')) {
+            showToast("Item is already in your wishlist", "info");
+            return;
+        }
 
-        if (isLiked) {
-            button.classList.remove('text-red-500');
-            button.classList.add('text-charcoal', 'dark:text-white');
-            svg.setAttribute('fill', 'none');
-        } else {
-            button.classList.add('text-red-500');
-            button.classList.remove('text-charcoal', 'dark:text-white', 'hover:text-red-500');
-            svg.setAttribute('fill', 'currentColor');
+        // Optimistic UI update (loading state)
+        const svg = btn.querySelector('svg');
+        const originalClass = btn.className;
+        
+        // Optional: Show loading spinner or subtle change
+        svg.classList.add('animate-pulse');
+
+        try {
+            // Call the route provided in the prompt
+            const response = await fetch(`/wishlist/add/${productId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    // Credentials ensures cookies/session_id are sent for guest users
+                    "Credentials": "same-origin" 
+                }
+            });
+
+            const data = await response.json();
+            svg.classList.remove('animate-pulse');
+
+            if (data.status === 'success' || data.status === 'exists') {
+                // Update visual state to "Liked"
+                btn.classList.add('text-red-500');
+                btn.classList.remove('text-charcoal', 'dark:text-white', 'hover:text-red-500');
+                svg.setAttribute('fill', 'currentColor');
+                
+                // Feedback message
+                showToast(data.message || "Added to wishlist", data.status === 'exists' ? 'info' : 'success');
+            } else {
+                showToast("Could not update wishlist", "error");
+            }
+
+        } catch (error) {
+            console.error("Wishlist error:", error);
+            svg.classList.remove('animate-pulse');
+            showToast("Network error. Please try again.", "error");
         }
     }
 </script>
