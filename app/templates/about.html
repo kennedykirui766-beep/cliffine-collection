@@ -286,13 +286,13 @@
         <h2 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-4">Ready to Start Shopping?</h2>
         <p class="text-slate-500 mb-8">Explore our wide range of products and flexible payment options today.</p>
         <div class="flex flex-col sm:flex-row justify-center gap-4">
-            <a href="{% url 'products' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#5423E7] text-white rounded-xl font-semibold hover:bg-[#6333f0] transition-all duration-300 shadow-lg hover:-translate-y-1">
+            <a href="{{ url_for('main.products') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#5423E7] text-white rounded-xl font-semibold hover:bg-[#6333f0] transition-all duration-300 shadow-lg hover:-translate-y-1">
                 Shop Products
             </a>
-            <a href="{% url 'chama' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-amber-400 text-slate-900 rounded-xl font-semibold hover:bg-amber-500 transition-all duration-300 shadow-lg hover:-translate-y-1">
+            <a href="{{ url_for('main.chama') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-amber-400 text-slate-900 rounded-xl font-semibold hover:bg-amber-500 transition-all duration-300 shadow-lg hover:-translate-y-1">
                 Join a Chama
             </a>
-            <a href="{% url 'contact' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
+            <a href="{{ url_for('main.contact') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
                 Contact Us
             </a>
         </div>
