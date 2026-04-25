@@ -475,3 +475,71 @@ class DeliveryArea(db.Model):
 
     def __repr__(self):
         return f"<DeliveryArea {self.name} - {self.fee}>"
+    
+
+class Wishlist(db.Model):
+    __tablename__ = "wishlists"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)  
+    # nullable → allows guest users later
+
+    session_id = db.Column(db.String(255), nullable=True)  
+    # for non-logged users (optional but production-ready)
+
+    name = db.Column(db.String(100), default="My Wishlist")  
+    # allows multiple wishlists in future
+
+    is_active = db.Column(db.Boolean, default=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    items = db.relationship(
+        "WishlistItem",
+        backref="wishlist",
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
+
+    def __repr__(self):
+        return f"<Wishlist {self.id} User {self.user_id}>"    
+
+    
+class WishlistItem(db.Model):
+    __tablename__ = "wishlist_items"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    wishlist_id = db.Column(
+        db.Integer,
+        db.ForeignKey("wishlists.id"),
+        nullable=False
+    )
+
+    product_id = db.Column(
+        db.Integer,
+        db.ForeignKey("products.id"),
+        nullable=False
+    )
+
+    # Optional: support variants later
+    variant_id = db.Column(db.Integer, nullable=True)
+
+    quantity = db.Column(db.Integer, default=1)  
+    # useful if user wants multiple later
+
+    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Prevent duplicates (VERY IMPORTANT)
+    __table_args__ = (
+        db.UniqueConstraint("wishlist_id", "product_id", name="unique_wishlist_product"),
+    )
+
+    # Relationships
+    product = db.relationship("Product", backref="wishlist_items")
+
+    def __repr__(self):
+        return f"<WishlistItem {self.product_id} in Wishlist {self.wishlist_id}>"    

@@ -4,7 +4,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from datetime import datetime
 from flask import session
 from flask_login import current_user
-from app.models import Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea
+from app.models import Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist
 from app import db
 
 from app.models import Product
@@ -236,7 +236,35 @@ def lipa_pole_pole():
 # Wishlist
 @main_bp.route("/wishlist")
 def wishlist():
-    return render_template("wishlist.html", current_year=datetime.now().year)
+
+    wishlist = None
+
+    # ── Logged-in user ─────────────────────────────
+    if current_user.is_authenticated:
+        wishlist = Wishlist.query.filter_by(
+            user_id=current_user.id,
+            is_active=True
+        ).first()
+
+    # ── Guest user (session-based) ─────────────────
+    else:
+        session_id = session.get("wishlist_session_id")
+
+        if session_id:
+            wishlist = Wishlist.query.filter_by(
+                session_id=session_id,
+                is_active=True
+            ).first()
+
+    # ── Extract items safely ───────────────────────
+    items = wishlist.items if wishlist else []
+
+    return render_template(
+        "wishlist.html",
+        wishlist=wishlist,
+        items=items,
+        current_year=datetime.now().year
+    )
 
 # Blog
 @main_bp.route("/blog")
