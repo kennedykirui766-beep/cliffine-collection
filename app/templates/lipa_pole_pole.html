@@ -327,7 +327,7 @@
             {% for title, desc, emoji in steps %}
             <div class="step-card">
                 <div class="flex items-center gap-3 mb-3">
-                    <div class="step-number">{{ i + 1 }}</div>
+                    <div class="step-number">{{ loop.index }}</div>
                     <span class="text-2xl">{{ emoji }}</span>
                 </div>
                 <h3 class="font-bold text-charcoal dark:text-white mb-1.5 text-[0.95rem]">{{ title }}</h3>
