@@ -1,0 +1,548 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Chama — {{ chama.name }}{% endblock %}
+{% block page_title %}Edit Chama{% endblock %}
+
+{% block head %}
+<style>
+    /* ── Section Cards ─────────────────────── */
+    .form-section {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: box-shadow 0.2s ease;
+    }
+    .form-section:hover {
+        box-shadow: 0 4px 20px rgba(84, 35, 231, 0.07);
+    }
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #5423E7;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .section-title svg {
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+        color: #D4AF37;
+    }
+
+    /* ── Form Controls ─────────────────────── */
+    .form-label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.35rem;
+        letter-spacing: 0.02em;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.55rem 0.85rem;
+        font-size: 0.875rem;
+        color: #1e293b;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        font-family: 'DM Sans', sans-serif;
+    }
+    .form-control:focus {
+        border-color: #7C3AED;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+    }
+    textarea.form-control {
+        resize: vertical;
+        min-height: 90px;
+    }
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1rem;
+        padding-right: 2.5rem;
+    }
+
+    /* ── Toggle Switch ─────────────────────── */
+    .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label {
+        font-size: 0.875rem;
+        color: #374151;
+        font-weight: 500;
+    }
+    .toggle-desc {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-top: 1px;
+    }
+    .toggle-switch {
+        position: relative;
+        width: 42px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+        position: absolute;
+        inset: 0;
+        background: #e2e8f0;
+        border-radius: 99px;
+        cursor: pointer;
+        transition: background 0.25s;
+    }
+    .toggle-track::before {
+        content: '';
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        left: 3px;
+        top: 3px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.25s;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .toggle-switch input:checked + .toggle-track { background: #5423E7; }
+    .toggle-switch input:checked + .toggle-track::before { transform: translateX(18px); }
+
+    /* ── Breadcrumb ────────────────────────── */
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-bottom: 1.5rem;
+    }
+    .breadcrumb a { color: #7C3AED; text-decoration: none; font-weight: 500; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb svg { width: 14px; height: 14px; color: #cbd5e1; }
+
+    /* ── Submit Bar ────────────────────────── */
+    .action-bar {
+        position: sticky;
+        bottom: 0;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid #e2e8f0;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        z-index: 10;
+        margin: 0 -1.5rem -1.5rem;
+    }
+
+    /* ── Buttons ───────────────────────────── */
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.6rem 1.4rem;
+        background: linear-gradient(135deg, #5423E7 0%, #7C3AED 100%);
+        color: #fff;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 9px;
+        border: none;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+        box-shadow: 0 4px 14px rgba(84,35,231,0.35);
+        font-family: 'DM Sans', sans-serif;
+    }
+    .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(84,35,231,0.4); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.6rem 1.2rem;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 9px;
+        border: 1px solid #e2e8f0;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.2s;
+        font-family: 'DM Sans', sans-serif;
+    }
+    .btn-secondary:hover { background: #e2e8f0; }
+
+    /* ── Status Badge ──────────────────────── */
+    .status-select-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        transition: background 0.2s;
+    }
+
+    /* ── Mpesa conditional fields ──────────── */
+    #mpesa-fields { display: none; }
+    #mpesa-fields.visible { display: block; }
+
+    /* ── Grid helpers ─────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    @media (max-width: 768px) {
+        .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+        .action-bar { padding: 0.75rem 1rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a>
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <a href="{{ url_for('admin.all_chamas') }}">Chamas</a>
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Edit — {{ chama.name }}</span>
+</div>
+
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+            <h2 class="text-lg font-bold text-slate-800 leading-tight">Edit Chama</h2>
+            <p class="text-sm text-slate-500">ID #{{ chama.id }} &nbsp;·&nbsp; Last updated {{ chama.updated_at.strftime('%b %d, %Y') if chama.updated_at else 'N/A' }}</p>
+        </div>
+    </div>
+    <a href="{{ url_for('admin.all_chamas') }}" class="btn-secondary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Back to Chamas
+    </a>
+</div>
+
+<!-- ── FORM ───────────────────────────────────────────────────── -->
+<form method="POST" action="{{ url_for('admin.edit_chama', chama_id=chama.id) }}" autocomplete="off">
+
+    <!-- 1. Basic Info -->
+    <div class="form-section">
+        <div class="section-title">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Basic Information
+        </div>
+        <div class="grid-2" style="margin-bottom: 1rem;">
+            <div>
+                <label class="form-label" for="name">Chama Name <span class="text-red-400">*</span></label>
+                <input type="text" id="name" name="name" class="form-control" value="{{ chama.name }}" required placeholder="e.g. Umoja Savings Group">
+            </div>
+            <div>
+                <label class="form-label" for="category">Category</label>
+                <select id="category" name="category" class="form-control">
+                    <option value="">-- Select Category --</option>
+                    {% for cat in ['Savings', 'Investment', 'Welfare', 'Shopping', 'Table Banking', 'Merry-Go-Round', 'Education', 'Other'] %}
+                        <option value="{{ cat }}" {% if chama.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div>
+            <label class="form-label" for="description">Description</label>
+            <textarea id="description" name="description" class="form-control" placeholder="Describe the purpose and goals of this chama…">{{ chama.description or '' }}</textarea>
+        </div>
+    </div>
+
+    <!-- 2. Target / Goal -->
+    <div class="form-section">
+        <div class="section-title">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Target &amp; Goal
+        </div>
+        <div class="grid-3">
+            <div>
+                <label class="form-label" for="product_id">Linked Product ID</label>
+                <input type="number" id="product_id" name="product_id" class="form-control" value="{{ chama.product_id or '' }}" placeholder="Optional product ID" min="1">
+            </div>
+            <div>
+                <label class="form-label" for="target_amount">Target Amount (KES)</label>
+                <input type="number" id="target_amount" name="target_amount" class="form-control" value="{{ chama.target_amount or '' }}" placeholder="e.g. 500000" min="0" step="0.01">
+            </div>
+            <div>
+                <label class="form-label" for="deadline">Deadline</label>
+                <input type="date" id="deadline" name="deadline" class="form-control"
+                    value="{{ chama.deadline.strftime('%Y-%m-%d') if chama.deadline else '' }}">
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Contribution Plan -->
+    <div class="form-section">
+        <div class="section-title">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Contribution Plan
+        </div>
+        <div class="grid-3">
+            <div>
+                <label class="form-label" for="contribution_amount">Contribution Amount (KES)</label>
+                <input type="number" id="contribution_amount" name="contribution_amount" class="form-control" value="{{ chama.contribution_amount or '' }}" placeholder="e.g. 2000" min="0" step="0.01">
+            </div>
+            <div>
+                <label class="form-label" for="contribution_frequency">Frequency</label>
+                <select id="contribution_frequency" name="contribution_frequency" class="form-control">
+                    <option value="">-- Select --</option>
+                    {% for freq in ['Daily', 'Weekly', 'Bi-weekly', 'Monthly', 'Quarterly', 'Annually'] %}
+                        <option value="{{ freq }}" {% if chama.contribution_frequency == freq %}selected{% endif %}>{{ freq }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="max_members">Max Members</label>
+                <input type="number" id="max_members" name="max_members" class="form-control" value="{{ chama.max_members or '' }}" placeholder="e.g. 30" min="2">
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Rules & Privacy -->
+    <div class="grid-2" style="margin-bottom:0;">
+        <!-- Rules -->
+        <div class="form-section" style="margin-bottom:1.5rem;">
+            <div class="section-title">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Rules &amp; Guidelines
+            </div>
+            <label class="form-label" for="rules">Rules</label>
+            <textarea id="rules" name="rules" class="form-control" style="min-height: 130px;" placeholder="List the chama's operating rules and member expectations…">{{ chama.rules or '' }}</textarea>
+        </div>
+
+        <!-- Privacy -->
+        <div class="form-section" style="margin-bottom:1.5rem;">
+            <div class="section-title">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                Privacy &amp; Access
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label class="form-label" for="privacy">Privacy Setting</label>
+                <select id="privacy" name="privacy" class="form-control">
+                    <option value="public"   {% if chama.privacy == 'public' %}selected{% endif %}>🌐 Public — Anyone can join</option>
+                    <option value="private"  {% if chama.privacy == 'private' %}selected{% endif %}>🔒 Private — Invite only</option>
+                    <option value="unlisted" {% if chama.privacy == 'unlisted' %}selected{% endif %}>🔗 Unlisted — Link access</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="invite_code">Invite Code</label>
+                <div style="display:flex; gap:0.5rem;">
+                    <input type="text" id="invite_code" name="invite_code" class="form-control" value="{{ chama.invite_code or '' }}" placeholder="e.g. UMOJA2025">
+                    <button type="button" onclick="generateCode()" title="Generate random code"
+                        class="flex-shrink-0 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 text-sm font-semibold transition-colors" style="white-space:nowrap;">
+                        ⟳ Generate
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Payment Methods -->
+    <div class="form-section">
+        <div class="section-title">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Payment Methods
+        </div>
+
+        <!-- Toggles row -->
+        <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+            <!-- M-Pesa -->
+            <div class="toggle-row" style="border:none; padding:0; gap:0.75rem;">
+                <div>
+                    <div class="toggle-label">M-Pesa</div>
+                    <div class="toggle-desc">Mobile money</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="accepts_mpesa" id="accepts_mpesa" value="1"
+                        {% if chama.accepts_mpesa %}checked{% endif %}
+                        onchange="toggleMpesaFields()">
+                    <span class="toggle-track"></span>
+                </label>
+            </div>
+            <!-- Card -->
+            <div class="toggle-row" style="border:none; padding:0; gap:0.75rem;">
+                <div>
+                    <div class="toggle-label">Card</div>
+                    <div class="toggle-desc">Visa / Mastercard</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="accepts_card" value="1" {% if chama.accepts_card %}checked{% endif %}>
+                    <span class="toggle-track"></span>
+                </label>
+            </div>
+            <!-- Bank -->
+            <div class="toggle-row" style="border:none; padding:0; gap:0.75rem;">
+                <div>
+                    <div class="toggle-label">Bank Transfer</div>
+                    <div class="toggle-desc">Direct bank</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="accepts_bank" value="1" {% if chama.accepts_bank %}checked{% endif %}>
+                    <span class="toggle-track"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- M-Pesa Details (conditional) -->
+        <div id="mpesa-fields" class="{% if chama.accepts_mpesa %}visible{% endif %}" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:1rem;">
+            <p class="text-xs font-semibold text-purple-700 mb-3 uppercase tracking-wide">M-Pesa Configuration</p>
+            <div class="grid-3">
+                <div>
+                    <label class="form-label" for="mpesa_type">M-Pesa Type</label>
+                    <select id="mpesa_type" name="mpesa_type" class="form-control">
+                        <option value="">-- Select --</option>
+                        <option value="till" {% if chama.mpesa_type == 'till' %}selected{% endif %}>Till Number</option>
+                        <option value="paybill" {% if chama.mpesa_type == 'paybill' %}selected{% endif %}>Paybill</option>
+                        <option value="personal" {% if chama.mpesa_type == 'personal' %}selected{% endif %}>Personal</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="mpesa_number">M-Pesa Number / Till</label>
+                    <input type="text" id="mpesa_number" name="mpesa_number" class="form-control" value="{{ chama.mpesa_number or '' }}" placeholder="e.g. 247247">
+                </div>
+                <div>
+                    <label class="form-label" for="mpesa_account">Account Reference</label>
+                    <input type="text" id="mpesa_account" name="mpesa_account" class="form-control" value="{{ chama.mpesa_account or '' }}" placeholder="e.g. ChamaSavings">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Notifications & Status -->
+    <div class="grid-2" style="margin-bottom:0;">
+        <!-- Notifications -->
+        <div class="form-section" style="margin-bottom:1.5rem;">
+            <div class="section-title">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                Notification Triggers
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">New Member Joins</div>
+                    <div class="toggle-desc">Alert admin when someone joins</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_on_join" value="1" {% if chama.notify_on_join %}checked{% endif %}>
+                    <span class="toggle-track"></span>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Payment Received</div>
+                    <div class="toggle-desc">Alert on contribution received</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_on_payment" value="1" {% if chama.notify_on_payment %}checked{% endif %}>
+                    <span class="toggle-track"></span>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Goal Reached</div>
+                    <div class="toggle-desc">Alert when target is achieved</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_on_goal" value="1" {% if chama.notify_on_goal %}checked{% endif %}>
+                    <span class="toggle-track"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Status & Dates -->
+        <div class="form-section" style="margin-bottom:1.5rem;">
+            <div class="section-title">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Status &amp; Dates
+            </div>
+            <div style="margin-bottom:1rem;">
+                <label class="form-label" for="status">Status</label>
+                <div class="status-select-wrapper">
+                    <span class="status-dot" id="status-dot"
+                        style="background:{% if chama.status == 'active' %}#22c55e{% elif chama.status == 'inactive' %}#94a3b8{% elif chama.status == 'suspended' %}#ef4444{% else %}#f59e0b{% endif %}">
+                    </span>
+                    <select id="status" name="status" class="form-control" onchange="updateStatusDot(this)">
+                        {% for s in ['active', 'inactive', 'suspended', 'pending'] %}
+                            <option value="{{ s }}" {% if chama.status == s %}selected{% endif %}>
+                                {{ s | capitalize }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="form-label" for="start_date">Start Date</label>
+                <input type="date" id="start_date" name="start_date" class="form-control"
+                    value="{{ chama.start_date.strftime('%Y-%m-%d') if chama.start_date else '' }}">
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Sticky Action Bar ────────────────────────────────── -->
+    <div class="action-bar">
+        <a href="{{ url_for('admin.all_chamas') }}" class="btn-secondary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            Cancel
+        </a>
+        <button type="submit" class="btn-primary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Save Changes
+        </button>
+    </div>
+
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    /* ── M-Pesa toggle ───────────────────── */
+    function toggleMpesaFields() {
+        const cb = document.getElementById('accepts_mpesa');
+        const fields = document.getElementById('mpesa-fields');
+        fields.classList.toggle('visible', cb.checked);
+    }
+
+    /* ── Status dot colour ───────────────── */
+    function updateStatusDot(sel) {
+        const colours = { active: '#22c55e', inactive: '#94a3b8', suspended: '#ef4444', pending: '#f59e0b' };
+        document.getElementById('status-dot').style.background = colours[sel.value] || '#94a3b8';
+    }
+
+    /* ── Invite code generator ───────────── */
+    function generateCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+        document.getElementById('invite_code').value = code;
+    }
+</script>
+{% endblock %}

@@ -698,15 +698,58 @@ def create_chama():
     return render_template("admin/chamas/create.html")
 
 
+from datetime import datetime
+
 @admin_bp.route("/chamas/edit/<int:chama_id>", methods=["GET", "POST"])
 def edit_chama(chama_id):
 
     chama = Chama.query.get_or_404(chama_id)
 
     if request.method == "POST":
+        # ── Basic Info ─────────────────────
         chama.name = request.form.get("name")
         chama.description = request.form.get("description")
         chama.category = request.form.get("category")
+
+        # ── Target / Goal ──────────────────
+        chama.product_id = request.form.get("product_id") or None
+        chama.target_amount = request.form.get("target_amount") or None
+
+        deadline = request.form.get("deadline")
+        chama.deadline = datetime.strptime(deadline, "%Y-%m-%d") if deadline else None
+
+        # ── Contribution Plan ──────────────
+        chama.contribution_amount = request.form.get("contribution_amount") or None
+        chama.contribution_frequency = request.form.get("contribution_frequency")
+        chama.max_members = request.form.get("max_members") or None
+
+        # ── Rules ─────────────────────────
+        chama.rules = request.form.get("rules")
+
+        # ── Privacy ───────────────────────
+        chama.privacy = request.form.get("privacy")
+        chama.invite_code = request.form.get("invite_code")
+
+        # ── Payments ──────────────────────
+        chama.accepts_mpesa = bool(request.form.get("accepts_mpesa"))
+        chama.accepts_card = bool(request.form.get("accepts_card"))
+        chama.accepts_bank = bool(request.form.get("accepts_bank"))
+
+        chama.mpesa_type = request.form.get("mpesa_type")
+        chama.mpesa_number = request.form.get("mpesa_number")
+        chama.mpesa_account = request.form.get("mpesa_account")
+
+        # ── Notifications ─────────────────
+        chama.notify_on_join = bool(request.form.get("notify_on_join"))
+        chama.notify_on_payment = bool(request.form.get("notify_on_payment"))
+        chama.notify_on_goal = bool(request.form.get("notify_on_goal"))
+
+        # ── Status ────────────────────────
+        chama.status = request.form.get("status")
+
+        # ── Dates ─────────────────────────
+        start_date = request.form.get("start_date")
+        chama.start_date = datetime.strptime(start_date, "%Y-%m-%d") if start_date else None
 
         db.session.commit()
 
@@ -717,7 +760,6 @@ def edit_chama(chama_id):
         "admin/chamas/edit_chama.html",
         chama=chama
     )
-
 
 @admin_bp.route("/chamas/delete/<int:chama_id>", methods=["POST"])
 def delete_chama(chama_id):
