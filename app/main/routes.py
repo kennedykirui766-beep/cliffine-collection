@@ -152,9 +152,7 @@ def chama_detail(chama_id):
 def join_chama(chama_id):
     chama = Chama.query.get_or_404(chama_id)
 
-    # --- HANDLE GET REQUEST (Display the form) ---
     if request.method == "GET":
-        # 🚫 Prevent accessing join page if closed/full
         if chama.status != "open":
             flash("This chama is not open for joining.", "error")
             return redirect(url_for("main.chama_details", chama_id=chama.id))
