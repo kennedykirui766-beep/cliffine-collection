@@ -605,9 +605,28 @@ def remove_from_cart():
 
 
 # Account
-@main_bp.route("/account")
-def account():
-    return render_template("login.html", current_year=datetime.now().year)
+from app.forms import LoginForm
+from flask import render_template, redirect, url_for, flash, request
+
+@main_bp.route("/login", methods=["GET", "POST"])
+def login():
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
+
+        # TODO: authenticate user here
+        # user = User.query.filter_by(email=email).first()
+
+        flash("Login successful", "success")
+        return redirect(url_for("main.index"))
+
+    return render_template(
+        "login.html",
+        form=form
+    )
 
 # Privacy
 @main_bp.route("/privacy")
