@@ -100,7 +100,7 @@
                         {% endfor %}
                     {% endif %}
 
-                    <form method="post" action="{% url 'login' %}" class="space-y-5">
+                    <form method="post" action="{{ url_for('main.login') }}" class="space-y-5">
                         {% csrf_token %}
                         
                         <!-- Email Address -->
