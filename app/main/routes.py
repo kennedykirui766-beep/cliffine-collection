@@ -1,10 +1,11 @@
+from collections import defaultdict
 from operator import and_
 
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from datetime import datetime
 from flask import session
 from flask_login import current_user
-from app.models import BlogPost, Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist, WishlistItem
+from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist, WishlistItem
 from app import db
 
 from app.models import Product
@@ -380,7 +381,32 @@ def contact():
 # FAQ
 @main_bp.route("/faq")
 def faq():
-    return render_template("faq.html", current_year=datetime.now().year)
+
+    faqs = FAQ.query.filter_by(is_active=True)\
+        .order_by(FAQ.category, FAQ.sort_order)\
+        .all()
+
+    grouped_faqs = defaultdict(list)
+
+    for faq in faqs:
+        grouped_faqs[faq.category or "General"].append(faq)
+
+    return render_template(
+        "faq.html",
+        grouped_faqs=grouped_faqs
+    )
+
+@main_bp.route("/faq/search")
+def faq_search():
+
+    query = request.args.get("q", "")
+
+    faqs = FAQ.query.filter(
+        FAQ.question.ilike(f"%{query}%"),
+        FAQ.is_active == True
+    ).all()
+
+    return render_template("faq_search.html", faqs=faqs, query=query)
 
 # Cart
 @main_bp.route("/cart")

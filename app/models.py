@@ -565,3 +565,21 @@ class BlogPost(db.Model):
 
     def __repr__(self):
         return f"<BlogPost {self.title}>"    
+
+
+class FAQ(db.Model):
+    __tablename__ = "faqs"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    question = db.Column(db.String(255), nullable=False)
+    answer = db.Column(db.Text, nullable=False)
+
+    category = db.Column(db.String(100), index=True)  # payments, delivery, chama, products
+
+    sort_order = db.Column(db.Integer, default=0)  # control display order
+
+    is_active = db.Column(db.Boolean, default=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)    
