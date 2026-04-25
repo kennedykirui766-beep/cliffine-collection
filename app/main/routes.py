@@ -395,6 +395,7 @@ def faq():
         grouped_faqs=grouped_faqs
     )
 
+
 @main_bp.route("/faq/search")
 def faq_search():
 
@@ -405,7 +406,16 @@ def faq_search():
         FAQ.is_active == True
     ).all()
 
-    return render_template("faq_search.html", faqs=faqs, query=query)
+    grouped_faqs = defaultdict(list)
+
+    for faq in faqs:
+        grouped_faqs[faq.category or "General"].append(faq)
+
+    return render_template(
+        "faq_search.html",
+        grouped_faqs=grouped_faqs,
+        query=query
+    )
 
 # Cart
 @main_bp.route("/cart")
