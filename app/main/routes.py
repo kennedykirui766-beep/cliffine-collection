@@ -1,10 +1,10 @@
 from operator import and_
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from datetime import datetime
 from flask import session
 from flask_login import current_user
-from app.models import Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist, WishlistItem
+from app.models import BlogPost, Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist, WishlistItem
 from app import db
 
 from app.models import Product
@@ -322,10 +322,39 @@ def add_to_wishlist(product_id):
 
     return jsonify({"status": "success", "message": "Added to wishlist"})
 
-# Blog
+
+# Blog list page
 @main_bp.route("/blog")
 def blog():
-    return render_template("blog.html", current_year=datetime.now().year)
+
+    posts = BlogPost.query.filter_by(
+        is_published=True
+    ).order_by(BlogPost.created_at.desc()).all()
+
+    return render_template(
+        "blog/list.html",
+        posts=posts,
+        current_year=datetime.now().year
+    )
+
+
+# Single blog post
+@main_bp.route("/blog/<slug>")
+def blog_detail(slug):
+
+    post = BlogPost.query.filter_by(
+        slug=slug,
+        is_published=True
+    ).first()
+
+    if not post:
+        abort(404)
+
+    return render_template(
+        "blog/detail.html",
+        post=post,
+        current_year=datetime.now().year
+    )
 
 # About
 @main_bp.route("/about")
