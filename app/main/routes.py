@@ -224,7 +224,6 @@ def join_chama(chama_id):
 # Lipa Pole Pole
 @main_bp.route("/lipa-pole-pole")
 def lipa_pole_pole():
-    # Fetch only active products that support Lipa Pole Pole
     products = Product.query.filter_by(
         lipa_pole_pole=True,
         is_active=True
