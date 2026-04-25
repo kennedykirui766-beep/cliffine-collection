@@ -324,7 +324,7 @@
                 ('Agree on Terms', 'We agree on the deposit amount, number of installments and schedule that fits you.', '🤝'),
                 ('Pay & Receive', 'Pay via M-Pesa Till 4106106, make installments on schedule, and collect your item!', '✅'),
             ] %}
-            {% for i, (title, desc, emoji) in enumerate(steps) %}
+            {% for title, desc, emoji in steps %}
             <div class="step-card">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="step-number">{{ i + 1 }}</div>
