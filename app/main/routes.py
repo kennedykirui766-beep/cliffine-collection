@@ -620,7 +620,6 @@ def register():
             flash("Email already registered", "danger")
             return redirect(url_for("main.register"))
 
-        # ── Create new user ──
         user = User(
             name=form.name.data,
             email=form.email.data
@@ -634,6 +633,7 @@ def register():
         return redirect(url_for("main.login"))
 
     return render_template("register.html", form=form)
+
 
 @main_bp.route("/login", methods=["GET", "POST"])
 def login():
