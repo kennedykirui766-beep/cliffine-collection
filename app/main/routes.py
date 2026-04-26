@@ -615,7 +615,6 @@ def register():
 
     if form.validate_on_submit():
 
-        # ── Check if email already exists ──
         existing_user = User.query.filter_by(email=form.email.data).first()
         if existing_user:
             flash("Email already registered", "danger")
