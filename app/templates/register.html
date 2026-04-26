@@ -9,7 +9,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ol class="flex items-center space-x-2 text-sm">
             <li>
-                <a href="{% url 'home' %}" class="text-slate-500 hover:text-[#5423E7] transition-colors duration-300">
+                <a href="{{ url_for('main.index') }}" class="text-slate-500 hover:text-[#5423E7] transition-colors duration-300">
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                     </svg>
@@ -101,8 +101,7 @@
                     </div>
                     {% endif %}
 
-                    <form method="post" action="{% url 'register' %}" class="space-y-5">
-                        {% csrf_token %}
+                    <form method="post" action="{{ url_for('main.register') }}" class="space-y-5">
                         
                         <!-- Full Name -->
                         <div>
@@ -162,7 +161,7 @@
                         <div class="flex items-start gap-3">
                             <input type="checkbox" name="terms" id="terms" required class="mt-1 w-4 h-4 rounded border-slate-300 text-[#5423E7] focus:ring-[#5423E7]">
                             <label for="terms" class="text-sm text-slate-600">
-                                I agree to the <a href="{% url 'terms' %}" class="text-[#5423E7] font-semibold hover:underline">Terms & Conditions</a> and <a href="{% url 'privacy' %}" class="text-[#5423E7] font-semibold hover:underline">Privacy Policy</a>.
+                                I agree to the <a href="{{ url_for('main.terms') }}" class="text-[#5423E7] font-semibold hover:underline">Terms & Conditions</a> and <a href="{{ url_for('main.privacy') }}" class="text-[#5423E7] font-semibold hover:underline">Privacy Policy</a>.
                             </label>
                         </div>
 
@@ -197,7 +196,7 @@
                     <!-- Login Redirect -->
                     <p class="mt-8 text-center text-sm text-slate-600">
                         Already have an account? 
-                        <a href="{% url 'login' %}" class="font-semibold text-[#5423E7] hover:underline">Login here</a>
+                        <a href="{{ url_for('main.login') }}" class="font-semibold text-[#5423E7] hover:underline">Login here</a>
                     </p>
                 </div>
             </div>
