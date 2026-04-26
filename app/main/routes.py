@@ -4,6 +4,7 @@ from operator import and_
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from datetime import datetime
 from flask import session
+from app.forms import LoginForm
 from flask_login import current_user
 from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist, WishlistItem
 from app import db
@@ -300,7 +301,7 @@ def add_to_wishlist(product_id):
             wishlist = Wishlist(session_id=session["wishlist_session_id"])
             db.session.add(wishlist)
 
-    db.session.flush()  # ensures wishlist.id is available
+    db.session.flush() 
 
     # ── Prevent duplicates ──────────────────────
     existing = WishlistItem.query.filter_by(
@@ -452,7 +453,7 @@ def cart():
                     "product": product,
                     "quantity": item.quantity,
                     "total": item_total,
-                    "unit_price": unit_price  # optional (good for future use)
+                    "unit_price": unit_price 
                 })
 
     return render_template(
@@ -605,8 +606,6 @@ def remove_from_cart():
 
 
 # Account
-from app.forms import LoginForm
-from flask import render_template, redirect, url_for, flash, request
 
 @main_bp.route("/login", methods=["GET", "POST"])
 def login():
