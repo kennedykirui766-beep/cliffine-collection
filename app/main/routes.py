@@ -628,6 +628,10 @@ def login():
         form=form
     )
 
+@main_bp.route("/account")
+def account():
+    return render_template("account.html")
+
 # Privacy
 @main_bp.route("/privacy")
 def privacy():
