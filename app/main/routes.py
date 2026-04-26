@@ -620,8 +620,11 @@ def register():
             flash("Email already registered", "danger")
             return redirect(url_for("main.register"))
 
+        full_name = form.name.data.split(" ", 1)
+
         user = User(
-            name=form.name.data,
+            first_name=full_name[0],
+            last_name=full_name[1] if len(full_name) > 1 else "",
             email=form.email.data
         )
         user.set_password(form.password.data)
