@@ -5,7 +5,7 @@ from flask import Blueprint, abort, flash, jsonify, redirect, render_template, r
 from datetime import datetime
 from flask import session
 from app.forms import LoginForm
-from flask_login import current_user
+from flask_login import current_user, login_required
 from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist, WishlistItem
 from app import db
 
@@ -627,9 +627,32 @@ def login():
         form=form
     )
 
+
 @main_bp.route("/account")
+@login_required
 def account():
-    return render_template("account.html")
+
+    # ── Basic user info ─────────────────────
+    user = current_user
+
+    # ── Wishlist (if exists) ────────────────
+    wishlist = Wishlist.query.filter_by(
+        user_id=user.id,
+        is_active=True
+    ).first()
+
+    wishlist_items = wishlist.items if wishlist else []
+
+    # ── Orders (if you have model later) ────
+    # orders = Order.query.filter_by(user_id=user.id).all()
+
+    return render_template(
+        "account.html",
+        user=user,
+        wishlist_items=wishlist_items,
+        # orders=orders,
+        current_year=datetime.now().year
+    )
 
 # Privacy
 @main_bp.route("/privacy")
