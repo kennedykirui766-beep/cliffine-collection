@@ -5,9 +5,10 @@ from flask import Blueprint, abort, flash, jsonify, redirect, render_template, r
 from datetime import datetime
 from flask import session
 from app.forms import LoginForm
-from flask_login import current_user
+from flask_login import current_user, login_required
 from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist, WishlistItem
 from app import db
+from flask_login import login_required, current_user
 
 from app.models import Product
 
@@ -809,7 +810,6 @@ def dashboard():
 
 # app/main/routes.py
 
-from flask import render_template, request, redirect, url_for, flash
 
 @main_bp.route("/password-reset", methods=["GET", "POST"])
 def password_reset():
