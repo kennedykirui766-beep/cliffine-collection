@@ -5,7 +5,7 @@ from flask import Blueprint, abort, flash, jsonify, redirect, render_template, r
 from datetime import datetime
 from flask import session
 from app.forms import LoginForm
-from flask_login import current_user, login_required
+from flask_login import current_user
 from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist, WishlistItem
 from app import db
 
@@ -806,3 +806,19 @@ def orders():
 @main_bp.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html", current_year=datetime.now().year)
+
+# app/main/routes.py
+
+from flask import render_template, request, redirect, url_for, flash
+
+@main_bp.route("/password-reset", methods=["GET", "POST"])
+def password_reset():
+
+    if request.method == "POST":
+        email = request.form.get("email")
+
+        # TODO: send reset email later
+        flash("Password reset link sent to your email", "info")
+        return redirect(url_for("main.login"))
+
+    return render_template("password_reset.html")
