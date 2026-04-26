@@ -168,7 +168,6 @@ def join_chama(chama_id):
 
     # --- HANDLE POST REQUEST (Process the form) ---
     try:
-        # 🚫 Prevent joining closed/full chama (Double check on submit)
         if chama.status != "open":
             flash("This chama is not open for joining.", "error")
             return redirect(url_for("main.chamas"))
