@@ -4,9 +4,9 @@ from operator import and_
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from datetime import datetime
 from flask import session
-from app.forms import LoginForm
+from app.forms import LoginForm, RegistrationForm
 from flask_login import current_user, login_required
-from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, Wishlist, WishlistItem
+from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, User, Wishlist, WishlistItem
 from app import db
 from flask_login import login_required, current_user
 
@@ -607,6 +607,34 @@ def remove_from_cart():
 
 
 # Account
+
+@main_bp.route("/register", methods=["GET", "POST"])
+def register():
+
+    form = RegistrationForm()
+
+    if form.validate_on_submit():
+
+        # ── Check if email already exists ──
+        existing_user = User.query.filter_by(email=form.email.data).first()
+        if existing_user:
+            flash("Email already registered", "danger")
+            return redirect(url_for("main.register"))
+
+        # ── Create new user ──
+        user = User(
+            name=form.name.data,
+            email=form.email.data
+        )
+        user.set_password(form.password.data)
+
+        db.session.add(user)
+        db.session.commit()
+
+        flash("Account created successfully. Please login.", "success")
+        return redirect(url_for("main.login"))
+
+    return render_template("register.html", form=form)
 
 @main_bp.route("/login", methods=["GET", "POST"])
 def login():
