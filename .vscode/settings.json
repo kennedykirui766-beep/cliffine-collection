@@ -1,0 +1,21 @@
+{
+    "cSpell.words": [
+        "backref",
+        "certifi",
+        "Chama",
+        "chamas",
+        "Cliffine",
+        "colorama",
+        "dnspython",
+        "dotenv",
+        "gunicorn",
+        "idna",
+        "itsdangerous",
+        "joinedload",
+        "mpesa",
+        "onupdate",
+        "psycopg",
+        "urllib",
+        "Werkzeug"
+    ]
+}

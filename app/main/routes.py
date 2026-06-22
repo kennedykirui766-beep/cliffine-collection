@@ -4,9 +4,9 @@ from operator import and_
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from datetime import datetime
 from flask import session
-from app.forms import LoginForm, RegistrationForm
-from flask_login import current_user, login_required
-from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, Order, OrderItem, Product, DeliveryArea, User, Wishlist, WishlistItem
+from app.forms import ContactForm, LoginForm, RegistrationForm, ProfileForm
+from flask_login import current_user, login_required, login_user, logout_user
+from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, ContactMessage, Order, OrderItem, Product, DeliveryArea, User, Wishlist, WishlistItem
 from app import db
 from flask_login import login_required, current_user
 
@@ -374,9 +374,35 @@ def about():
     return render_template("about.html", current_year=datetime.now().year)
 
 # Contact
-@main_bp.route("/contact")
+@main_bp.route("/contact", methods=["GET", "POST"])
 def contact():
-    return render_template("contact.html", current_year=datetime.now().year)
+    form = ContactForm()
+
+    if form.validate_on_submit():
+
+        contact_message = ContactMessage(
+            name=form.name.data,
+            email=form.email.data,
+            phone=form.phone.data,
+            subject=form.subject.data,
+            message=form.message.data
+        )
+
+        db.session.add(contact_message)
+        db.session.commit()
+
+        flash(
+            "Thank you for contacting us. We will get back to you shortly.",
+            "success"
+        )
+
+        return redirect(url_for("main.contact"))
+
+    return render_template(
+        "contact.html",
+        form=form,
+        current_year=datetime.now().year
+    )
 
 # FAQ
 @main_bp.route("/faq")
@@ -609,23 +635,30 @@ def remove_from_cart():
 
 @main_bp.route("/register", methods=["GET", "POST"])
 def register():
-
     form = RegistrationForm()
 
     if form.validate_on_submit():
 
-        existing_user = User.query.filter_by(email=form.email.data).first()
+        email = form.email.data.strip().lower()
+
+        existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash("Email already registered", "danger")
             return redirect(url_for("main.register"))
 
-        full_name = form.name.data.split(" ", 1)
+        # safer name splitting
+        name_parts = form.name.data.strip().split()
+
+        first_name = name_parts[0]
+        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
 
         user = User(
-            first_name=full_name[0],
-            last_name=full_name[1] if len(full_name) > 1 else "",
-            email=form.email.data
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone=form.phone.data  # if your form has it
         )
+
         user.set_password(form.password.data)
 
         db.session.add(user)
@@ -643,29 +676,66 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        email = form.email.data
+        email = form.email.data.strip().lower()
         password = form.password.data
 
-        # TODO: authenticate user here
-        # user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).first()
 
-        flash("Login successful", "success")
-        return redirect(url_for("main.index"))
+        if user and user.check_password(password):
+            login_user(user)
+
+            flash("Login successful", "success")
+            return redirect(url_for("main.index"))
+
+        flash("Invalid email or password", "danger")
 
     return render_template(
         "login.html",
         form=form
     )
 
+@main_bp.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("main.login"))
 
-@main_bp.route("/account")
+@main_bp.route("/account", methods=["GET", "POST"])
 @login_required
 def account():
 
-    # ── Basic user info ─────────────────────
     user = current_user
 
-    # ── Wishlist (if exists) ────────────────
+    # Profile form
+    form = ProfileForm(obj=user)
+
+    if form.validate_on_submit():
+
+        existing_user = User.query.filter(
+            User.email == form.email.data.lower().strip(),
+            User.id != user.id
+        ).first()
+
+        if existing_user:
+            flash("Email already in use.", "danger")
+            return redirect(url_for("main.account"))
+
+        user.first_name = form.first_name.data
+        user.last_name = form.last_name.data
+        user.email = form.email.data.lower().strip()
+        user.phone = form.phone.data
+        user.address = form.address.data
+        user.city = form.city.data
+        user.country = form.country.data
+
+        db.session.commit()
+
+        flash("Profile updated successfully.", "success")
+
+        return redirect(url_for("main.account"))
+
+    # Wishlist
     wishlist = Wishlist.query.filter_by(
         user_id=user.id,
         is_active=True
@@ -673,17 +743,13 @@ def account():
 
     wishlist_items = wishlist.items if wishlist else []
 
-    # ── Orders (if you have model later) ────
-    # orders = Order.query.filter_by(user_id=user.id).all()
-
     return render_template(
         "account.html",
         user=user,
+        form=form,
         wishlist_items=wishlist_items,
-        # orders=orders,
         current_year=datetime.now().year
     )
-
 # Privacy
 @main_bp.route("/privacy")
 def privacy():
@@ -829,8 +895,19 @@ def checkout_process():
 
 # Orders
 @main_bp.route("/orders")
+@login_required
 def orders():
-    return render_template("orders.html", current_year=datetime.now().year)
+    user_id=current_user.id
+
+    orders = Order.query.filter_by(user_id=current_user.id)\
+        .order_by(Order.created_at.desc())\
+        .all()
+
+    return render_template(
+        "orders.html",
+        orders=orders,
+        current_year=datetime.now().year
+    )
 
 # User dashboard
 @main_bp.route("/dashboard")
@@ -851,3 +928,4 @@ def password_reset():
         return redirect(url_for("main.login"))
 
     return render_template("password_reset.html")
+

@@ -25,35 +25,40 @@
     </div>
 </section>
 
+{% if orders %}
+
 <!-- 3. Orders Summary / Stats -->
 <section class="py-6 bg-white dark:bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Total Orders -->
             <div class="bg-sand dark:bg-gray-800 p-5 rounded-xl flex items-center gap-4">
                 <div class="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center">
                     <svg class="w-6 h-6 text-primary dark:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 </div>
                 <div>
                     <p class="text-sm text-muted dark:text-gray-400">Total Orders</p>
-                    <p class="text-xl font-bold text-charcoal dark:text-white">12</p>
+                    <p class="text-xl font-bold text-charcoal dark:text-white">{{ orders|length }}</p>
                 </div>
             </div>
+            <!-- Pending Deliveries -->
             <div class="bg-sand dark:bg-gray-800 p-5 rounded-xl flex items-center gap-4">
                 <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/20 rounded-full flex items-center justify-center">
                     <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
                     <p class="text-sm text-muted dark:text-gray-400">Pending Deliveries</p>
-                    <p class="text-xl font-bold text-charcoal dark:text-white">2</p>
+                    <p class="text-xl font-bold text-charcoal dark:text-white">{{ orders|selectattr('status', 'in', ['pending', 'processing', 'shipped'])|list|length }}</p>
                 </div>
             </div>
+            <!-- Completed -->
             <div class="bg-sand dark:bg-gray-800 p-5 rounded-xl flex items-center gap-4">
                 <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
                     <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
                     <p class="text-sm text-muted dark:text-gray-400">Completed</p>
-                    <p class="text-xl font-bold text-charcoal dark:text-white">10</p>
+                    <p class="text-xl font-bold text-charcoal dark:text-white">{{ orders|selectattr('status', 'equalto', 'delivered')|list|length }}</p>
                 </div>
             </div>
         </div>
@@ -66,23 +71,25 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <!-- Search -->
             <div class="relative flex-1 max-w-md">
-                <input type="text" placeholder="Search by Order Number..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-sm">
+                <input type="text" id="orderSearch" placeholder="Search by Order Number..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-sm">
                 <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
             
             <!-- Filters -->
             <div class="flex flex-wrap gap-2">
-                <select class="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-accent text-charcoal dark:text-white">
-                    <option>All Status</option>
-                    <option>Delivered</option>
-                    <option>Processing</option>
-                    <option>Cancelled</option>
+                <select id="statusFilter" class="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-accent text-charcoal dark:text-white">
+                    <option value="">All Status</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="processing">Processing</option>
+                    <option value="pending">Pending</option>
+                    <option value="cancelled">Cancelled</option>
                 </select>
-                <select class="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-accent text-charcoal dark:text-white">
-                    <option>All Payments</option>
-                    <option>Paid</option>
-                    <option>Pending</option>
-                    <option>Lipa Pole Pole</option>
+                <select id="paymentFilter" class="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-accent text-charcoal dark:text-white">
+                    <option value="">All Payments</option>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                    <option value="lipa_pole_pole">Lipa Pole Pole</option>
                 </select>
             </div>
         </div>
@@ -94,38 +101,81 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- 4. Orders List -->
-        <div class="space-y-6">
+        <div id="ordersList" class="space-y-6">
             
-            <!-- Order Card 1 (Pending Payment) -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-yellow-200 dark:border-yellow-800 overflow-hidden">
+            {% for order in orders %}
+            <!-- Order Card -->
+            <div class="order-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border overflow-hidden" 
+                 data-order-id="CC-{{ '%04d'|format(order.id) }}"
+                 data-status="{{ order.status }}"
+                 data-payment="{{ order.payment_status }}">
+                
                 <!-- Header -->
+                {% if order.payment_status == 'pending' %}
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 px-6 py-3 border-b border-yellow-100 dark:border-yellow-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div class="flex items-center gap-3">
-                        <span class="font-bold text-charcoal dark:text-white">Order #CC-1023</span>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="font-bold text-charcoal dark:text-white">Order #CC-{{ '%04d'|format(order.id) }}</span>
                         <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-200">Payment Pending</span>
+                        {% if order.status %}{{ status_badge(order.status) }}{% endif %}
                     </div>
-                    <span class="text-xs text-muted dark:text-gray-400">Placed on Oct 24, 2023</span>
+                    <span class="text-xs text-muted dark:text-gray-400">Placed on {{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'N/A' }}</span>
                 </div>
+                {% else %}
+                <div class="bg-sand dark:bg-gray-700/50 px-6 py-3 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="font-bold text-charcoal dark:text-white">Order #CC-{{ '%04d'|format(order.id) }}</span>
+                        {{ status_badge(order.status) }}
+                        {% if order.payment_method == 'lipa_pole_pole' %}
+                        <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">Lipa Pole Pole</span>
+                        {% endif %}
+                    </div>
+                    <span class="text-xs text-muted dark:text-gray-400">Placed on {{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'N/A' }}</span>
+                </div>
+                {% endif %}
                 
                 <!-- Body -->
                 <div class="p-6">
                     <div class="flex flex-col lg:flex-row gap-6">
                         <!-- Products -->
                         <div class="flex-1">
-                            <div class="flex items-center gap-4 mb-4">
+                            {% if order.items %}
+                                {% for item in order.items %}
+                                <div class="flex items-center gap-4 {% if not loop.first %}mt-3{% endif %}">
+                                    <div class="w-{% if order.items|length == 1 %}20{% else %}16{% endif %} h-{% if order.items|length == 1 %}20{% else %}16{% endif %} bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+                                        {% if item.product and item.product.image %}
+                                        <img src="{{ item.product.image }}" alt="{{ item.product.name }}" class="w-full h-full object-cover">
+                                        {% else %}
+                                        <div class="w-full h-full flex items-center justify-center text-xs text-muted">No Image</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-charcoal dark:text-white">{{ item.product.name if item.product else 'Product #' ~ item.product_id }}</h3>
+                                        <p class="text-sm text-muted">Qty: {{ item.quantity }}</p>
+                                        {% if loop.first and order.delivery_address %}
+                                        <p class="text-xs text-muted mt-1">Delivery: {{ order.delivery_address }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                            <div class="flex items-center gap-4">
                                 <div class="w-20 h-20 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img src="https://placehold.co/100x100/581C87/FFFFFF?text=Smart+TV" alt="Smart TV" class="w-full h-full object-cover">
+                                    <div class="w-full h-full flex items-center justify-center text-xs text-muted">No Items</div>
                                 </div>
                                 <div>
-                                    <h3 class="font-semibold text-charcoal dark:text-white">43" Smart Android TV</h3>
-                                    <p class="text-sm text-muted">Qty: 1</p>
+                                    <h3 class="font-semibold text-charcoal dark:text-white">Order Items</h3>
+                                    <p class="text-sm text-muted">View details for item list</p>
                                 </div>
                             </div>
+                            {% endif %}
+                            
+                            {% if order.payment_status == 'pending' %}
                             <!-- Payment Info Alert -->
                             <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mt-4">
                                 <p class="text-sm text-red-700 dark:text-red-300 font-medium">Action Required: Please complete payment to process your order.</p>
                                 <p class="text-xs text-red-600 dark:text-red-400 mt-1">Paybill: <span class="font-bold">714888</span> Acc: <span class="font-bold">196856</span></p>
                             </div>
+                            {% endif %}
                         </div>
                         
                         <!-- Status & Price -->
@@ -133,151 +183,42 @@
                             <div class="space-y-2 mb-4">
                                 <div class="flex justify-between text-sm">
                                     <span class="text-muted dark:text-gray-300">Total Amount</span>
-                                    <span class="font-bold text-charcoal dark:text-white">KES 32,500</span>
+                                    <span class="font-bold text-charcoal dark:text-white">KES {{ '{:,.0f}'.format(order.total_amount) if order.total_amount else '0' }}</span>
                                 </div>
                                 <div class="flex justify-between text-sm">
                                     <span class="text-muted dark:text-gray-300">Delivery</span>
-                                    <span class="font-medium text-yellow-600">Processing</span>
+                                    <span class="font-medium {% if order.status == 'delivered' %}text-green-600{% elif order.status == 'shipped' %}text-blue-600{% elif order.status == 'cancelled' %}text-red-600{% else %}text-yellow-600{% endif %}">{{ order.status|capitalize if order.status else 'N/A' }}</span>
                                 </div>
                             </div>
                             <div class="flex gap-2">
-                                <button class="flex-1 py-2 bg-accent text-white text-sm font-bold rounded-lg hover:bg-accent-dark transition-colors">Pay Now</button>
-                                <a href="/orders/1023" class="flex-1 py-2 border border-gray-200 dark:border-gray-600 text-charcoal dark:text-white text-sm font-medium rounded-lg text-center hover:bg-sand dark:hover:bg-gray-700 transition-colors">Details</a>
+                                {% if order.payment_status == 'pending' %}
+                                <a href="/pay/{{ order.id }}" class="flex-1 py-2 bg-accent text-white text-sm font-bold rounded-lg hover:bg-accent-dark transition-colors text-center">Pay Now</a>
+                                {% elif order.status in ['shipped', 'processing'] %}
+                                <a href="/track/{{ order.id }}" class="flex-1 py-2 bg-primary text-white text-sm font-medium rounded-lg text-center hover:bg-primary-dark transition-colors">Track Order</a>
+                                {% endif %}
+                                <a href="/orders/{{ order.id }}" class="flex-1 py-2 border border-gray-200 dark:border-gray-600 text-charcoal dark:text-white text-sm font-medium rounded-lg text-center hover:bg-sand dark:hover:bg-gray-700 transition-colors">Details</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Order Card 2 (Shipped) -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <!-- Header -->
-                <div class="bg-sand dark:bg-gray-700/50 px-6 py-3 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div class="flex items-center gap-3">
-                        <span class="font-bold text-charcoal dark:text-white">Order #CC-1022</span>
-                        <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">Shipped</span>
-                    </div>
-                    <span class="text-xs text-muted dark:text-gray-400">Placed on Oct 20, 2023</span>
-                </div>
-                
-                <!-- Body -->
-                <div class="p-6">
-                    <div class="flex flex-col lg:flex-row gap-6">
-                        <!-- Products -->
-                        <div class="flex-1 space-y-3">
-                            <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img src="https://placehold.co/100x100/3B0D5D/D4AF37?text=Bag" alt="Bag" class="w-full h-full object-cover">
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-charcoal dark:text-white">Leather Handbag</h3>
-                                    <p class="text-sm text-muted">Qty: 1</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img src="https://placehold.co/100x100/581C87/FFFFFF?text=Shoes" alt="Shoes" class="w-full h-full object-cover">
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-charcoal dark:text-white">Men's Office Shoes</h3>
-                                    <p class="text-sm text-muted">Qty: 1</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Status & Price -->
-                        <div class="lg:w-64 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-gray-100 dark:border-gray-700 pt-4 lg:pt-0 lg:pl-6">
-                            <div class="space-y-2 mb-4">
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-muted dark:text-gray-300">Total Amount</span>
-                                    <span class="font-bold text-charcoal dark:text-white">KES 7,400</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-muted dark:text-gray-300">Payment</span>
-                                    <span class="font-medium text-green-600">Paid</span>
-                                </div>
-                            </div>
-                            <div class="flex gap-2">
-                                <a href="/track/1022" class="flex-1 py-2 bg-primary text-white text-sm font-medium rounded-lg text-center hover:bg-primary-dark transition-colors">Track Order</a>
-                                <a href="/orders/1022" class="flex-1 py-2 border border-gray-200 dark:border-gray-600 text-charcoal dark:text-white text-sm font-medium rounded-lg text-center hover:bg-sand dark:hover:bg-gray-700 transition-colors">Details</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Order Card 3 (Delivered - Lipa Pole Pole) -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <!-- Header -->
-                <div class="bg-sand dark:bg-gray-700/50 px-6 py-3 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div class="flex items-center gap-3">
-                        <span class="font-bold text-charcoal dark:text-white">Order #CC-1019</span>
-                        <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">Delivered</span>
-                        <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">Lipa Pole Pole</span>
-                    </div>
-                    <span class="text-xs text-muted dark:text-gray-400">Placed on Oct 05, 2023</span>
-                </div>
-                
-                <!-- Body -->
-                <div class="p-6">
-                    <div class="flex flex-col lg:flex-row gap-6">
-                        <!-- Products -->
-                        <div class="flex-1">
-                            <div class="flex items-center gap-4">
-                                <div class="w-20 h-20 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img src="https://placehold.co/100x100/581C87/FFFFFF?text=Sofa" alt="Sofa" class="w-full h-full object-cover">
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-charcoal dark:text-white">3-Seater Sofa Set</h3>
-                                    <p class="text-sm text-muted">Qty: 1</p>
-                                    <p class="text-xs text-muted mt-1">Delivery: Nairobi, Kenya</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Status & Price -->
-                        <div class="lg:w-64 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-gray-100 dark:border-gray-700 pt-4 lg:pt-0 lg:pl-6">
-                            <div class="space-y-2 mb-4">
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-muted dark:text-gray-300">Total Amount</span>
-                                    <span class="font-bold text-charcoal dark:text-white">KES 45,000</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-muted dark:text-gray-300">Payment</span>
-                                    <span class="font-medium text-green-600">Completed</span>
-                                </div>
-                            </div>
-                            <div class="flex gap-2">
-                                <a href="/orders/1019" class="w-full py-2 border border-gray-200 dark:border-gray-600 text-charcoal dark:text-white text-sm font-medium rounded-lg text-center hover:bg-sand dark:hover:bg-gray-700 transition-colors">View Details</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {% endfor %}
 
         </div>
 
-        <!-- 7. Pagination -->
-        <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
-            <p class="text-sm text-muted dark:text-gray-400">Showing 1 to 3 of 12 orders</p>
-            <div class="flex items-center gap-1">
-                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold text-sm">1</button>
-                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 text-sm">2</button>
-                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 text-sm">3</button>
-                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-sand dark:hover:bg-gray-700 text-muted dark:text-gray-300 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </button>
-            </div>
+        <!-- No Results Message (hidden by default) -->
+        <div id="noResults" class="hidden py-16 text-center">
+            <svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <h3 class="font-display text-xl font-bold text-charcoal dark:text-white mb-2">No Matching Orders</h3>
+            <p class="text-muted dark:text-gray-400">Try adjusting your search or filter criteria.</p>
         </div>
 
     </div>
 </section>
 
-<!-- 6. Empty Orders Message (Hidden by default) -->
-<!-- 
+{% else %}
+
+<!-- 6. Empty Orders Message -->
 <section class="py-16">
     <div class="text-center max-w-md mx-auto">
         <svg class="w-24 h-24 mx-auto text-gray-300 dark:text-gray-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
@@ -288,7 +229,8 @@
         </a>
     </div>
 </section>
--->
+
+{% endif %}
 
 <!-- 8. Call to Action -->
 <section class="py-8 bg-sand dark:bg-gray-800">
@@ -304,5 +246,47 @@
         </div>
     </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('orderSearch');
+    const statusFilter = document.getElementById('statusFilter');
+    const paymentFilter = document.getElementById('paymentFilter');
+    const orderCards = document.querySelectorAll('.order-card');
+    const noResults = document.getElementById('noResults');
+
+    function filterOrders() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const statusValue = statusFilter.value;
+        const paymentValue = paymentFilter.value;
+        let visibleCount = 0;
+
+        orderCards.forEach(card => {
+            const orderId = card.dataset.orderId.toLowerCase();
+            const status = card.dataset.status;
+            const payment = card.dataset.payment;
+
+            const matchesSearch = !searchTerm || orderId.includes(searchTerm);
+            const matchesStatus = !statusValue || status === statusValue;
+            const matchesPayment = !paymentValue || payment === paymentValue;
+
+            if (matchesSearch && matchesStatus && matchesPayment) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        if (noResults) {
+            noResults.classList.toggle('hidden', visibleCount > 0);
+        }
+    }
+
+    if (searchInput) searchInput.addEventListener('input', filterOrders);
+    if (statusFilter) statusFilter.addEventListener('change', filterOrders);
+    if (paymentFilter) paymentFilter.addEventListener('change', filterOrders);
+});
+</script>
 
 {% endblock %}

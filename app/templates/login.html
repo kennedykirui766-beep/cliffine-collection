@@ -74,55 +74,124 @@
             <!-- Right Side: Login Form -->
             <div class="w-full p-6 sm:p-10 lg:p-12">
                 <div class="max-w-md mx-auto">
+                    <!-- Mobile Header -->
                     <div class="text-center mb-8 lg:hidden">
                         <h1 class="text-3xl font-bold text-slate-900">Login</h1>
                         <p class="text-slate-500 mt-2">Welcome back!</p>
                     </div>
                     
+                    <!-- Desktop Header -->
                     <div class="hidden lg:block mb-8">
                         <h1 class="text-3xl font-bold text-slate-900">Login to Your Account</h1>
                         <p class="text-slate-500 mt-2">Please login to continue shopping.</p>
                     </div>
 
-                    <!-- Error Messages -->
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="mb-6 space-y-2">
+                                {% for category, message in messages %}
+                                    <div class="flex items-center p-4 rounded-lg border 
+                                        {% if category == 'success' %} bg-green-50 border-green-200 text-green-800 {% elif category == 'danger' or category == 'error' %} bg-red-50 border-red-200 text-red-800 {% else %} bg-blue-50 border-blue-200 text-blue-800 {% endif %}"
+                                        role="alert">
+                                        <svg class="w-5 h-5 flex-shrink-0 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            {% if category == 'success' %}
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            {% else %}
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            {% endif %}
+                                        </svg>
+                                        <span class="text-sm font-medium">{{ message }}</span>
+                                        <button type="button" class="ml-auto flex-shrink-0 p-1 rounded-full hover:bg-black/5 transition-colors" onclick="this.parentElement.remove()">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Form Error Summary -->
                     {% if form.errors %}
                     <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-lg" role="alert">
-                        <p class="font-bold">Login failed.</p>
-                        <p class="text-sm">Your email or password is incorrect. Please try again.</p>
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 flex-shrink-0 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                            <div>
+                                <p class="font-bold mb-1">Please correct the errors below.</p>
+                                <ul class="mt-1 text-sm list-disc list-inside space-y-0.5">
+                                    {% for field_name, field_errors in form.errors.items() %}
+                                        {% for error in field_errors %}
+                                        <li>{{ form[field_name].label.text if form[field_name].label else field_name }}: {{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                     {% endif %}
-                    
-                    {% if messages %}
-                        {% for message in messages %}
-                        <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 rounded-r-lg" role="alert">
-                            {{ message }}
-                        </div>
-                        {% endfor %}
-                    {% endif %}
 
-                    <form method="post" action="{{ url_for('main.login') }}" class="space-y-5">
+                    <form method="post" action="{{ url_for('main.login') }}" id="loginForm" class="space-y-5" novalidate>
+                        {{ form.hidden_tag() }}
                         
                         <!-- Email Address -->
                         <div>
-                            <label for="id_username" class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                            <input type="text" name="username" id="id_username" required autofocus
-                                class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all"
-                                placeholder="you@example.com">
+                            <label for="{{ form.email.id }}" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                {{ form.email.label.text }}
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                </div>
+                                {{ form.email(class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all" + (" border-red-500 bg-red-50" if form.email.errors else ""), placeholder="you@example.com", autofocus=true) }}
+                            </div>
+                            {% if form.email.errors %}
+                                {% for error in form.email.errors %}
+                                <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {{ error }}
+                                </p>
+                                {% endfor %}
+                            {% endif %}
                         </div>
 
                         <!-- Password -->
                         <div>
-                            <label for="id_password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                            <input type="password" name="password" id="id_password" required
-                                class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all"
-                                placeholder="Enter your password">
+                            <label for="{{ form.password.id }}" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                {{ form.password.label.text }}
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                </div>
+                                {{ form.password(class="w-full pl-12 pr-12 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all" + (" border-red-500 bg-red-50" if form.password.errors else ""), placeholder="Enter your password") }}
+                                <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors" onclick="togglePassword('{{ form.password.id }}', this)">
+                                    <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                            </div>
+                            {% if form.password.errors %}
+                                {% for error in form.password.errors %}
+                                <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {{ error }}
+                                </p>
+                                {% endfor %}
+                            {% endif %}
                         </div>
 
                         <!-- Remember Me & Forgot Password -->
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <input type="checkbox" name="remember" id="remember" class="w-4 h-4 rounded border-slate-300 text-[#5423E7] focus:ring-[#5423E7]">
-                                <label for="remember" class="ml-2 block text-sm text-slate-600">Remember Me</label>
+                            <div class="flex items-center gap-2">
+                                {% if form.remember is defined %}
+                                    {{ form.remember(class="w-4 h-4 rounded border-slate-300 text-[#5423E7] focus:ring-[#5423E7]") }}
+                                    <label for="{{ form.remember.id }}" class="block text-sm text-slate-600">Remember Me</label>
+                                {% else %}
+                                    <input type="checkbox" name="remember" id="remember" class="w-4 h-4 rounded border-slate-300 text-[#5423E7] focus:ring-[#5423E7]">
+                                    <label for="remember" class="block text-sm text-slate-600">Remember Me</label>
+                                {% endif %}
                             </div>
                             
                             <a href="{{ url_for('main.password_reset') }}" class="text-sm font-medium text-[#5423E7] hover:underline">
@@ -131,12 +200,13 @@
                         </div>
 
                         <!-- Login Button -->
-                        <button type="submit" class="w-full bg-amber-400 text-slate-900 py-4 rounded-xl font-bold hover:bg-amber-500 transition-all duration-300 hover:-translate-y-1 shadow-lg flex items-center justify-center gap-2">
-                            Login
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                        <button type="submit" class="w-full bg-amber-400 text-slate-900 py-4 rounded-xl font-bold hover:bg-amber-500 transition-all duration-300 hover:-translate-y-1 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0" id="submitBtn">
+                            <span id="btnText">Login</span>
+                            <svg id="btnArrow" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                            <svg id="btnSpinner" class="w-5 h-5 animate-spin hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         </button>
 
-                        <!-- Social Login (Optional Placeholder) -->
+                        <!-- Social Login Divider -->
                         <div class="relative my-6">
                             <div class="absolute inset-0 flex items-center">
                                 <div class="w-full border-t border-slate-200"></div>
@@ -146,6 +216,7 @@
                             </div>
                         </div>
 
+                        <!-- Social Login Buttons -->
                         <div class="grid grid-cols-2 gap-4">
                             <button type="button" class="flex items-center justify-center gap-2 py-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-slate-700 font-medium text-sm">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
@@ -168,5 +239,37 @@
         </div>
     </div>
 </section>
+
+<script>
+// Toggle password visibility — single eye icon
+function togglePassword(fieldId, btn) {
+    const field = document.getElementById(fieldId);
+    const icon = btn.querySelector('.eye-icon');
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>';
+    } else {
+        field.type = 'password';
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+    }
+}
+
+// Form submission handling
+const form = document.getElementById('loginForm');
+const submitBtn = document.getElementById('submitBtn');
+const btnText = document.getElementById('btnText');
+const btnArrow = document.getElementById('btnArrow');
+const btnSpinner = document.getElementById('btnSpinner');
+
+if (form) {
+    form.addEventListener('submit', function() {
+        // Show loading state
+        submitBtn.disabled = true;
+        btnText.textContent = 'Logging in...';
+        btnArrow.classList.add('hidden');
+        btnSpinner.classList.remove('hidden');
+    });
+}
+</script>
 
 {% endblock %}

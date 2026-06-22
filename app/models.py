@@ -15,7 +15,7 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100))
 
-    email = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False, index=True)
     phone = db.Column(db.String(50))
 
     password_hash = db.Column(db.String(255), nullable=False)
@@ -27,10 +27,23 @@ class User(db.Model, UserMixin):
     country = db.Column(db.String(100), default="Kenya")
 
     is_active = db.Column(db.Boolean, default=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    orders = db.relationship("Order", backref="user", lazy=True)
-    reviews = db.relationship("Review", backref="user", lazy=True)
+    # relationships
+    orders = db.relationship("Order", backref="user", lazy="dynamic")
+    reviews = db.relationship("Review", backref="user", lazy="dynamic")
+
+    def set_password(self, password):
+        from werkzeug.security import generate_password_hash
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        from werkzeug.security import check_password_hash
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f"<User {self.email}>"
 
 
 # ===============================
@@ -582,4 +595,20 @@ class FAQ(db.Model):
     is_active = db.Column(db.Boolean, default=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)    
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)  
+
+class ContactMessage(db.Model):
+    __tablename__ = "contact_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    name = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(150), nullable=False)
+    phone = db.Column(db.String(30))
+    subject = db.Column(db.String(200))
+    message = db.Column(db.Text, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<ContactMessage {self.email}>"
