@@ -4,6 +4,8 @@ from flask_migrate import Migrate
 from flask_login import LoginManager, current_user
 import os
 
+from markupsafe import Markup
+
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
@@ -63,5 +65,31 @@ def create_app():
             cart_count = sum(item.quantity for item in cart.items)
 
         return dict(cart_count=cart_count)
+    
+    from markupsafe import Markup
+
+    @app.context_processor
+    def utility_processor():
+
+        def status_badge(status):
+            status = (status or "").lower()
+
+            colors = {
+                "pending": "bg-yellow-100 text-yellow-800",
+                "processing": "bg-blue-100 text-blue-800",
+                "shipped": "bg-indigo-100 text-indigo-800",
+                "delivered": "bg-green-100 text-green-800",
+                "cancelled": "bg-red-100 text-red-800",
+            }
+
+            css = colors.get(status, "bg-gray-100 text-gray-800")
+
+            return Markup(
+                f'<span class="px-2 py-1 rounded-full text-xs font-semibold {css}">'
+                f'{status.title()}'
+                f'</span>'
+            )
+
+        return dict(status_badge=status_badge)
 
     return app
