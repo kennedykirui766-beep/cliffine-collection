@@ -1,11 +1,25 @@
 {% extends "admin/admin_base.html" %}
 
-{% block title %}Order Details #ORD-1045{% endblock %}
+{% block title %}Order Details #ORD-{{ order.id }}{% endblock %}
+
+{% set status_colors = {
+    'pending': 'bg-amber-100 text-amber-700 border-amber-200',
+    'processing': 'bg-blue-100 text-blue-700 border-blue-200',
+    'shipped': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    'delivered': 'bg-green-100 text-green-700 border-green-200',
+    'cancelled': 'bg-red-100 text-red-700 border-red-200'
+} %}
+{% set payment_colors = {
+    'paid': 'bg-green-100 text-green-700',
+    'pending': 'bg-amber-100 text-amber-700',
+    'failed': 'bg-red-100 text-red-700',
+    'refunded': 'bg-slate-100 text-slate-600'
+} %}
 
 {% block page_title %}
-    Order <span class="text-primary">#ORD-1045</span>
-    <span class="ml-2 items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
-        Processing
+    Order <span class="text-primary">#ORD-{{ order.id }}</span>
+    <span class="ml-2 items-center px-2.5 py-0.5 rounded-full text-xs font-medium border {{ status_colors.get(order.status, 'bg-slate-100 text-slate-700 border-slate-200') }}">
+        {{ order.status|capitalize }}
     </span>
 {% endblock %}
 
@@ -21,6 +35,9 @@
         width: 2px;
         background-color: #E2E8F0;
     }
+    .timeline-item.completed::before {
+        background-color: #10B981;
+    }
     .timeline-item:last-child::before {
         display: none;
     }
@@ -31,14 +48,16 @@
 
     <!-- Page Specific Action Buttons -->
     <div class="flex flex-wrap justify-end gap-3 mb-6">
-        <button class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm bg-white">
+        <button onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm bg-white">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
             Print Invoice
         </button>
+        {% if order.status != 'cancelled' and order.status != 'delivered' %}
         <button onclick="toggleStatusModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             Update Status
         </button>
+        {% endif %}
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -48,43 +67,37 @@
             
             <!-- Products Ordered -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <div class="p-6 border-b border-slate-100">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                     <h3 class="text-lg font-bold text-slate-800">Order Items</h3>
+                    <span class="text-sm text-slate-400">{{ order.items|length }} item{{ 's' if order.items|length != 1 else '' }}</span>
                 </div>
                 <div class="divide-y divide-slate-100">
-                    <!-- Item 1 -->
-                    <div class="p-4 sm:p-6 flex flex-col sm:flex-row gap-4">
-                        <img src="https://placehold.co/100x100/5423E7/FFFFFF?text=TV" class="w-20 h-20 rounded-lg object-cover border border-slate-100" alt="Product">
-                        <div class="flex-1">
-                            <div class="flex justify-between">
-                                <div>
-                                    <h4 class="font-semibold text-slate-800">43" Smart Android TV</h4>
-                                    <p class="text-xs text-slate-400 mt-0.5">SKU: ELEC-TV-4321</p>
+                    {% for item in order.items %}
+                        {% set product = item.product %}
+                        <div class="p-4 sm:p-6 flex flex-col sm:flex-row gap-4">
+                            <img src="{{ product.images[0].image_url if product and product.images else 'https://placehold.co/100x100/581C87/FFFFFF?text=No+Image' }}" 
+                                 class="w-20 h-20 rounded-lg object-cover border border-slate-100" 
+                                 alt="{{ product.name if product else 'Product' }}">
+                            <div class="flex-1">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <h4 class="font-semibold text-slate-800">{{ product.name if product else 'Deleted Product' }}</h4>
+                                        <p class="text-xs text-slate-400 mt-0.5">SKU: {{ product.sku if product and product.sku else 'N/A' }}</p>
+                                    </div>
+                                    <p class="font-bold text-slate-800">KES {{ "{:,.0f}".format(item.price) }}</p>
                                 </div>
-                                <p class="font-bold text-slate-800">KES 32,500</p>
-                            </div>
-                            <div class="mt-2 flex items-center gap-4 text-sm text-slate-600">
-                                <span>Qty: 1</span>
+                                <div class="mt-2 flex items-center gap-4 text-sm text-slate-600">
+                                    <span>Qty: {{ item.quantity }}</span>
+                                    <span class="text-slate-300">|</span>
+                                    <span>Subtotal: <strong class="text-slate-700">KES {{ "{:,.0f}".format(item.price * item.quantity) }}</strong></span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Item 2 -->
-                    <div class="p-4 sm:p-6 flex flex-col sm:flex-row gap-4">
-                        <img src="https://placehold.co/100x100/D4AF37/000000?text=Bag" class="w-20 h-20 rounded-lg object-cover border border-slate-100" alt="Product">
-                        <div class="flex-1">
-                            <div class="flex justify-between">
-                                <div>
-                                    <h4 class="font-semibold text-slate-800">Leather Handbag (Black)</h4>
-                                    <p class="text-xs text-slate-400 mt-0.5">SKU: BAG-LTH-001</p>
-                                </div>
-                                <p class="font-bold text-slate-800">KES 8,400</p>
-                            </div>
-                            <div class="mt-2 flex items-center gap-4 text-sm text-slate-600">
-                                <span>Qty: 1</span>
-                            </div>
+                    {% else %}
+                        <div class="p-8 text-center">
+                            <p class="text-slate-400 text-sm">No items found for this order.</p>
                         </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
 
@@ -97,21 +110,41 @@
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-slate-500">Payment Method</span>
                         <span class="text-sm font-medium text-slate-800 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-                            M-Pesa
+                            {% if order.payment_status == 'paid' %}
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            {% else %}
+                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            {% endif %}
+                            {{ order.payment_method|capitalize if order.payment_method else 'N/A' }}
+                        </span>
+                    </div>
+                    {% if order.transaction_id or order.mpesa_receipt_number %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-slate-500">Transaction ID</span>
+                        <span class="text-sm font-mono font-medium text-slate-800">{{ order.transaction_id or order.mpesa_receipt_number }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-slate-500">Payment Status</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold {{ payment_colors.get(order.payment_status, 'bg-slate-100 text-slate-600') }}">
+                            {{ order.payment_status|capitalize if order.payment_status else 'N/A' }}
                         </span>
                     </div>
                     <div class="flex items-center justify-between">
-                        <span class="text-sm text-slate-500">Transaction ID</span>
-                        <span class="text-sm font-mono font-medium text-slate-800">MPX894521</span>
-                    </div>
-                    <div class="flex items-center justify-between">
                         <span class="text-sm text-slate-500">Payment Date</span>
-                        <span class="text-sm font-medium text-slate-800">Oct 24, 2026 10:30 AM</span>
+                        <span class="text-sm font-medium text-slate-800">
+                            {{ order.paid_at.strftime('%b %d, %Y %I:%M %p') if order.paid_at else (order.updated_at.strftime('%b %d, %Y %I:%M %p') if order.updated_at else 'N/A') }}
+                        </span>
                     </div>
                     <div class="flex items-center justify-between pt-2 border-t border-slate-100">
                         <span class="text-sm font-semibold text-slate-700">Amount Paid</span>
-                        <span class="text-sm font-bold text-green-600">KES 40,900</span>
+                        {% if order.payment_status == 'paid' %}
+                            <span class="text-sm font-bold text-green-600">KES {{ "{:,.0f}".format(order.total_amount) }}</span>
+                        {% elif order.payment_status == 'refunded' %}
+                            <span class="text-sm font-bold text-slate-500 line-through">KES {{ "{:,.0f}".format(order.total_amount) }}</span>
+                        {% else %}
+                            <span class="text-sm font-bold text-amber-600">Pending</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -122,18 +155,28 @@
                     <h3 class="text-lg font-bold text-slate-800">Order Notes</h3>
                 </div>
                 <div class="p-6 space-y-4">
-                    <div class="bg-amber-50 border border-amber-100 p-3 rounded-lg">
-                        <p class="text-sm text-slate-700"><strong>Admin Note:</strong> Customer requested fast delivery via WhatsApp.</p>
-                        <p class="text-xs text-slate-400 mt-1">Added by Admin - 24 Oct, 10:35 AM</p>
-                    </div>
-                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-lg">
-                        <p class="text-sm text-slate-700"><strong>Customer Note:</strong> Please call before delivery.</p>
-                        <p class="text-xs text-slate-400 mt-1">Added at checkout</p>
-                    </div>
+                    {% if order.customer_note or order.notes %}
+                        {% if order.notes %}
+                        <div class="bg-amber-50 border border-amber-100 p-3 rounded-lg">
+                            <p class="text-sm text-slate-700"><strong>Admin Note:</strong> {{ order.notes }}</p>
+                            <p class="text-xs text-slate-400 mt-1">Added by Admin</p>
+                        </div>
+                        {% endif %}
+                        {% if order.customer_note %}
+                        <div class="bg-slate-50 border border-slate-100 p-3 rounded-lg">
+                            <p class="text-sm text-slate-700"><strong>Customer Note:</strong> {{ order.customer_note }}</p>
+                            <p class="text-xs text-slate-400 mt-1">Added at checkout</p>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-sm text-slate-400 italic">No notes for this order.</p>
+                    {% endif %}
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Add New Note</label>
-                        <textarea rows="2" placeholder="Write an internal note..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/50 outline-none"></textarea>
-                        <button class="mt-2 px-4 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-slate-700">Save Note</button>
+                        <form method="POST" action="{{ url_for('admin.add_order_note', order_id=order.id) }}">
+                            <textarea name="note" rows="2" placeholder="Write an internal note..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/50 outline-none" required></textarea>
+                            <button type="submit" class="mt-2 px-4 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-slate-700 transition-colors">Save Note</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -144,52 +187,121 @@
                     <h3 class="text-lg font-bold text-slate-800">Order Timeline</h3>
                 </div>
                 <div class="p-6 relative">
-                    <!-- Timeline Item 1 -->
-                    <div class="timeline-item relative pl-10 pb-8">
-                        <div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center ring-4 ring-white">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    
+                    {% if order.status == 'cancelled' %}
+                        <!-- Cancelled Timeline -->
+                        <div class="timeline-item completed relative pl-10 pb-8">
+                            <div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center ring-4 ring-white">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">Order Placed</p>
+                                <p class="text-xs text-slate-500 mt-0.5">{{ order.created_at.strftime('%b %d, %Y at %I:%M %p') if order.created_at else 'N/A' }}</p>
+                                <p class="text-xs text-slate-400 mt-1">Order created by {{ order.user.full_name if order.user else 'Customer' }}.</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-semibold text-slate-800">Order Placed</p>
-                            <p class="text-xs text-slate-500 mt-0.5">Oct 24, 2026 at 10:30 AM</p>
-                            <p class="text-xs text-slate-400 mt-1">Order created by Customer.</p>
-                        </div>
-                    </div>
 
-                    <!-- Timeline Item 2 -->
-                    <div class="timeline-item relative pl-10 pb-8">
-                        <div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center ring-4 ring-white">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        {% if order.payment_status == 'paid' %}
+                        <div class="timeline-item completed relative pl-10 pb-8">
+                            <div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center ring-4 ring-white">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">Payment Confirmed</p>
+                                <p class="text-xs text-slate-500 mt-0.5">{{ order.paid_at.strftime('%b %d, %Y at %I:%M %p') if order.paid_at else (order.updated_at.strftime('%b %d, %Y at %I:%M %p') if order.updated_at else 'N/A') }}</p>
+                                <p class="text-xs text-slate-400 mt-1">{{ order.payment_method|capitalize if order.payment_method else 'Payment' }} transaction verified.</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-semibold text-slate-800">Payment Confirmed</p>
-                            <p class="text-xs text-slate-500 mt-0.5">Oct 24, 2026 at 10:31 AM</p>
-                            <p class="text-xs text-slate-400 mt-1">M-Pesa transaction verified.</p>
-                        </div>
-                    </div>
+                        {% endif %}
 
-                    <!-- Timeline Item 3 (Current) -->
-                    <div class="timeline-item relative pl-10 pb-8">
-                        <div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center ring-4 ring-white animate-pulse">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div class="relative pl-10">
+                            <div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center ring-4 ring-white">
+                                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-red-600">Order Cancelled</p>
+                                <p class="text-xs text-slate-500 mt-0.5">{{ order.updated_at.strftime('%b %d, %Y at %I:%M %p') if order.updated_at else 'N/A' }}</p>
+                                <p class="text-xs text-slate-400 mt-1">
+                                    {% if order.payment_status == 'refunded' %}Payment was refunded.{% else %}Order was cancelled.{% endif %}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-semibold text-primary">Processing</p>
-                            <p class="text-xs text-slate-500 mt-0.5">Oct 24, 2026 at 10:45 AM</p>
-                            <p class="text-xs text-slate-400 mt-1">Order is being packed.</p>
-                        </div>
-                    </div>
 
-                    <!-- Timeline Item 4 (Pending) -->
-                    <div class="relative pl-10">
-                        <div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center ring-4 ring-white">
-                            <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold text-slate-400">Shipped / Delivered</p>
-                            <p class="text-xs text-slate-300 mt-0.5">Pending</p>
-                        </div>
-                    </div>
+                    {% else %}
+                        <!-- Normal Status Timeline -->
+                        {% set status_flow = ['pending', 'processing', 'shipped', 'delivered'] %}
+                        {% set current_index = status_flow.index(order.status) if order.status in status_flow else 0 %}
+                        {% set step_labels = {
+                            'pending': 'Order Placed',
+                            'processing': 'Processing',
+                            'shipped': 'Shipped',
+                            'delivered': 'Delivered'
+                        } %}
+                        {% set step_descriptions = {
+                            'pending': 'Order created by ' ~ (order.user.full_name if order.user else 'Customer') ~ '.',
+                            'processing': 'Order is being prepared and packed.',
+                            'shipped': 'Order has been dispatched for delivery.',
+                            'delivered': 'Order has been delivered successfully.'
+                        } %}
+                        {% set step_icons = {
+                            'pending': 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                            'processing': 'M5 13l4 4L19 7',
+                            'shipped': 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',
+                            'delivered': 'M5 13l4 4L19 7'
+                        } %}
+
+                        {% for status_key in status_flow %}
+                            {% set step_index = loop.index0 %}
+                            {% set is_completed = step_index < current_index %}
+                            {% set is_current = step_index == current_index %}
+                            {% set is_pending = step_index > current_index %}
+                            
+                            <div class="timeline-item {{ 'completed' if is_completed else '' }} relative pl-10 {{ 'pb-8' if not loop.last else '' }}">
+                                {% if is_completed %}
+                                    <div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center ring-4 ring-white">
+                                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-800">{{ step_labels[status_key] }}</p>
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            {% if status_key == 'pending' %}
+                                                {{ order.created_at.strftime('%b %d, %Y at %I:%M %p') if order.created_at else 'N/A' }}
+                                            {% elif status_key == 'processing' and order.payment_status == 'paid' %}
+                                                Payment confirmed &bull; {{ order.paid_at.strftime('%b %d, %Y at %I:%M %p') if order.paid_at else 'N/A' }}
+                                            {% else %}
+                                                Completed
+                                            {% endif %}
+                                        </p>
+                                        <p class="text-xs text-slate-400 mt-1">{{ step_descriptions[status_key] }}</p>
+                                    </div>
+                                {% elif is_current %}
+                                    <div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center ring-4 ring-white animate-pulse">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-primary">{{ step_labels[status_key] }}</p>
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            {% if status_key == 'pending' %}
+                                                {{ order.created_at.strftime('%b %d, %Y at %I:%M %p') if order.created_at else 'N/A' }}
+                                            {% else %}
+                                                {{ order.updated_at.strftime('%b %d, %Y at %I:%M %p') if order.updated_at else 'In progress' }}
+                                            {% endif %}
+                                        </p>
+                                        <p class="text-xs text-slate-400 mt-1">{{ step_descriptions[status_key] }}</p>
+                                    </div>
+                                {% else %}
+                                    <div class="absolute left-0 top-1 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center ring-4 ring-white">
+                                        <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ step_icons[status_key] }}"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-400">{{ step_labels[status_key] }}</p>
+                                        <p class="text-xs text-slate-300 mt-0.5">Pending</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
                 </div>
             </div>
 
@@ -206,20 +318,29 @@
                 <div class="p-6 space-y-3">
                     <div class="flex justify-between text-sm">
                         <span class="text-slate-500">Subtotal</span>
-                        <span class="text-slate-700 font-medium">KES 40,900</span>
+                        <span class="text-slate-700 font-medium">KES {{ "{:,.0f}".format(order.subtotal) if order.subtotal else "{:,.0f}".format(order.total_amount) }}</span>
                     </div>
+                    {% if order.discount and order.discount > 0 %}
                     <div class="flex justify-between text-sm">
                         <span class="text-slate-500">Discount</span>
-                        <span class="text-slate-700 font-medium text-green-600">- KES 0</span>
+                        <span class="text-green-600 font-medium">- KES {{ "{:,.0f}".format(order.discount) }}</span>
                     </div>
+                    {% else %}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Discount</span>
+                        <span class="text-green-600 font-medium">- KES 0</span>
+                    </div>
+                    {% endif %}
                     <div class="flex justify-between text-sm">
                         <span class="text-slate-500">Shipping Fee</span>
-                        <span class="text-slate-700 font-medium">KES 300</span>
+                        <span class="text-slate-700 font-medium">KES {{ "{:,.0f}".format(order.shipping_fee) if order.shipping_fee else '0' }}</span>
                     </div>
                     <div class="border-t border-slate-100 pt-3 mt-3">
                         <div class="flex justify-between">
                             <span class="text-base font-bold text-slate-800">Total</span>
-                            <span class="text-base font-bold text-primary">KES 41,200</span>
+                            <span class="text-base font-bold {{ 'text-slate-500 line-through' if order.status == 'cancelled' else 'text-primary' }}">
+                                KES {{ "{:,.0f}".format(order.total_amount) }}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -229,25 +350,34 @@
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                 <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                     <h3 class="text-lg font-bold text-slate-800">Customer</h3>
-                    <a href="#" class="text-xs text-primary hover:underline font-medium">View Profile</a>
+                    {% if order.user %}
+                    <a href="{{ url_for('admin.user_detail', user_id=order.user.id) }}" class="text-xs text-primary hover:underline font-medium">View Profile</a>
+                    {% endif %}
                 </div>
                 <div class="p-6 space-y-3">
                     <div class="flex items-center gap-3">
-                        <img src="https://ui-avatars.com/api/?name=Jane+Doe&background=5423E7&color=fff" class="w-10 h-10 rounded-full" alt="">
+                        <img src="https://ui-avatars.com/api/?name={{ (order.user.full_name if order.user else 'Guest')|urlencode }}&background=5423E7&color=fff" 
+                             class="w-10 h-10 rounded-full" alt="">
                         <div>
-                            <p class="text-sm font-semibold text-slate-800">Jane Doe</p>
-                            <p class="text-xs text-slate-400">Customer ID: #245</p>
+                            <p class="text-sm font-semibold text-slate-800">{{ order.user.full_name if order.user else 'Guest User' }}</p>
+                            {% if order.user %}
+                            <p class="text-xs text-slate-400">Customer ID: #{{ order.user.id }}</p>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="pt-2 space-y-2 text-sm">
+                        {% if order.user and order.user.email %}
                         <div class="flex items-center gap-2 text-slate-600">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                            <span>jane.doe@example.com</span>
+                            <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            <span class="truncate">{{ order.user.email }}</span>
                         </div>
+                        {% endif %}
+                        {% if order.phone or (order.user and order.user.phone) %}
                         <div class="flex items-center gap-2 text-slate-600">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                            <span>+254 712 334 556</span>
+                            <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                            <span>{{ order.phone or (order.user.phone if order.user else 'N/A') }}</span>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -258,27 +388,61 @@
                     <h3 class="text-lg font-bold text-slate-800">Shipping Address</h3>
                 </div>
                 <div class="p-6 space-y-2 text-sm">
-                    <p class="font-semibold text-slate-800">Jane Doe</p>
-                    <p class="text-slate-600">123 Kenyatta Avenue</p>
-                    <p class="text-slate-600">Nairobi, Kenya</p>
+                    <p class="font-semibold text-slate-800">{{ order.shipping_name or (order.user.full_name if order.user else 'N/A') }}</p>
+                    {% if order.shipping_address or order.address %}
+                    <p class="text-slate-600">{{ order.shipping_address or order.address }}</p>
+                    {% endif %}
+                    {% if order.shipping_city or order.city %}
+                    <p class="text-slate-600">{{ order.shipping_city or order.city }}{% if order.shipping_country or order.country %}, {{ order.shipping_country or order.country }}{% endif %}</p>
+                    {% elif order.shipping_country or order.country %}
+                    <p class="text-slate-600">{{ order.shipping_country or order.country }}</p>
+                    {% endif %}
+                    {% if order.phone %}
+                    <p class="text-slate-600">{{ order.phone }}</p>
+                    {% endif %}
                     <div class="pt-2 mt-2 border-t border-slate-100 flex justify-between">
                         <span class="text-slate-500">Method</span>
-                        <span class="font-medium text-slate-700">Standard Courier</span>
+                        <span class="font-medium text-slate-700">{{ order.shipping_method|capitalize if order.shipping_method else 'Standard Delivery' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Meta -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-6 border-b border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-800">Order Info</h3>
+                </div>
+                <div class="p-6 space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Order ID</span>
+                        <span class="font-mono font-medium text-slate-800">#ORD-{{ order.id }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Created</span>
+                        <span class="font-medium text-slate-800">{{ order.created_at.strftime('%b %d, %Y %I:%M %p') if order.created_at else 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Last Updated</span>
+                        <span class="font-medium text-slate-800">{{ order.updated_at.strftime('%b %d, %Y %I:%M %p') if order.updated_at else 'N/A' }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Danger Zone -->
+            {% if order.status != 'cancelled' and order.status != 'delivered' %}
             <div class="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
                 <div class="p-6 border-b border-red-100 bg-red-50">
                     <h3 class="text-md font-bold text-red-800">Danger Zone</h3>
                 </div>
                 <div class="p-6">
-                    <button class="w-full px-4 py-2 border border-red-200 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-50 transition-colors">
-                        Cancel Order
-                    </button>
+                    <form method="POST" action="{{ url_for('admin.cancel_order', order_id=order.id) }}" onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone.');">
+                        <button type="submit" class="w-full px-4 py-2 border border-red-200 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-50 transition-colors">
+                            Cancel Order
+                        </button>
+                    </form>
                 </div>
             </div>
+            {% endif %}
 
         </div>
     </div>
@@ -288,26 +452,40 @@
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
             <div class="p-6 border-b border-slate-100">
                 <h3 class="text-lg font-bold text-slate-800">Update Order Status</h3>
+                <p class="text-sm text-slate-500 mt-1">Order #ORD-{{ order.id }} &mdash; Currently: <span class="font-semibold text-slate-700">{{ order.status|capitalize }}</span></p>
             </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Order Status</label>
-                    <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white">
-                        <option>Processing</option>
-                        <option>Shipped</option>
-                        <option>Delivered</option>
-                        <option>Cancelled</option>
-                    </select>
+            <form method="POST" action="{{ url_for('admin.update_order_status', order_id=order.id) }}">
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-slate-700 mb-1">Order Status</label>
+                        <select name="status" id="status" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                            {% if order.status == 'pending' %}
+                                <option value="processing">Processing</option>
+                                <option value="cancelled">Cancelled</option>
+                            {% elif order.status == 'processing' %}
+                                <option value="shipped">Shipped</option>
+                                <option value="cancelled">Cancelled</option>
+                            {% elif order.status == 'shipped' %}
+                                <option value="delivered">Delivered</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    {% if order.status == 'shipped' %}
+                    <div>
+                        <label for="tracking_number" class="block text-sm font-medium text-slate-700 mb-1">Tracking Number (Optional)</label>
+                        <input type="text" name="tracking_number" id="tracking_number" placeholder="Enter tracking number..." class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                    </div>
+                    {% endif %}
+                    <div>
+                        <label for="note" class="block text-sm font-medium text-slate-700 mb-1">Internal Note (Optional)</label>
+                        <textarea name="note" id="note" rows="3" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="Add a note about this status change..."></textarea>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Internal Note (Optional)</label>
-                    <textarea rows="3" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+                <div class="p-6 border-t border-slate-100 flex justify-end gap-3">
+                    <button type="button" onclick="toggleStatusModal()" class="px-4 py-2 text-slate-600 font-medium rounded-lg hover:bg-slate-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors">Update Status</button>
                 </div>
-            </div>
-            <div class="p-6 border-t border-slate-100 flex justify-end gap-3">
-                <button onclick="toggleStatusModal()" class="px-4 py-2 text-slate-600 font-medium rounded-lg hover:bg-slate-100">Cancel</button>
-                <button onclick="toggleStatusModal()" class="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark">Update</button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -321,6 +499,23 @@
             modal.classList.toggle('hidden');
             modal.classList.toggle('flex');
         }
+
+        // Close modal on backdrop click
+        document.getElementById('statusModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                toggleStatusModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('statusModal');
+                if (!modal.classList.contains('hidden')) {
+                    toggleStatusModal();
+                }
+            }
+        });
 
         // --- Sidebar Active State Logic ---
         document.addEventListener('DOMContentLoaded', function() {

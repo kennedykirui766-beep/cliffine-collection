@@ -8,6 +8,7 @@
         "colorama",
         "dnspython",
         "dotenv",
+        "equalto",
         "greaterthan",
         "gunicorn",
         "idna",

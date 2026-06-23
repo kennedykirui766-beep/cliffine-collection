@@ -504,35 +504,103 @@ def product_reviews():
     return render_template("admin/products/reviews.html")    
 
 
+
 @admin_bp.route("/orders")
 def all_orders():
-    return render_template("admin/orders/all_orders.html")
+
+    orders = Order.query.order_by(
+        Order.created_at.desc()
+    ).all()
+
+    return render_template(
+        "admin/orders/all_orders.html",
+        orders=orders
+    )
 
 
 @admin_bp.route("/orders/pending")
 def pending_orders():
-    return render_template("admin/orders/pending.html")
+
+    orders = Order.query.filter_by(
+        status="pending"
+    ).order_by(
+        Order.created_at.desc()
+    ).all()
+
+    return render_template(
+        "admin/orders/pending_orders.html",
+        orders=orders
+    )
 
 
 @admin_bp.route("/orders/processing")
 def processing_orders():
-    return render_template("admin/orders/processing.html")
+
+    orders = Order.query.filter_by(
+        status="processing"
+    ).order_by(
+        Order.created_at.desc()
+    ).all()
+
+    return render_template(
+        "admin/orders/processing_orders.html",
+        orders=orders
+    )
 
 
 @admin_bp.route("/orders/delivered")
 def delivered_orders():
-    return render_template("admin/orders/delivered.html")
+
+    orders = Order.query.filter_by(
+        status="delivered"
+    ).order_by(
+        Order.created_at.desc()
+    ).all()
+
+    return render_template(
+        "admin/orders/delivered_orders.html",
+        orders=orders
+    )
 
 
 @admin_bp.route("/orders/cancelled")
 def cancelled_orders():
-    return render_template("admin/orders/cancelled.html")
+
+    orders = Order.query.filter_by(
+        status="cancelled"
+    ).order_by(
+        Order.created_at.desc()
+    ).all()
+
+    return render_template(
+        "admin/orders/cancelled_orders.html",
+        orders=orders
+    )
 
 
 @admin_bp.route("/orders/refunds")
 def order_refunds():
-    return render_template("admin/orders/refunds.html")
 
+    orders = Order.query.filter_by(
+        status="refund_requested"
+    ).order_by(
+        Order.created_at.desc()
+    ).all()
+
+    return render_template(
+        "admin/orders/order_refunds.html",
+        orders=orders
+    )
+
+@admin_bp.route("/orders/<int:order_id>")
+def order_details(order_id):
+
+    order = Order.query.get_or_404(order_id)
+
+    return render_template(
+        "admin/orders/details.html",
+        order=order
+    )
 
 @admin_bp.route("/customers")
 def all_users():
