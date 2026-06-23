@@ -8,13 +8,16 @@
         "colorama",
         "dnspython",
         "dotenv",
+        "greaterthan",
         "gunicorn",
         "idna",
         "itsdangerous",
         "joinedload",
+        "Lipa",
         "mpesa",
         "onupdate",
         "psycopg",
+        "selectattr",
         "urllib",
         "Werkzeug"
     ]
