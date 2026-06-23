@@ -67,7 +67,7 @@
                             <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col {% if not is_in_stock %}opacity-75{% endif %}">
                                 <div class="relative">
                                     <!-- Image: Fallback to placeholder if no image exists -->
-                                    <img src="{{ product.image_url or url_for('static', filename='images/placeholder.jpg') }}" 
+                                    <img src="{{ product.images[0].image_url if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
                                          alt="{{ product.name }}" 
                                          class="w-full h-48 object-cover">
                                     
