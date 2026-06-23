@@ -131,26 +131,29 @@
                             </td>
                             <td class="p-4 text-center">
                                 <div class="flex items-center justify-center gap-1">
-                                    <a href="{{ url_for('admin.order_details', order_id=order.id) }}" 
-                                       class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" 
-                                       title="View Details">
+                                    <a href="{{ url_for('admin.order_details', order_id=order.id) }}" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" title="View Details">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                     </a>
-                                    <button onclick="openApproveModal({{ order.id }}, {{ order.total_amount }}, '{{ order.payment_method|capitalize if order.payment_method else "N/A" }}')" 
-                                            class="p-2 hover:bg-green-50 rounded-lg text-slate-500 hover:text-green-600 transition-colors" 
-                                            title="Approve Refund">
+                                    
+                                    <button 
+                                        class="approve-refund-btn p-2 hover:bg-green-50 rounded-lg text-slate-500 hover:text-green-600 transition-colors" 
+                                        title="Approve Refund"
+                                        data-order-id="{{ order.id }}"
+                                        data-total="{{ order.total_amount or 0 }}"
+                                        data-method="{{ order.payment_method|capitalize if order.payment_method else 'N/A' }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </button>
-                                    <button onclick="openRejectModal({{ order.id }})" 
-                                            class="p-2 hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors" 
-                                            title="Reject Refund">
+
+                                    <button 
+                                        class="reject-refund-btn p-2 hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors" 
+                                        title="Reject Refund"
+                                        data-order-id="{{ order.id }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </button>
                                 </div>
                             </td>
                         </tr>
                     {% else %}
-                        <!-- Empty State -->
                         <tr>
                             <td colspan="7" class="p-16 text-center">
                                 <div class="flex flex-col items-center">
@@ -280,7 +283,7 @@
 
 {% block scripts %}
     <script>
-        // --- Modal Control Logic ---
+        // --- Core Modal & Logic Functions ---
         function toggleModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.toggle('hidden');
@@ -289,7 +292,7 @@
 
         function openApproveModal(orderId, amount, method) {
             document.getElementById('approveOrderId').textContent = orderId;
-            document.getElementById('approveAmount').textContent = amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('approveAmount').textContent = Number(amount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             document.getElementById('approveMethod').textContent = method;
             document.getElementById('approveForm').action = `/admin/orders/${orderId}/approve-refund`;
             toggleModal('approveModal');
@@ -301,12 +304,29 @@
             toggleModal('rejectModal');
         }
 
+        // --- Attach Event Listeners using Data Attributes ---
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.approve-refund-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    openApproveModal(
+                        btn.dataset.orderId,
+                        btn.dataset.total,
+                        btn.dataset.method
+                    );
+                });
+            });
+
+            document.querySelectorAll('.reject-refund-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    openRejectModal(btn.dataset.orderId);
+                });
+            });
+        });
+
         // Close modals on backdrop click
         document.querySelectorAll('[id$="Modal"]').forEach(modal => {
             modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    toggleModal(this.id);
-                }
+                if (e.target === this) toggleModal(this.id);
             });
         });
 
@@ -314,20 +334,16 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 document.querySelectorAll('[id$="Modal"]').forEach(modal => {
-                    if (!modal.classList.contains('hidden')) {
-                        toggleModal(modal.id);
-                    }
+                    if (!modal.classList.contains('hidden')) toggleModal(modal.id);
                 });
             }
         });
 
         // --- Sidebar Active State Logic ---
         document.addEventListener('DOMContentLoaded', function() {
-            // 1. Remove active from default Dashboard link
             const activeLink = document.querySelector('.nav-link.active');
             if (activeLink) activeLink.classList.remove('active');
 
-            // 2. Expand the 'Orders' sub-menu
             const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
                 const link = item.querySelector('.nav-link');
@@ -341,7 +357,6 @@
                 }
             });
 
-            // 3. Highlight 'Refunds' link inside the submenu
             const subLinks = document.querySelectorAll('.nav-item .submenu a');
             subLinks.forEach(link => {
                 if (link.textContent.trim() === 'Refunds') {
