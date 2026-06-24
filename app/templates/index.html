@@ -161,7 +161,7 @@
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {% if featured_products %}
                 {% for product in featured_products %}
-                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden group">
+                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden group product-card" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}" data-product-price="{{ product.price }}">
                     <div class="relative overflow-hidden">
                        <a href="{{ url_for('main.product_detail', product_id=product.id) }}">
                             <img 
@@ -170,9 +170,13 @@
                                 class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
                         </a>
                         <div class="absolute top-2 right-2">
-                            <button class="p-2 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-accent hover:text-white transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                            <button class="p-2 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-accent hover:text-white transition-colors wishlist-btn" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}" title="Add to Wishlist">
+                                <svg class="w-5 h-5 heart-outline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                                <svg class="w-5 h-5 heart-filled hidden" fill="currentColor" viewBox="0 0 24 24" style="color:#ef4444"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                             </button>
+                        </div>
+                        <div class="added-indicator absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300">
+                            <span class="bg-accent text-white px-4 py-2 rounded-full font-bold text-sm transform scale-75 transition-transform duration-300">Added!</span>
                         </div>
                     </div>
                     <div class="p-4">
@@ -180,8 +184,9 @@
                         <p class="text-muted text-sm dark:text-gray-400 mb-3">{{ product.category.name if product.category else 'General' }}</p>
                         <div class="flex items-center justify-between">
                             <span class="text-lg font-bold text-primary dark:text-accent">KES {{ "{:,.0f}".format(product.price) }}</span>
-                            <button class="p-2 bg-primary text-white rounded-lg hover:bg-accent transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            <button class="p-2 bg-primary text-white rounded-lg hover:bg-accent transition-colors cart-btn" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}" data-product-price="{{ product.price }}" title="Add to Cart">
+                                <svg class="w-5 h-5 cart-icon-plus" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                <svg class="w-5 h-5 cart-icon-check hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                             </button>
                         </div>
                     </div>
@@ -190,13 +195,19 @@
             {% else %}
                 <!-- Fallback Static Content if no products found -->
                 {% for i in range(1, 5) %}
-                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden group">
+                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden group product-card" data-product-id="fallback-{{ i }}" data-product-name="Premium Product Item {{i}}" data-product-price="2500">
                     <div class="relative overflow-hidden">
-                        <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Product+{{i}}" alt="Product {{i}}" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        <a href="/products">
+                            <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Product+{{i}}" alt="Product {{i}}" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        </a>
                         <div class="absolute top-2 right-2">
-                            <button class="p-2 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-accent hover:text-white transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                            <button class="p-2 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-accent hover:text-white transition-colors wishlist-btn" data-product-id="fallback-{{ i }}" data-product-name="Premium Product Item {{i}}" title="Add to Wishlist">
+                                <svg class="w-5 h-5 heart-outline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                                <svg class="w-5 h-5 heart-filled hidden" fill="currentColor" viewBox="0 0 24 24" style="color:#ef4444"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                             </button>
+                        </div>
+                        <div class="added-indicator absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300">
+                            <span class="bg-accent text-white px-4 py-2 rounded-full font-bold text-sm transform scale-75 transition-transform duration-300">Added!</span>
                         </div>
                     </div>
                     <div class="p-4">
@@ -204,8 +215,9 @@
                         <p class="text-muted text-sm dark:text-gray-400 mb-3">Category Name</p>
                         <div class="flex items-center justify-between">
                             <span class="text-lg font-bold text-primary dark:text-accent">KES 2,500</span>
-                            <button class="p-2 bg-primary text-white rounded-lg hover:bg-accent transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            <button class="p-2 bg-primary text-white rounded-lg hover:bg-accent transition-colors cart-btn" data-product-id="fallback-{{ i }}" data-product-name="Premium Product Item {{i}}" data-product-price="2500" title="Add to Cart">
+                                <svg class="w-5 h-5 cart-icon-plus" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                <svg class="w-5 h-5 cart-icon-check hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                             </button>
                         </div>
                     </div>
@@ -516,4 +528,225 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+<!-- Toast Notification Container -->
+<div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ── State ──────────────────────────────────────────────
+    var cart = JSON.parse(sessionStorage.getItem('cliffine_cart') || '[]');
+    var wishlist = JSON.parse(sessionStorage.getItem('cliffine_wishlist') || '[]');
+
+    // ── Pre-fill button states from saved state ───────────
+    wishlist.forEach(function(id) {
+        var btn = document.querySelector('.wishlist-btn[data-product-id="' + id + '"]');
+        if (btn) setWishlistedUI(btn, true);
+    });
+    cart.forEach(function(item) {
+        var btn = document.querySelector('.cart-btn[data-product-id="' + item.id + '"]');
+        if (btn) setCartedUI(btn, true);
+    });
+    updateCartBadge();
+
+    // ── Attach event listeners to all cart buttons ────────
+    var cartButtons = document.querySelectorAll('.cart-btn');
+    cartButtons.forEach(function(btn) {
+        btn.addEventListener('click', handleCartClick);
+    });
+
+    // ── Attach event listeners to all wishlist buttons ─────
+    var wishlistButtons = document.querySelectorAll('.wishlist-btn');
+    wishlistButtons.forEach(function(btn) {
+        btn.addEventListener('click', handleWishlistClick);
+    });
+
+    // ── CART CLICK HANDLER ────────────────────────────────
+    function handleCartClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var btn = event.currentTarget;
+        var productId = btn.getAttribute('data-product-id');
+        var productName = btn.getAttribute('data-product-name');
+        var productPrice = parseFloat(btn.getAttribute('data-product-price'));
+        var card = btn.closest('.product-card');
+
+        // Check if already in cart — if so, remove it (toggle behaviour)
+        var existingIndex = -1;
+        for (var i = 0; i < cart.length; i++) {
+            if (cart[i].id == productId) {
+                existingIndex = i;
+                break;
+            }
+        }
+
+        if (existingIndex > -1) {
+            cart.splice(existingIndex, 1);
+            setCartedUI(btn, false);
+            showToast(productName + ' removed from cart', 'info');
+        } else {
+            cart.push({ id: productId, name: productName, price: productPrice, qty: 1 });
+            setCartedUI(btn, true);
+            flashAddedIndicator(card);
+            showToast(productName + ' added to cart', 'success');
+        }
+
+        sessionStorage.setItem('cliffine_cart', JSON.stringify(cart));
+        updateCartBadge();
+    }
+
+    // ── WISHLIST CLICK HANDLER ────────────────────────────
+    function handleWishlistClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var btn = event.currentTarget;
+        var productId = btn.getAttribute('data-product-id');
+        var productName = btn.getAttribute('data-product-name');
+
+        var existingIndex = -1;
+        for (var i = 0; i < wishlist.length; i++) {
+            if (wishlist[i] === productId) {
+                existingIndex = i;
+                break;
+            }
+        }
+
+        if (existingIndex > -1) {
+            wishlist.splice(existingIndex, 1);
+            setWishlistedUI(btn, false);
+            showToast(productName + ' removed from wishlist', 'info');
+        } else {
+            wishlist.push(productId);
+            setWishlistedUI(btn, true);
+            // Small pop animation
+            btn.style.transform = 'scale(1.3)';
+            setTimeout(function() { btn.style.transform = 'scale(1)'; }, 200);
+            showToast(productName + ' added to wishlist', 'success');
+        }
+
+        sessionStorage.setItem('cliffine_wishlist', JSON.stringify(wishlist));
+    }
+
+    // ── UI Helpers ─────────────────────────────────────────
+    function setCartedUI(btn, isAdded) {
+        var plusIcon = btn.querySelector('.cart-icon-plus');
+        var checkIcon = btn.querySelector('.cart-icon-check');
+        if (isAdded) {
+            btn.classList.remove('bg-primary', 'hover:bg-accent');
+            btn.classList.add('bg-green-500', 'hover:bg-green-600');
+            plusIcon.classList.add('hidden');
+            checkIcon.classList.remove('hidden');
+        } else {
+            btn.classList.add('bg-primary', 'hover:bg-accent');
+            btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+            plusIcon.classList.remove('hidden');
+            checkIcon.classList.add('hidden');
+        }
+    }
+
+    function setWishlistedUI(btn, isWishlisted) {
+        var outline = btn.querySelector('.heart-outline');
+        var filled = btn.querySelector('.heart-filled');
+        if (isWishlisted) {
+            btn.classList.add('bg-accent', 'text-white');
+            btn.classList.remove('bg-white', 'dark:bg-gray-800');
+            outline.classList.add('hidden');
+            filled.classList.remove('hidden');
+        } else {
+            btn.classList.remove('bg-accent', 'text-white');
+            btn.classList.add('bg-white', 'dark:bg-gray-800');
+            outline.classList.remove('hidden');
+            filled.classList.add('hidden');
+        }
+    }
+
+    function flashAddedIndicator(card) {
+        if (!card) return;
+        var indicator = card.querySelector('.added-indicator');
+        if (!indicator) return;
+        indicator.style.opacity = '1';
+        var label = indicator.querySelector('span');
+        if (label) label.style.transform = 'scale(1)';
+        setTimeout(function() {
+            indicator.style.opacity = '0';
+            if (label) label.style.transform = 'scale(0.75)';
+        }, 1200);
+    }
+
+    function updateCartBadge() {
+        // Try to find a cart badge in the navbar — common patterns:
+        var badgeSelectors = [
+            '#cart-count',
+            '.cart-count',
+            '.cart-badge',
+            '[data-cart-count]',
+            'a[href="/cart"] .badge',
+            'a[href*="cart"] span'
+        ];
+        var badge = null;
+        for (var i = 0; i < badgeSelectors.length; i++) {
+            badge = document.querySelector(badgeSelectors[i]);
+            if (badge) break;
+        }
+        if (badge) {
+            var count = cart.length;
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+    }
+
+    // ── Toast Notification System ──────────────────────────
+    function showToast(message, type) {
+        var container = document.getElementById('toast-container');
+        var toast = document.createElement('div');
+
+        // Color scheme by type
+        var bgClass = 'bg-gray-800 dark:bg-gray-700';
+        var iconSvg = '';
+        if (type === 'success') {
+            bgClass = 'bg-green-600';
+            iconSvg = '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+        } else if (type === 'info') {
+            bgClass = 'bg-gray-700 dark:bg-gray-600';
+            iconSvg = '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>';
+        } else if (type === 'error') {
+            bgClass = 'bg-red-600';
+            iconSvg = '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>';
+        }
+
+        toast.className = 'pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-2xl transform translate-x-full opacity-0 transition-all duration-300 ' + bgClass;
+        toast.innerHTML = iconSvg + '<span>' + message + '</span>';
+
+        container.appendChild(toast);
+
+        // Animate in
+        requestAnimationFrame(function() {
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            toast.classList.add('translate-x-0', 'opacity-100');
+        });
+
+        // Auto remove after 2.5s
+        setTimeout(function() {
+            toast.classList.add('translate-x-full', 'opacity-0');
+            toast.classList.remove('translate-x-0', 'opacity-100');
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 2500);
+    }
+
+    // ── Optional: Send cart/wishlist to backend on page unload ─
+    // Uncomment below if you have backend sync endpoints
+    /*
+    window.addEventListener('beforeunload', function() {
+        if (cart.length > 0) {
+            navigator.sendBeacon('/api/cart/sync', JSON.stringify({ cart: cart }));
+        }
+    });
+    */
+});
+</script>
 {% endblock %}

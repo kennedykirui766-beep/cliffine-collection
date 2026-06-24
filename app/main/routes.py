@@ -24,11 +24,28 @@ def index():
         is_active=True
     ).order_by(Product.created_at.desc()).limit(8).all()
 
+    # ── Resolve current cart & wishlist product IDs ──────
+    cart_product_ids = []
+    wishlist_product_ids = []
+
+    if current_user.is_authenticated:
+        cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
+        cart_product_ids = [item.product_id for item in cart_items]
+
+        wishlist_items = WishlistItem.query.filter_by(user_id=current_user.id).all()
+        wishlist_product_ids = [item.product_id for item in wishlist_items]
+    else:
+        # Guest users: store lists of product IDs in the session
+        cart_product_ids = session.get("guest_cart", [])
+        wishlist_product_ids = session.get("guest_wishlist", [])
+
     return render_template(
         "index.html",
         categories=categories,
         featured_products=featured_products,
-        current_year=datetime.now().year
+        current_year=datetime.now().year,
+        cart_product_ids=cart_product_ids,
+        wishlist_product_ids=wishlist_product_ids,
     )
 
 @main_bp.route("/categories/<slug>")
