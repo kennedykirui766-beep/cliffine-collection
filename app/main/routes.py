@@ -27,19 +27,16 @@ def index():
     cart_product_ids = []
     wishlist_product_ids = []
 
-    if current_user.is_authenticated:
-        # ── Cart: User → Cart → CartItem ─────────────────
-        try:
-            user_cart = Cart.query.filter_by(user_id=current_user.id).first()
-            if user_cart:
-                cart_product_ids = [
-                    item.product_id
-                    for item in user_cart.items
-                ]
-        except Exception:
-            cart_product_ids = []
+    # ── Cart IDs (database, no create for guests) ────────
+    try:
+        cart = _get_cart(create=False)
+        if cart:
+            cart_product_ids = [item.product_id for item in cart.items]
+    except Exception:
+        cart_product_ids = []
 
-        # ── Wishlist: safe detection ──────────────────────
+    # ── Wishlist IDs (safe column detection) ─────────────
+    if current_user.is_authenticated:
         try:
             wish_model = WishlistItem
             user_fk_col = None
@@ -59,7 +56,6 @@ def index():
         except Exception:
             wishlist_product_ids = []
     else:
-        cart_product_ids = session.get("guest_cart", [])
         wishlist_product_ids = session.get("guest_wishlist", [])
 
     return render_template(
@@ -70,6 +66,7 @@ def index():
         cart_product_ids=cart_product_ids,
         wishlist_product_ids=wishlist_product_ids,
     )
+
 
 
 # ── Helper: get or create the user's Cart ─────────────────
