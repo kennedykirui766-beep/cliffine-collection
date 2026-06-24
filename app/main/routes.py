@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import session
 from app.forms import ContactForm, LoginForm, RegistrationForm, ProfileForm
 from flask_login import current_user, login_required, login_user, logout_user
-from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, ContactMessage, Order, OrderItem, Product, DeliveryArea, User, Wishlist, WishlistItem
+from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, ContactMessage, Order, OrderItem, Product, DeliveryArea, User, Wishlist, WishlistItem,  Payment
 from app import db
 from flask_login import login_required, current_user
 
