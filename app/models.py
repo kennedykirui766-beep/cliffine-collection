@@ -259,26 +259,6 @@ class OrderItem(db.Model):
     shipped_at = db.Column(db.DateTime, nullable=True)
 
 
-# ===============================
-# PAYMENTS
-# ===============================
-class Payment(db.Model):
-    __tablename__ = "payments"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    order_id = db.Column(db.Integer, db.ForeignKey("orders.id"))
-
-    payment_method = db.Column(db.String(100))  
-    # mpesa, card, paypal, cash
-
-    transaction_id = db.Column(db.String(255))
-
-    amount = db.Column(db.Float)
-
-    status = db.Column(db.String(50), default="pending")
-
-    paid_at = db.Column(db.DateTime)
 
 
 # ===============================
@@ -616,16 +596,26 @@ class ContactMessage(db.Model):
 
 
 class Payment(db.Model):
+    __tablename__ = "payments"
+
     id = db.Column(db.Integer, primary_key=True)
 
-    order_id = db.Column(db.Integer, db.ForeignKey("order.id"))
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    order_id = db.Column(
+        db.Integer,
+        db.ForeignKey("orders.id"),   # <-- FIX HERE
+        nullable=True
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=True
+    )
 
     checkout_request_id = db.Column(db.String(100), unique=True)
     merchant_request_id = db.Column(db.String(100))
 
     phone_number = db.Column(db.String(20))
-
     amount = db.Column(db.Float)
 
     mpesa_receipt = db.Column(db.String(50))
@@ -634,7 +624,6 @@ class Payment(db.Model):
         db.String(20),
         default="pending"
     )
-    # pending, paid, failed, cancelled
 
     result_code = db.Column(db.String(20))
     result_desc = db.Column(db.Text)
