@@ -24,18 +24,41 @@ def index():
         is_active=True
     ).order_by(Product.created_at.desc()).limit(8).all()
 
-    # ── Resolve current cart & wishlist product IDs ──────
     cart_product_ids = []
     wishlist_product_ids = []
 
     if current_user.is_authenticated:
-        cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
-        cart_product_ids = [item.product_id for item in cart_items]
+        # ── Cart: User → Cart → CartItem ─────────────────
+        try:
+            user_cart = Cart.query.filter_by(user_id=current_user.id).first()
+            if user_cart:
+                cart_product_ids = [
+                    item.product_id
+                    for item in user_cart.items
+                ]
+        except Exception:
+            cart_product_ids = []
 
-        wishlist_items = WishlistItem.query.filter_by(user_id=current_user.id).all()
-        wishlist_product_ids = [item.product_id for item in wishlist_items]
+        # ── Wishlist: safe detection ──────────────────────
+        try:
+            wish_model = WishlistItem
+            user_fk_col = None
+            product_fk_col = None
+            for col in wish_model.__table__.columns:
+                if col.name in ("user_id", "customer_id", "buyer_id"):
+                    user_fk_col = col.name
+                if col.name in ("product_id", "item_id"):
+                    product_fk_col = col.name
+
+            if user_fk_col and product_fk_col:
+                filters = {user_fk_col: current_user.id}
+                wish_items = wish_model.query.filter_by(**filters).all()
+                wishlist_product_ids = [
+                    getattr(item, product_fk_col) for item in wish_items
+                ]
+        except Exception:
+            wishlist_product_ids = []
     else:
-        # Guest users: store lists of product IDs in the session
         cart_product_ids = session.get("guest_cart", [])
         wishlist_product_ids = session.get("guest_wishlist", [])
 
@@ -47,6 +70,16 @@ def index():
         cart_product_ids=cart_product_ids,
         wishlist_product_ids=wishlist_product_ids,
     )
+
+
+# ── Helper: get or create the user's Cart ─────────────────
+def _get_or_create_cart(user_id):
+    cart = Cart.query.filter_by(user_id=user_id).first()
+    if not cart:
+        cart = Cart(user_id=user_id)
+        db.session.add(cart)
+        db.session.commit()
+    return cart
 
 @main_bp.route("/categories/<slug>")
 def category_products(slug):
