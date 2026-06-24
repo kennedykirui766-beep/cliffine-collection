@@ -106,29 +106,45 @@
                         <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="Special instructions for delivery..."></textarea>
                     </div>
 
-                    <!-- 5. Payment Method (Moved to Bottom) -->
+                    <!-- 5. Payment Method (Moved to Bottom - Button Style) -->
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-6 flex items-center gap-2">
                             <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                             Payment Method
                         </h2>
 
-                        <div class="space-y-4">
-                            <!-- Payment Option 1: STK Push -->
-                            <div>
-                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" data-payment-type="stk">
-                                    <input type="radio" name="payment_method" value="stk_push" checked class="w-5 h-5 text-accent">
-                                    <span class="font-medium text-charcoal dark:text-white">M-Pesa STK Push (Lipa Na M-Pesa)</span>
-                                </label>
-                            </div>
+                        <!-- Hidden radio inputs to preserve form data -->
+                        <input type="radio" name="payment_method" value="stk_push" checked class="hidden" id="payment-stk-radio">
+                        <input type="radio" name="payment_method" value="manual" class="hidden" id="payment-manual-radio">
 
-                            <!-- Payment Option 2: Paybill -->
-                            <div>
-                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" data-payment-type="manual">
-                                    <input type="radio" name="payment_method" value="manual" class="w-5 h-5 text-accent">
-                                    <span class="font-medium text-charcoal dark:text-white">M-Pesa Paybill (Manual)</span>
-                                </label>
-                            </div>
+                        <div class="space-y-3">
+                            <!-- Payment Button 1: STK Push -->
+                            <button type="button" class="w-full flex items-center justify-between p-5 bg-sand dark:bg-gray-700 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-accent hover:bg-accent/5 dark:hover:bg-accent/10 transition-all duration-200 group" data-payment-type="stk" id="payment-stk-btn">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-200 dark:group-hover:bg-green-900/50 transition-colors">
+                                        <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <span class="font-display font-bold text-charcoal dark:text-white block">M-Pesa STK Push</span>
+                                        <span class="text-sm text-muted dark:text-gray-400">Lipa Na M-Pesa - Instant Payment</span>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-accent transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+
+                            <!-- Payment Button 2: Paybill -->
+                            <button type="button" class="w-full flex items-center justify-between p-5 bg-sand dark:bg-gray-700 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-accent hover:bg-accent/5 dark:hover:bg-accent/10 transition-all duration-200 group" data-payment-type="manual" id="payment-manual-btn">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-accent/10 dark:bg-accent/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 dark:group-hover:bg-accent/30 transition-colors">
+                                        <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <span class="font-display font-bold text-charcoal dark:text-white block">M-Pesa Paybill</span>
+                                        <span class="text-sm text-muted dark:text-gray-400">Manual Payment - Verify via SMS</span>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-accent transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
                         </div>
                     </div>
 
@@ -244,9 +260,8 @@
                     <input type="tel" id="stk-modal-phone" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="0712345678">
                 </div>
                 
-                <!-- Pay Button -->
+                <!-- Pay Button - No icon, just text -->
                 <button type="button" id="stk-modal-pay-btn" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                     <span id="stk-modal-btn-text">Pay Now</span>
                 </button>
 
@@ -336,9 +351,8 @@
                     <p class="text-xs text-muted dark:text-gray-400 mt-1">You can paste the full SMS message or just the M-Pesa code (e.g., QJK3LR5V4R)</p>
                 </div>
                 
-                <!-- Verify Button -->
+                <!-- Verify Button - No icon, just text -->
                 <button type="button" id="manual-verify-btn" class="w-full py-3 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span id="manual-verify-btn-text">Verify Payment</span>
                 </button>
 
@@ -402,6 +416,12 @@
     const placeOrderBtn = document.getElementById('place-order-btn');
     const paymentStatusBadge = document.getElementById('payment-status-badge');
     
+    // Payment button elements
+    const paymentStkBtn = document.getElementById('payment-stk-btn');
+    const paymentManualBtn = document.getElementById('payment-manual-btn');
+    const paymentStkRadio = document.getElementById('payment-stk-radio');
+    const paymentManualRadio = document.getElementById('payment-manual-radio');
+    
     // STK Modal Elements
     const stkModal = document.getElementById('stk-modal');
     const stkModalBackdrop = document.getElementById('stk-modal-backdrop');
@@ -432,9 +452,26 @@
     const manualModalFailedBox = document.getElementById('manual-modal-failed-box');
     const manualModalFailedText = document.getElementById('manual-modal-failed-text');
     const manualModalDoneBtn = document.getElementById('manual-modal-done-btn');
-    
-    // Payment type labels
-    const paymentTypeLabels = document.querySelectorAll('[data-payment-type]');
+
+    // Function to highlight active payment button
+    function highlightPaymentButton(type) {
+        // Reset both buttons
+        paymentStkBtn.classList.remove('border-accent', 'bg-accent/5', 'dark:bg-accent/10');
+        paymentStkBtn.classList.add('border-gray-200', 'dark:border-gray-600');
+        paymentManualBtn.classList.remove('border-accent', 'bg-accent/5', 'dark:bg-accent/10');
+        paymentManualBtn.classList.add('border-gray-200', 'dark:border-gray-600');
+        
+        // Highlight selected
+        if (type === 'stk') {
+            paymentStkBtn.classList.remove('border-gray-200', 'dark:border-gray-600');
+            paymentStkBtn.classList.add('border-accent', 'bg-accent/5', 'dark:bg-accent/10');
+            paymentStkRadio.checked = true;
+        } else if (type === 'manual') {
+            paymentManualBtn.classList.remove('border-gray-200', 'dark:border-gray-600');
+            paymentManualBtn.classList.add('border-accent', 'bg-accent/5', 'dark:bg-accent/10');
+            paymentManualRadio.checked = true;
+        }
+    }
 
     // Function to update order summary instantly on client side
     function updateOrderSummary() {
@@ -474,6 +511,9 @@
     // ==================== STK MODAL FUNCTIONS ====================
     
     function openStkModal() {
+        // Highlight the button
+        highlightPaymentButton('stk');
+        
         // Reset modal state
         stkModalPhone.value = phoneInput.value || '';
         stkModalAmount.textContent = formatAmount(getCurrentTotal());
@@ -502,7 +542,7 @@
         stkModalPayBtn.disabled = false;
         stkModalPayBtn.classList.remove('opacity-75', 'bg-green-800');
         stkModalPayBtn.classList.add('bg-green-600', 'hover:bg-green-700');
-        stkModalBtnText.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg> Pay Now';
+        stkModalBtnText.textContent = 'Pay Now';
     }
     
     function showStkModalStatus(message, type) {
@@ -616,7 +656,7 @@
                         stkModalPayBtn.disabled = true;
                         stkModalPayBtn.classList.add('bg-green-800');
                         stkModalPayBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
-                        stkModalBtnText.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Payment Complete';
+                        stkModalBtnText.textContent = 'Payment Complete';
                         
                         // Show done button
                         stkModalDoneBtn.classList.remove('hidden');
@@ -659,6 +699,9 @@
     // ==================== MANUAL MODAL FUNCTIONS ====================
     
     function openManualModal() {
+        // Highlight the button
+        highlightPaymentButton('manual');
+        
         // Reset modal state
         const currentTotal = getCurrentTotal();
         manualModalAmount.textContent = formatAmount(currentTotal);
@@ -687,7 +730,7 @@
         manualVerifyBtn.disabled = false;
         manualVerifyBtn.classList.remove('opacity-75', 'bg-green-800');
         manualVerifyBtn.classList.add('bg-accent', 'hover:bg-accent-dark');
-        manualVerifyBtnText.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Verify Payment';
+        manualVerifyBtnText.textContent = 'Verify Payment';
     }
     
     function showManualModalStatus(message, type) {
@@ -766,7 +809,7 @@
                 manualVerifyBtn.disabled = true;
                 manualVerifyBtn.classList.add('bg-green-800');
                 manualVerifyBtn.classList.remove('bg-accent', 'hover:bg-accent-dark');
-                manualVerifyBtnText.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Verified';
+                manualVerifyBtnText.textContent = 'Verified';
                 
                 // Show done button
                 manualModalDoneBtn.classList.remove('hidden');
@@ -845,25 +888,19 @@
 
     // ==================== EVENT LISTENERS ====================
     
-    // Delivery location change - replaces onclick="updateOrderSummary()"
+    // Delivery location change
     deliveryLocationSelect.addEventListener('change', updateOrderSummary);
     
-    // Payment type selection - opens modals instead of inline details
-    paymentTypeLabels.forEach(label => {
-        label.addEventListener('click', function() {
-            // Let the radio button get checked first
-            setTimeout(() => {
-                const paymentType = this.dataset.paymentType;
-                if (paymentType === 'stk') {
-                    openStkModal();
-                } else if (paymentType === 'manual') {
-                    openManualModal();
-                }
-            }, 50);
-        });
+    // Payment button clicks - open respective modals
+    paymentStkBtn.addEventListener('click', function() {
+        openStkModal();
     });
     
-    // STK Modal event listeners - replaces onclick="sendStkPush()"
+    paymentManualBtn.addEventListener('click', function() {
+        openManualModal();
+    });
+    
+    // STK Modal event listeners
     stkModalBackdrop.addEventListener('click', closeStkModal);
     stkModalClose.addEventListener('click', closeStkModal);
     stkModalPayBtn.addEventListener('click', sendStkPush);
@@ -913,6 +950,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         updateOrderSummary(); // Run once to set initial state
         disablePlaceOrderButton(); // Ensure button starts disabled
+        highlightPaymentButton('stk'); // Highlight default payment method
     });
     
     // Cleanup on page unload
