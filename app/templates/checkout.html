@@ -260,7 +260,7 @@
                     <input type="tel" id="stk-modal-phone" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="0712345678">
                 </div>
                 
-                <!-- Pay Button - No icon, just text -->
+                <!-- Pay Button -->
                 <button type="button" id="stk-modal-pay-btn" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors">
                     <span id="stk-modal-btn-text">Pay Now</span>
                 </button>
@@ -351,7 +351,7 @@
                     <p class="text-xs text-muted dark:text-gray-400 mt-1">You can paste the full SMS message or just the M-Pesa code (e.g., QJK3LR5V4R)</p>
                 </div>
                 
-                <!-- Verify Button - No icon, just text -->
+                <!-- Verify Button -->
                 <button type="button" id="manual-verify-btn" class="w-full py-3 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors">
                     <span id="manual-verify-btn-text">Verify Payment</span>
                 </button>
@@ -404,7 +404,7 @@
     let checkoutRequestId = null;
     let pollingInterval = null;
     let pollingCount = 0;
-    const MAX_POLLING_ATTEMPTS = 30; // 30 attempts * 3 seconds = 90 seconds max
+    const MAX_POLLING_ATTEMPTS = 30; // 30 attempts * 5 seconds = 150 seconds max
 
     // DOM Elements
     const deliveryLocationSelect = document.getElementById('delivery-location');
@@ -553,10 +553,10 @@
             stkModalStatus.innerHTML = '<div class="flex items-center justify-center gap-2"><svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>' + message + '</div>';
         } else if (type === 'success') {
             stkModalStatus.className = 'text-sm text-center text-green-600 dark:text-green-400 font-medium';
-            stkModalStatus.innerHTML = '✓ ' + message;
+            stkModalStatus.innerHTML = message;
         } else if (type === 'error') {
             stkModalStatus.className = 'text-sm text-center text-red-600 dark:text-red-400 font-medium';
-            stkModalStatus.innerHTML = '✗ ' + message;
+            stkModalStatus.innerHTML = message;
         }
     }
     
@@ -579,7 +579,7 @@
         // Disable button and show loading
         stkModalPayBtn.disabled = true;
         stkModalPayBtn.classList.add('opacity-75');
-        stkModalBtnText.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...';
+        stkModalBtnText.textContent = 'Sending...';
         
         // Hide any previous status boxes
         stkModalSuccessBox.classList.add('hidden');
@@ -602,36 +602,53 @@
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
+            if (data.success && data.checkout_request_id) {
                 checkoutRequestId = data.checkout_request_id;
                 showStkModalStatus('STK Push sent! Check your phone and enter PIN...', 'loading');
                 
                 // Start polling for status
                 pollingCount = 0;
-                pollingInterval = setInterval(checkStkModalStatus, 3000);
+                pollingInterval = setInterval(checkStkModalStatus, 5000);
                 
                 // Update button to show waiting state
-                stkModalBtnText.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Waiting...';
+                stkModalBtnText.textContent = 'Waiting...';
                 
             } else {
-                // Failed to initiate
-                showStkModalStatus(data.message || 'Failed to initiate STK Push', 'error');
+                // Failed to initiate - this is a real failure from the API
+                showStkModalStatus('✗ ' + (data.message || 'Failed to initiate STK Push'), 'error');
                 resetStkModalButton();
             }
         })
         .catch(error => {
             console.error('STK Push error:', error);
-            showStkModalStatus('Network error. Please check your connection and try again.', 'error');
+            showStkModalStatus('✗ Network error. Please check your connection and try again.', 'error');
             resetStkModalButton();
         });
     }
     
+    /*
+     * IMPORTANT: This function polls /checkout/check-stk-status
+     * 
+     * Your backend check_stk_status() route MUST read from the DATABASE,
+     * not from the session.
+     * 
+     * Why: The M-Pesa callback (C2B) comes from Safaricom's servers,
+     * which do NOT share the customer's browser session.
+     * Setting session["payment_confirmed"] = True inside the callback
+     * will NOT be visible to this customer's polling requests.
+     * 
+     * Correct backend flow:
+     *   1. initiate_stk() → saves CheckoutRequestID to a Payment table in DB
+     *   2. mpesa_callback() → looks up CheckoutRequestID, updates Payment.status
+     *   3. check_stk_status() → queries Payment table by CheckoutRequestID,
+     *      returns {"success": true, "status": "pending"|"success"|"failed"}
+     */
     function checkStkModalStatus() {
         pollingCount++;
         
         if (pollingCount > MAX_POLLING_ATTEMPTS) {
             stopPolling();
-            showStkModalStatus('Payment request timed out. Please try again.', 'error');
+            showStkModalStatus('✗ Payment request timed out. Please try again.', 'error');
             resetStkModalButton();
             return;
         }
@@ -639,60 +656,78 @@
         fetch(`/checkout/check-stk-status?checkout_request_id=${checkoutRequestId}`)
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    if (data.status === 'success') {
-                        // Payment confirmed
-                        stopPolling();
-                        showStkModalStatus('Payment received successfully!', 'success');
-                        
-                        // Show success box
-                        stkModalSuccessBox.classList.remove('hidden');
-                        stkModalReceiptText.textContent = 'Receipt: ' + (data.receipt || 'Processing...');
-                        
-                        // Hide failed box if visible
-                        stkModalFailedBox.classList.add('hidden');
-                        
-                        // Disable pay button and show completed state
-                        stkModalPayBtn.disabled = true;
-                        stkModalPayBtn.classList.add('bg-green-800');
-                        stkModalPayBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
-                        stkModalBtnText.textContent = 'Payment Complete';
-                        
-                        // Show done button
-                        stkModalDoneBtn.classList.remove('hidden');
-                        
-                        // Enable place order button
-                        enablePlaceOrderButton();
-                        
-                    } else if (data.status === 'failed') {
-                        // Payment failed
-                        stopPolling();
-                        showStkModalStatus(data.message || 'Payment failed', 'error');
-                        
-                        // Show failed box
-                        stkModalFailedBox.classList.remove('hidden');
-                        stkModalFailedText.textContent = data.message || 'Payment was cancelled or failed. Please try again.';
-                        
-                        // Hide success box if visible
-                        stkModalSuccessBox.classList.add('hidden');
-                        stkModalDoneBtn.classList.add('hidden');
-                        
-                        // Reset button
-                        resetStkModalButton();
-                        
-                    } else if (data.status === 'pending') {
-                        // Still waiting - update message with countdown
-                        const remainingAttempts = MAX_POLLING_ATTEMPTS - pollingCount;
-                        const remainingSeconds = remainingAttempts * 3;
-                        showStkModalStatus(`Waiting for confirmation... (${remainingSeconds}s)`, 'loading');
-                    }
-                } else {
-                    // API error - continue polling
-                    console.error('Status check error:', data.message);
+                
+                // -------------------------------------------------------
+                // THREE explicit branches based on data.status ONLY.
+                // We do NOT use an else-fallback that treats unknown as failed.
+                // -------------------------------------------------------
+                
+                if (data.status === 'success') {
+                    // ===== PAYMENT CONFIRMED =====
+                    stopPolling();
+                    showStkModalStatus('✓ Payment received successfully!', 'success');
+                    
+                    // Show success box
+                    stkModalSuccessBox.classList.remove('hidden');
+                    stkModalReceiptText.textContent = 'Receipt: ' + (data.receipt || 'Processing...');
+                    
+                    // Hide failed box if visible
+                    stkModalFailedBox.classList.add('hidden');
+                    
+                    // Disable pay button and show completed state
+                    stkModalPayBtn.disabled = true;
+                    stkModalPayBtn.classList.add('bg-green-800');
+                    stkModalPayBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    stkModalBtnText.textContent = 'Payment Complete';
+                    
+                    // Show done button
+                    stkModalDoneBtn.classList.remove('hidden');
+                    
+                    // Enable place order button
+                    enablePlaceOrderButton();
+                    
+                }
+                else if (data.status === 'pending') {
+                    // ===== STILL WAITING — THIS IS NOT A FAILURE =====
+                    // The backend returned {"success": true, "status": "pending"}
+                    // M-Pesa is still processing. Keep polling. Do NOT show failure.
+                    const remainingAttempts = MAX_POLLING_ATTEMPTS - pollingCount;
+                    const remainingSeconds = remainingAttempts * 5;
+                    showStkModalStatus('⏳ Waiting for M-Pesa confirmation... (' + remainingSeconds + 's)', 'loading');
+                    // Polling continues via the setInterval — no action needed here
+                }
+                else if (data.status === 'failed') {
+                    // ===== ACTUAL PAYMENT FAILURE =====
+                    // Only reach here when backend explicitly says "failed"
+                    stopPolling();
+                    showStkModalStatus('✗ ' + (data.message || 'Payment failed'), 'error');
+                    
+                    // Show failed box
+                    stkModalFailedBox.classList.remove('hidden');
+                    stkModalFailedText.textContent = data.message || 'Payment was cancelled or failed. Please try again.';
+                    
+                    // Hide success box if visible
+                    stkModalSuccessBox.classList.add('hidden');
+                    stkModalDoneBtn.classList.add('hidden');
+                    
+                    // Reset button so user can retry
+                    resetStkModalButton();
+                }
+                else {
+                    // ===== UNKNOWN / UNEXPECTED STATUS =====
+                    // Do NOT treat as failure. Log it and keep polling.
+                    // This catches cases where the backend returns an
+                    // unexpected status string we haven't accounted for.
+                    console.warn('Unexpected payment status from server:', data.status, data);
+                    const remainingAttempts = MAX_POLLING_ATTEMPTS - pollingCount;
+                    const remainingSeconds = remainingAttempts * 5;
+                    showStkModalStatus('⏳ Waiting for M-Pesa confirmation... (' + remainingSeconds + 's)', 'loading');
                 }
             })
             .catch(error => {
-                console.error('Status check fetch error:', error);
+                // Network error on the polling request itself — not a payment failure
+                // Don't stop polling, don't show failure UI, just log and continue
+                console.error('Status check fetch error (will retry):', error);
             });
     }
 
@@ -741,10 +776,10 @@
             manualModalStatus.innerHTML = '<div class="flex items-center justify-center gap-2"><svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>' + message + '</div>';
         } else if (type === 'success') {
             manualModalStatus.className = 'text-sm text-center text-green-600 dark:text-green-400 font-medium';
-            manualModalStatus.innerHTML = '✓ ' + message;
+            manualModalStatus.innerHTML = message;
         } else if (type === 'error') {
             manualModalStatus.className = 'text-sm text-center text-red-600 dark:text-red-400 font-medium';
-            manualModalStatus.innerHTML = '✗ ' + message;
+            manualModalStatus.innerHTML = message;
         }
     }
     
@@ -771,7 +806,7 @@
         // Disable button and show loading
         manualVerifyBtn.disabled = true;
         manualVerifyBtn.classList.add('opacity-75');
-        manualVerifyBtnText.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Verifying...';
+        manualVerifyBtnText.textContent = 'Verifying...';
         
         // Hide any previous status boxes
         manualModalSuccessBox.classList.add('hidden');
@@ -796,7 +831,7 @@
         .then(data => {
             if (data.success) {
                 // Payment verified
-                showManualModalStatus('Payment verified successfully!', 'success');
+                showManualModalStatus('✓ Payment verified successfully!', 'success');
                 
                 // Show success box
                 manualModalSuccessBox.classList.remove('hidden');
@@ -830,7 +865,7 @@
                 
             } else {
                 // Verification failed
-                showManualModalStatus(data.message || 'Verification failed', 'error');
+                showManualModalStatus('✗ ' + (data.message || 'Verification failed'), 'error');
                 
                 // Show failed box
                 manualModalFailedBox.classList.remove('hidden');
@@ -846,7 +881,7 @@
         })
         .catch(error => {
             console.error('Verification error:', error);
-            showManualModalStatus('Network error. Please check your connection and try again.', 'error');
+            showManualModalStatus('✗ Network error. Please check your connection and try again.', 'error');
             resetManualVerifyButton();
         });
     }

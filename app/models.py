@@ -613,3 +613,35 @@ class ContactMessage(db.Model):
 
     def __repr__(self):
         return f"<ContactMessage {self.email}>"
+
+
+class Payment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    order_id = db.Column(db.Integer, db.ForeignKey("order.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+
+    checkout_request_id = db.Column(db.String(100), unique=True)
+    merchant_request_id = db.Column(db.String(100))
+
+    phone_number = db.Column(db.String(20))
+
+    amount = db.Column(db.Float)
+
+    mpesa_receipt = db.Column(db.String(50))
+
+    status = db.Column(
+        db.String(20),
+        default="pending"
+    )
+    # pending, paid, failed, cancelled
+
+    result_code = db.Column(db.String(20))
+    result_desc = db.Column(db.Text)
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    paid_at = db.Column(db.DateTime)

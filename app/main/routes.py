@@ -930,15 +930,49 @@ def initiate_stk_push():
             }), 503
         
         if result.get("ResponseCode") == "0":
-            # Store the checkout request ID in session for verification
-            session["stk_checkout_request_id"] = result.get("CheckoutRequestID")
-            session["stk_phone"] = phone
-            session["stk_amount"] = amount
-            
+            checkout_request_id = result.get("CheckoutRequestID")
+            merchant_request_id = result.get("MerchantRequestID")
+
+            # ----------------------------------------------------------
+            # Save to database instead of session.
+            # 
+            # The callback from Safaricom comes from Safaricom's servers,
+            # NOT from the customer's browser. So session storage is
+            # useless — the callback cannot read or write the customer's
+            # session. The database is the only shared medium.
+            # 
+            # order_id is set to None here because the order hasn't been
+            # placed yet (it's placed AFTER payment is confirmed).
+            # Your Payment model needs: order_id = db.Column(..., nullable=True)
+            # ----------------------------------------------------------
+            payment = Payment(
+                order_id=None,
+                user_id=current_user.id if current_user.is_authenticated else None,
+                checkout_request_id=checkout_request_id,
+                merchant_request_id=merchant_request_id,
+                phone_number=phone,
+                amount=float(amount),
+                mpesa_receipt=None,
+                status="pending",
+                result_code=None,
+                result_desc=None
+            )
+
+            db.session.add(payment)
+
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f"Failed to save payment record: {str(e)}", exc_info=True)
+                # Don't block the user — the STK was already sent.
+                # The callback can still arrive and we can handle it.
+                # But log it loudly so you know.
+
             return jsonify({
                 "success": True,
                 "message": "STK Push sent successfully. Check your phone.",
-                "checkout_request_id": result.get("CheckoutRequestID")
+                "checkout_request_id": checkout_request_id
             })
         else:
             error_code = result.get("errorCode", "Unknown")
