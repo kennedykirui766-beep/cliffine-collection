@@ -505,16 +505,28 @@ def product_reviews():
 
 
 
+from datetime import datetime
+
 @admin_bp.route("/orders")
 def all_orders():
+
+    today = datetime.utcnow().date()
 
     orders = Order.query.order_by(
         Order.created_at.desc()
     ).all()
 
+    today_revenue = sum(
+        order.total_amount
+        for order in orders
+        if order.created_at and order.created_at.date() == today
+    )
+
     return render_template(
         "admin/orders/all_orders.html",
-        orders=orders
+        orders=orders,
+        today=today,
+        today_revenue=today_revenue
     )
 
 
@@ -545,11 +557,14 @@ def processing_orders():
     return render_template(
         "admin/orders/processing_orders.html",
         orders=orders
+        
     )
 
 
 @admin_bp.route("/orders/delivered")
 def delivered_orders():
+
+    today = datetime.utcnow().date()
 
     orders = Order.query.filter_by(
         status="delivered"
@@ -559,9 +574,30 @@ def delivered_orders():
 
     return render_template(
         "admin/orders/delivered_orders.html",
-        orders=orders
+        orders=orders,
+        today=today
     )
 
+@admin_bp.route("/orders/<int:order_id>/deliver", methods=["POST"])
+def deliver_order(order_id):
+
+    order = Order.query.get_or_404(order_id)
+
+    # safety check
+    if order.status == "delivered":
+        flash("Order is already delivered.", "warning")
+        return redirect(url_for("admin.all_orders"))
+
+    order.status = "delivered"
+
+    # optional but recommended (if you added it)
+    order.delivered_at = datetime.utcnow()
+
+    db.session.commit()
+
+    flash(f"Order #{order.id} marked as delivered.", "success")
+
+    return redirect(url_for("admin.delivered_orders"))
 
 @admin_bp.route("/orders/cancelled")
 def cancelled_orders():
@@ -577,6 +613,78 @@ def cancelled_orders():
         orders=orders
     )
 
+@admin_bp.route("/users/<int:user_id>")
+def user_detail(user_id):
+
+    user = User.query.get_or_404(user_id)
+
+    return render_template(
+        "admin/users/user_detail.html",
+        user=user
+    )
+
+@admin_bp.route("/orders/<int:order_id>/status", methods=["POST"])
+def update_order_status(order_id):
+
+    order = Order.query.get_or_404(order_id)
+
+    new_status = request.form.get("status")
+
+    if new_status not in ["pending", "processing", "shipped", "delivered"]:
+        flash("Invalid status", "danger")
+        return redirect(url_for("admin.all_orders"))
+
+    order.status = new_status
+
+    # optional timestamps
+    if new_status == "shipped":
+        order.shipped_at = datetime.utcnow()
+
+    if new_status == "delivered":
+        order.delivered_at = datetime.utcnow()
+
+    db.session.commit()
+
+    flash("Order status updated.", "success")
+
+    return redirect(url_for("admin.all_orders"))
+
+from datetime import datetime
+
+@admin_bp.route("/orders/<int:order_id>/cancel", methods=["POST"])
+def cancel_order(order_id):
+
+    order = Order.query.get_or_404(order_id)
+
+    if order.status == "delivered":
+        flash("Delivered orders cannot be cancelled.", "warning")
+        return redirect(url_for("admin.all_orders"))
+
+    order.status = "cancelled"
+
+    # Optional if your model has this field
+    # order.cancelled_at = datetime.utcnow()
+
+    db.session.commit()
+
+    flash(f"Order #{order.id} has been cancelled.", "success")
+
+    return redirect(url_for("admin.cancelled_orders"))
+
+@admin_bp.route("/orders/<int:order_id>/note", methods=["POST"])
+def add_order_note(order_id):
+
+    order = Order.query.get_or_404(order_id)
+
+    note = request.form.get("note")
+
+    order.note = note  # or append to a notes table if you have one
+
+    db.session.commit()
+
+    flash("Note added successfully.", "success")
+
+    return redirect(url_for("admin.all_orders"))
 
 @admin_bp.route("/orders/refunds")
 def order_refunds():
@@ -591,6 +699,51 @@ def order_refunds():
         "admin/orders/order_refunds.html",
         orders=orders
     )
+
+@admin_bp.route("/orders/<int:order_id>/process", methods=["POST"])
+def process_order(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    order.status = "processing"
+
+    db.session.commit()
+
+    flash("Order marked as processing.", "success")
+
+    return redirect(url_for("admin.all_orders"))
+
+@admin_bp.route("/orders/<int:order_id>/ship", methods=["POST"])
+def ship_order(order_id):
+
+    order = Order.query.get_or_404(order_id)
+
+    if order.status == "delivered":
+        flash("Cannot ship a delivered order.", "warning")
+        return redirect(url_for("admin.all_orders"))
+
+    order.status = "shipped"
+    order.shipped_at = datetime.utcnow()
+
+    db.session.commit()
+
+    flash(f"Order #{order.id} marked as shipped.", "success")
+
+    return redirect(url_for("admin.shipped_orders"))
+
+@admin_bp.route("/orders/shipped")
+def shipped_orders():
+
+    orders = Order.query.filter_by(
+        status="shipped"
+    ).order_by(
+        Order.created_at.desc()
+    ).all()
+
+    return render_template(
+        "admin/orders/shipped_orders.html",
+        orders=orders
+    ) 
+
 
 @admin_bp.route("/orders/<int:order_id>")
 def order_details(order_id):

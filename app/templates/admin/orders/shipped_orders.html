@@ -1,11 +1,11 @@
 {% extends "admin/admin_base.html" %}
 
-{% block title %}Order Refunds{% endblock %}
+{% block title %}Shipped Orders{% endblock %}
 
 {% block page_title %}
-    Order Refunds
-    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200" id="pageTitleBadge">
-        {{ orders|length }} Pending
+    Shipped Orders
+    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 border border-indigo-200" id="pageTitleBadge">
+        {{ orders|length }} In Transit
     </span>
 {% endblock %}
 
@@ -24,27 +24,32 @@
     </div>
 
     <!-- Metrics Cards -->
-    {% set total_refund_amount = orders|sum(attribute='total_amount') %}
-    {% set avg_refund = total_refund_amount / orders|length if orders|length > 0 else 0 %}
-    {% set mpesa_count = orders|selectattr('payment_method', 'equalto', 'mpesa')|list|length %}
+    {% set total_value = orders|sum(attribute='total_amount') %}
+    {% set avg_value = total_value / orders|length if orders|length > 0 else 0 %}
+    
+    {% set total_items = namespace(count=0) %}
+    {% for order in orders %}
+        {% for item in order.items %}
+            {% set total_items.count = total_items.count + item.quantity %}
+        {% endfor %}
+    {% endfor %}
 
     <div id="metricsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-amber-500" data-metric="pending-count">
-            <p class="text-xs text-slate-500">Pending Requests</p>
-            <h3 class="text-xl font-bold text-amber-600 mt-1" data-metric-value="pending-count">{{ orders|length }}</h3>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-indigo-500" data-metric="in-transit-count">
+            <p class="text-xs text-slate-500">In Transit</p>
+            <h3 class="text-xl font-bold text-indigo-600 mt-1" data-metric-value="in-transit-count">{{ orders|length }}</h3>
         </div>
-        <div class="stat-card bg-gradient-to-br from-amber-500 to-amber-700 rounded-xl p-4 shadow-sm border border-amber-500" data-metric="pending-value">
-            <p class="text-xs text-white/70">Pending Value</p>
-            <h3 class="text-xl font-bold text-white mt-1" data-metric-value="pending-value">KES {{ "{:,.0f}".format(total_refund_amount) }}</h3>
+        <div class="stat-card bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl p-4 shadow-sm border border-indigo-500" data-metric="in-transit-value">
+            <p class="text-xs text-white/70">In Transit Value</p>
+            <h3 class="text-xl font-bold text-white mt-1" data-metric-value="in-transit-value">KES {{ "{:,.0f}".format(total_value) }}</h3>
         </div>
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-primary" data-metric="avg-value">
-            <p class="text-xs text-slate-500">Avg. Refund Amount</p>
-            <h3 class="text-xl font-bold text-primary mt-1" data-metric-value="avg-value">KES {{ "{:,.0f}".format(avg_refund) }}</h3>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-primary" data-metric="items-count">
+            <p class="text-xs text-slate-500">Items In Transit</p>
+            <h3 class="text-xl font-bold text-primary mt-1" data-metric-value="items-count">{{ total_items.count }}</h3>
         </div>
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-green-500" data-metric="mpesa-count" data-filter-method="mpesa">
-            <p class="text-xs text-slate-500">M-Pesa Refunds</p>
-            <h3 class="text-xl font-bold text-green-600 mt-1" data-metric-value="mpesa-count">{{ mpesa_count }}</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Auto-refund eligible</p>
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-amber-500" data-metric="avg-value">
+            <p class="text-xs text-slate-500">Avg. Order Value</p>
+            <h3 class="text-xl font-bold text-amber-600 mt-1" data-metric-value="avg-value">KES {{ "{:,.0f}".format(avg_value) }}</h3>
         </div>
     </div>
 
@@ -71,16 +76,6 @@
                 </button>
             </div>
             <div class="flex flex-wrap gap-3">
-                <div class="relative">
-                    <select id="paymentMethodFilter" class="appearance-none pl-4 pr-8 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white cursor-pointer">
-                        <option value="">All Payment Methods</option>
-                        <option value="mpesa">M-Pesa</option>
-                        <option value="paybill">Paybill</option>
-                        <option value="till">Till</option>
-                        <option value="card">Card</option>
-                    </select>
-                    <svg class="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
                 <div class="relative">
                     <select id="sortFilter" class="appearance-none pl-4 pr-8 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white cursor-pointer">
                         <option value="newest">Sort: Newest First</option>
@@ -119,11 +114,11 @@
         </div>
     </div>
 
-    <!-- Refunds Table -->
+    <!-- Shipped Orders Table -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left" id="refundsTable">
-                <thead class="bg-amber-50/50 border-b border-slate-200">
+            <table class="w-full text-left" id="shippedOrdersTable">
+                <thead class="bg-indigo-50/50 border-b border-slate-200">
                     <tr>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">
                             <input type="checkbox" id="selectAllCheckbox" class="rounded border-slate-300 text-primary focus:ring-primary">
@@ -133,11 +128,11 @@
                         </th>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell cursor-pointer select-none hover:text-slate-700 transition-colors" data-sort="date">
-                            <span class="inline-flex items-center gap-1">Order Date <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg></span>
+                            <span class="inline-flex items-center gap-1">Shipped Date <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg></span>
                         </th>
-                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Payment</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Items</th>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right cursor-pointer select-none hover:text-slate-700 transition-colors" data-sort="amount">
-                            <span class="inline-flex items-center gap-1 justify-end">Refund Amount <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg></span>
+                            <span class="inline-flex items-center gap-1 justify-end">Total <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg></span>
                         </th>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
                     </tr>
@@ -145,29 +140,31 @@
                 <tbody class="divide-y divide-slate-100" id="ordersTableBody">
                     
                     {% for order in orders %}
-                        {% set avatar_colors = ['F59E0B', 'D97706', 'B45309', 'FBBF24', 'FCD34D', '92400E', '78350F'] %}
-                        {% set color_index = loop.index0 % (avatar_colors|length) %}
+                        {% set avatar_bg = loop.cycle('3B82F6', '2563EB', '1D4ED8', '1E40AF', '60A5FA', '93C5FD', 'BFDBFE') %}
+                        {% set item_count = namespace(count=0) %}
+                        {% for item in order.items %}
+                            {% set item_count.count = item_count.count + item.quantity %}
+                        {% endfor %}
 
-                        <tr class="hover:bg-amber-50/20 transition-colors order-row" 
+                        <tr class="hover:bg-indigo-50/20 transition-colors order-row" 
                             data-order-id="{{ order.id }}"
                             data-customer-name="{{ (order.user.full_name if order.user else 'Guest User')|lower }}"
                             data-customer-email="{{ (order.user.email if order.user and order.user.email else '')|lower }}"
                             data-customer-phone="{{ (order.phone if order.phone else '')|lower }}"
-                            data-payment-method="{{ (order.payment_method if order.payment_method else '')|lower }}"
-                            data-date="{{ order.created_at.strftime('%Y-%m-%d') if order.created_at else '' }}"
-                            data-date-iso="{{ order.created_at.isoformat() if order.created_at else '' }}"
+                            data-date="{{ order.updated_at.strftime('%Y-%m-%d') if order.updated_at else (order.created_at.strftime('%Y-%m-%d') if order.created_at else '') }}"
+                            data-date-iso="{{ order.updated_at.isoformat() if order.updated_at else (order.created_at.isoformat() if order.created_at else '') }}"
                             data-amount="{{ order.total_amount }}"
-                            data-txn-id="{{ order.transaction_id or order.mpesa_receipt_number or '' }}">
+                            data-items-count="{{ item_count.count }}">
                             <td class="p-4"><input type="checkbox" class="order-checkbox rounded border-slate-300 text-primary focus:ring-primary"></td>
                             <td class="p-4">
                                 <a href="{{ url_for('admin.order_details', order_id=order.id) }}" class="font-semibold text-primary hover:underline">#ORD-{{ order.id }}</a>
                                 <div class="mt-1">
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 uppercase">Refund Requested</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 uppercase">In Transit</span>
                                 </div>
                             </td>
                             <td class="p-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name={{ (order.user.full_name if order.user else 'Guest')|urlencode }}&background={{ avatar_colors[color_index] }}&color=fff" 
+                                    <img src="https://ui-avatars.com/api/?name={{ (order.user.full_name if order.user else 'Guest')|urlencode }}&background={{ avatar_bg }}&color=fff" 
                                          class="w-8 h-8 rounded-full" alt="">
                                     <div>
                                         <p class="font-medium text-slate-800 text-sm">{{ order.user.full_name if order.user else 'Guest User' }}</p>
@@ -175,15 +172,25 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="p-4 text-sm text-slate-600 hidden md:table-cell">
-                                {{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'N/A' }}
+                            <td class="p-4 hidden md:table-cell">
+                                <div class="flex items-center gap-1.5 text-sm text-indigo-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+                                    {% if order.updated_at %}
+                                        {{ order.updated_at.strftime('%b %d, %Y') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </div>
                             </td>
                             <td class="p-4 hidden sm:table-cell">
-                                <p class="text-sm font-medium text-slate-700">{{ order.payment_method|capitalize if order.payment_method else 'N/A' }}</p>
-                                <p class="text-xs text-slate-400 font-mono">{{ order.transaction_id or order.mpesa_receipt_number or 'N/A' }}</p>
+                                <div class="flex items-center gap-1.5 text-sm text-slate-700">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    {{ item_count.count }} Item{{ 's' if item_count.count != 1 else '' }}
+                                </div>
                             </td>
                             <td class="p-4 text-right">
                                 <p class="font-bold text-slate-800">KES {{ "{:,.0f}".format(order.total_amount) }}</p>
+                                <p class="text-xs text-slate-400">{{ order.payment_method|capitalize if order.payment_method else 'Paid' }}</p>
                             </td>
                             <td class="p-4 text-center">
                                 <div class="flex items-center justify-center gap-1">
@@ -192,35 +199,27 @@
                                     </a>
                                     
                                     <button 
-                                        class="approve-refund-btn p-2 hover:bg-green-50 rounded-lg text-slate-500 hover:text-green-600 transition-colors" 
-                                        title="Approve Refund"
-                                        data-order-id="{{ order.id }}"
-                                        data-total="{{ order.total_amount or 0 }}"
-                                        data-method="{{ order.payment_method|capitalize if order.payment_method else 'N/A' }}">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    </button>
-
-                                    <button 
-                                        class="reject-refund-btn p-2 hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors" 
-                                        title="Reject Refund"
+                                        class="deliver-order-btn p-2 hover:bg-green-50 rounded-lg text-slate-500 hover:text-green-600 transition-colors" 
+                                        title="Mark as Delivered"
                                         data-order-id="{{ order.id }}">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </button>
                                 </div>
                             </td>
                         </tr>
                     {% else %}
+                        <!-- Empty State -->
                         <tr id="emptyStateNoOrders">
                             <td colspan="7" class="p-16 text-center">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-4">
-                                        <svg class="w-10 h-10 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <div class="w-20 h-20 rounded-full bg-indigo-50 flex items-center justify-center mb-4">
+                                        <svg class="w-10 h-10 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
                                     </div>
-                                    <h3 class="text-lg font-semibold text-slate-700 mb-1">No Pending Refunds</h3>
-                                    <p class="text-sm text-slate-400 mb-6 max-w-sm">All caught up! There are no refund requests waiting for review.</p>
-                                    <a href="{{ url_for('admin.all_orders') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-dark transition-colors">
+                                    <h3 class="text-lg font-semibold text-slate-700 mb-1">No Orders In Transit</h3>
+                                    <p class="text-sm text-slate-400 mb-6 max-w-sm">Once orders are dispatched, they will appear here while on the way to the customer.</p>
+                                    <a href="{{ url_for('admin.processing_orders') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-dark transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                        View All Orders
+                                        View Processing Orders
                                     </a>
                                 </div>
                             </td>
@@ -234,8 +233,8 @@
                                 <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
                                     <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                                 </div>
-                                <h3 class="text-lg font-semibold text-slate-700 mb-1">No Matching Refund Requests</h3>
-                                <p class="text-sm text-slate-400 mb-6 max-w-sm">No refund requests match your current filter criteria. Try adjusting your search or filters.</p>
+                                <h3 class="text-lg font-semibold text-slate-700 mb-1">No Matching Shipped Orders</h3>
+                                <p class="text-sm text-slate-400 mb-6 max-w-sm">No shipped orders match your current filter criteria. Try adjusting your search or filters.</p>
                                 <button id="clearFiltersFromEmpty" class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-dark transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                     Clear All Filters
@@ -251,7 +250,7 @@
         <div id="tableFooter" class="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50">
             <div class="flex items-center gap-4">
                 <p class="text-sm text-slate-500">
-                    Showing <span class="font-medium text-slate-700" id="showingCount">{{ orders|length }}</span> of <span class="font-medium text-slate-700" id="totalCount">{{ orders|length }}</span> pending refund request{{ 's' if orders|length != 1 else '' }}
+                    Showing <span class="font-medium text-slate-700" id="showingCount">{{ orders|length }}</span> of <span class="font-medium text-slate-700" id="totalCount">{{ orders|length }}</span> order{{ 's' if orders|length != 1 else '' }} in transit
                 </p>
                 <div id="selectionActions" class="hidden items-center gap-3 pl-4 border-l border-slate-300">
                     <span class="text-xs text-slate-500"><span id="selectedCount">0</span> selected</span>
@@ -259,96 +258,46 @@
             </div>
             <div class="flex items-center gap-6 text-sm">
                 <div class="text-slate-500">
-                    <span class="text-slate-400">M-Pesa (Auto):</span> 
-                    <span class="font-bold text-green-600" id="footerMpesaCount">{{ mpesa_count }}</span>
+                    <span class="text-slate-400">Items In Transit:</span> 
+                    <span class="font-bold text-indigo-600" id="footerItemsCount">{{ total_items.count }}</span>
                 </div>
                 <div class="text-slate-500">
-                    <span class="text-slate-400">Total Pending Value:</span> 
-                    <span class="font-bold text-amber-600" id="footerTotalValue">KES {{ "{:,.0f}".format(total_refund_amount) }}</span>
+                    <span class="text-slate-400">Total Value:</span> 
+                    <span class="font-bold text-indigo-600" id="footerTotalValue">KES {{ "{:,.0f}".format(total_value) }}</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Approve Refund Modal -->
-    <div id="approveModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+    <!-- Mark as Delivered Modal -->
+    <div id="deliverModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
             <div class="p-6 border-b border-slate-100 bg-green-50">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold text-slate-800">Approve Refund</h3>
-                        <p class="text-sm text-slate-500">Order #ORD-<span id="approveOrderId"></span></p>
+                        <h3 class="text-lg font-bold text-slate-800">Confirm Delivery</h3>
+                        <p class="text-sm text-slate-500">Marking #ORD-<span id="deliverOrderId"></span> as Delivered</p>
                     </div>
                 </div>
             </div>
-            <form method="POST" action="" id="approveForm">
+            <form method="POST" action="" id="deliverForm">
                 <div class="p-6 space-y-4">
-                    <div class="bg-slate-50 rounded-lg p-3 space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Refund Amount</span>
-                            <span class="font-bold text-slate-800">KES <span id="approveAmount"></span></span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Original Payment</span>
-                            <span class="font-medium text-slate-700" id="approveMethod"></span>
-                        </div>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <p class="text-sm text-green-800 font-medium">This will update the order status to Delivered and notify the customer that their package has arrived.</p>
                     </div>
                     <div>
-                        <label for="refund_method" class="block text-sm font-medium text-slate-700 mb-1">Refund Via</label>
-                        <select name="refund_method" id="refund_method" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm">
-                            <option value="original">Return to Original Method (Recommended)</option>
-                            <option value="mpesa">M-Pesa Manual</option>
-                            <option value="manual">Manual Offline Refund</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="approve_note" class="block text-sm font-medium text-slate-700 mb-1">Internal Note (Optional)</label>
-                        <textarea name="approve_note" id="approve_note" rows="2" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="E.g., Refunded via M-Pesa..."></textarea>
+                        <label for="delivery_note" class="block text-sm font-medium text-slate-700 mb-1">Internal Note (Optional)</label>
+                        <textarea name="delivery_note" id="delivery_note" rows="2" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="E.g., Left at the gate, received by customer..."></textarea>
                     </div>
                 </div>
                 <div class="p-6 border-t border-slate-100 flex justify-end gap-3">
-                    <button type="button" onclick="toggleModal('approveModal')" class="px-4 py-2 text-slate-600 font-medium rounded-lg hover:bg-slate-100 transition-colors">Cancel</button>
+                    <button type="button" onclick="toggleModal('deliverModal')" class="px-4 py-2 text-slate-600 font-medium rounded-lg hover:bg-slate-100 transition-colors">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Approve & Process
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Reject Refund Modal -->
-    <div id="rejectModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
-            <div class="p-6 border-b border-slate-100 bg-red-50">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-800">Reject Refund</h3>
-                        <p class="text-sm text-slate-500">Order #ORD-<span id="rejectOrderId"></span></p>
-                    </div>
-                </div>
-            </div>
-            <form method="POST" action="" id="rejectForm">
-                <div class="p-6 space-y-4">
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p class="text-sm text-red-800 font-medium">Warning: Rejecting this refund will notify the customer and resume the order's previous status.</p>
-                    </div>
-                    <div>
-                        <label for="reject_reason" class="block text-sm font-medium text-slate-700 mb-1">Reason for Rejection <span class="text-red-500">*</span></label>
-                        <textarea name="reject_reason" id="reject_reason" rows="3" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="Clearly state why the refund is being rejected..." required></textarea>
-                    </div>
-                </div>
-                <div class="p-6 border-t border-slate-100 flex justify-end gap-3">
-                    <button type="button" onclick="toggleModal('rejectModal')" class="px-4 py-2 text-slate-600 font-medium rounded-lg hover:bg-slate-100 transition-colors">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        Reject Refund
+                        Confirm Delivered
                     </button>
                 </div>
             </form>
@@ -367,28 +316,20 @@
 
 {% block scripts %}
     <script>
-        // --- Core Modal & Logic Functions (global scope) ---
+        // --- Core Modal & Logic Functions ---
         function toggleModal(modalId) {
             var modal = document.getElementById(modalId);
             modal.classList.toggle('hidden');
             modal.classList.toggle('flex');
         }
 
-        function openApproveModal(orderId, amount, method) {
-            document.getElementById('approveOrderId').textContent = orderId;
-            document.getElementById('approveAmount').textContent = Number(amount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            document.getElementById('approveMethod').textContent = method;
-            document.getElementById('approveForm').action = '/admin/orders/' + orderId + '/approve-refund';
-            toggleModal('approveModal');
+        function openDeliverModal(orderId) {
+            document.getElementById('deliverOrderId').textContent = orderId;
+            document.getElementById('deliverForm').action = '/admin/orders/' + orderId + '/deliver';
+            toggleModal('deliverModal');
         }
 
-        function openRejectModal(orderId) {
-            document.getElementById('rejectOrderId').textContent = orderId;
-            document.getElementById('rejectForm').action = '/admin/orders/' + orderId + '/reject-refund';
-            toggleModal('rejectModal');
-        }
-
-        // --- Toast Notification (global scope) ---
+        // --- Toast Notification ---
         function showToast(message, type) {
             type = type || 'success';
             var toast = document.getElementById('toast');
@@ -419,19 +360,9 @@
 
         // --- Attach Event Listeners using Data Attributes ---
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.approve-refund-btn').forEach(function(btn) {
+            document.querySelectorAll('.deliver-order-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    openApproveModal(
-                        btn.dataset.orderId,
-                        btn.dataset.total,
-                        btn.dataset.method
-                    );
-                });
-            });
-
-            document.querySelectorAll('.reject-refund-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    openRejectModal(btn.dataset.orderId);
+                    openDeliverModal(btn.dataset.orderId);
                 });
             });
 
@@ -442,7 +373,6 @@
 
             var searchInput = document.getElementById('searchInput');
             var clearSearchBtn = document.getElementById('clearSearchBtn');
-            var paymentMethodFilter = document.getElementById('paymentMethodFilter');
             var sortFilter = document.getElementById('sortFilter');
             var dateFrom = document.getElementById('dateFrom');
             var dateTo = document.getElementById('dateTo');
@@ -457,7 +387,7 @@
             var emptyStateFiltered = document.getElementById('emptyStateFiltered');
             var showingCount = document.getElementById('showingCount');
             var totalCount = document.getElementById('totalCount');
-            var footerMpesaCount = document.getElementById('footerMpesaCount');
+            var footerItemsCount = document.getElementById('footerItemsCount');
             var footerTotalValue = document.getElementById('footerTotalValue');
             var selectAllCheckbox = document.getElementById('selectAllCheckbox');
             var selectionActions = document.getElementById('selectionActions');
@@ -480,7 +410,6 @@
             });
 
             // --- Live filter on change ---
-            paymentMethodFilter.addEventListener('change', applyFilters);
             sortFilter.addEventListener('change', function() {
                 applyFilters();
                 applySortFromDropdown();
@@ -507,38 +436,30 @@
             // --- Core Filter Logic ---
             function applyFilters() {
                 var searchTerm = searchInput.value.trim().toLowerCase();
-                var methodVal = paymentMethodFilter.value;
                 var fromVal = dateFrom.value;
                 var toVal = dateTo.value;
 
                 var visibleCount = 0;
                 var visibleValue = 0;
-                var visibleMpesa = 0;
+                var visibleItems = 0;
 
                 orderRows.forEach(function(row) {
                     var orderId = row.dataset.orderId;
                     var customerName = row.dataset.customerName;
                     var customerEmail = row.dataset.customerEmail;
                     var customerPhone = row.dataset.customerPhone;
-                    var paymentMethod = row.dataset.paymentMethod;
                     var orderDate = row.dataset.date;
                     var amount = parseFloat(row.dataset.amount) || 0;
+                    var itemsCount = parseInt(row.dataset.itemsCount) || 0;
 
                     var matchesSearch = true;
-                    var matchesMethod = true;
                     var matchesDateFrom = true;
                     var matchesDateTo = true;
 
-                    // Search: match against order ID, name, email, phone, txn ID
+                    // Search: match against order ID, name, email, phone
                     if (searchTerm) {
-                        var txnId = row.dataset.txnId.toLowerCase();
-                        var searchFields = [orderId, customerName, customerEmail, customerPhone, txnId].join(' ');
+                        var searchFields = [orderId, customerName, customerEmail, customerPhone].join(' ');
                         matchesSearch = searchFields.indexOf(searchTerm) !== -1;
-                    }
-
-                    // Payment method filter
-                    if (methodVal) {
-                        matchesMethod = paymentMethod === methodVal;
                     }
 
                     // Date from filter
@@ -551,21 +472,21 @@
                         matchesDateTo = orderDate <= toVal;
                     }
 
-                    var isVisible = matchesSearch && matchesMethod && matchesDateFrom && matchesDateTo;
+                    var isVisible = matchesSearch && matchesDateFrom && matchesDateTo;
                     row.style.display = isVisible ? '' : 'none';
 
                     if (isVisible) {
                         visibleCount++;
                         visibleValue += amount;
-                        if (paymentMethod === 'mpesa') visibleMpesa++;
+                        visibleItems += itemsCount;
                     }
                 });
 
                 // Update UI
-                isFiltered = !!(searchTerm || methodVal || fromVal || toVal);
-                updateMetrics(visibleCount, visibleValue, visibleMpesa);
-                updateFooter(visibleCount, visibleValue, visibleMpesa);
-                updateActiveFilterPills(searchTerm, methodVal, fromVal, toVal);
+                isFiltered = !!(searchTerm || fromVal || toVal);
+                updateMetrics(visibleCount, visibleValue, visibleItems);
+                updateFooter(visibleCount, visibleValue, visibleItems);
+                updateActiveFilterPills(searchTerm, fromVal, toVal);
                 updateClearButtonVisibility();
                 handleEmptyStates(visibleCount);
                 updateSelectAllState();
@@ -603,14 +524,16 @@
             }
 
             // --- Update Metrics Cards ---
-            function updateMetrics(visibleCount, visibleValue, visibleMpesa) {
+            function updateMetrics(visibleCount, visibleValue, visibleItems) {
                 if (!isFiltered) {
-                    var keys = ['pending-count', 'mpesa-count'];
+                    var keys = ['in-transit-count', 'items-count'];
                     keys.forEach(function(key) {
                         var el = document.querySelector('[data-metric-value="' + key + '"]');
-                        if (el && el.dataset.original) el.textContent = el.dataset.original;
+                        if (el && el.dataset.original) {
+                            el.textContent = el.dataset.original;
+                        }
                     });
-                    var valEl = document.querySelector('[data-metric-value="pending-value"]');
+                    var valEl = document.querySelector('[data-metric-value="in-transit-value"]');
                     if (valEl && valEl.dataset.original) {
                         valEl.textContent = 'KES ' + parseFloat(valEl.dataset.original).toLocaleString(undefined, {maximumFractionDigits: 0});
                     }
@@ -622,32 +545,24 @@
                         card.classList.remove('ring-2', 'ring-primary/30', 'bg-primary/5');
                     });
                     if (pageTitleBadge) {
-                        pageTitleBadge.textContent = totalOrdersCount + ' Pending';
+                        pageTitleBadge.textContent = totalOrdersCount + ' In Transit';
                     }
                     return;
                 }
 
                 // Update with filtered values
-                document.querySelector('[data-metric-value="pending-count"]').textContent = visibleCount;
-                document.querySelector('[data-metric-value="pending-value"]').textContent = 'KES ' + visibleValue.toLocaleString(undefined, {maximumFractionDigits: 0});
+                document.querySelector('[data-metric-value="in-transit-count"]').textContent = visibleCount;
+                document.querySelector('[data-metric-value="in-transit-value"]').textContent = 'KES ' + visibleValue.toLocaleString(undefined, {maximumFractionDigits: 0});
+                document.querySelector('[data-metric-value="items-count"]').textContent = visibleItems;
                 var filteredAvg = visibleCount > 0 ? visibleValue / visibleCount : 0;
                 document.querySelector('[data-metric-value="avg-value"]').textContent = 'KES ' + filteredAvg.toLocaleString(undefined, {maximumFractionDigits: 0});
-                document.querySelector('[data-metric-value="mpesa-count"]').textContent = visibleMpesa;
 
-                // Highlight active metric card
                 document.querySelectorAll('[data-metric]').forEach(function(card) {
                     card.classList.remove('ring-2', 'ring-primary/30', 'bg-primary/5');
                 });
-                var activeMethod = paymentMethodFilter.value;
-                if (activeMethod) {
-                    var activeCard = document.querySelector('[data-filter-method="' + activeMethod + '"]');
-                    if (activeCard) {
-                        activeCard.classList.add('ring-2', 'ring-primary/30', 'bg-primary/5');
-                    }
-                }
 
                 if (pageTitleBadge) {
-                    pageTitleBadge.textContent = visibleCount + ' of ' + totalOrdersCount + ' Pending';
+                    pageTitleBadge.textContent = visibleCount + ' of ' + totalOrdersCount + ' In Transit';
                 }
             }
 
@@ -661,10 +576,10 @@
             storeOriginalMetrics();
 
             // --- Update Footer ---
-            function updateFooter(visibleCount, visibleValue, visibleMpesa) {
+            function updateFooter(visibleCount, visibleValue, visibleItems) {
                 showingCount.textContent = visibleCount;
                 totalCount.textContent = totalOrdersCount;
-                footerMpesaCount.textContent = visibleMpesa;
+                footerItemsCount.textContent = visibleItems;
                 footerTotalValue.textContent = 'KES ' + visibleValue.toLocaleString(undefined, {maximumFractionDigits: 0});
             }
 
@@ -675,6 +590,7 @@
                     emptyStateFiltered.classList.add('hidden');
                     return;
                 }
+
                 emptyStateNoOrders.style.display = 'none';
 
                 if (visibleCount === 0 && isFiltered) {
@@ -685,7 +601,7 @@
             }
 
             // --- Active Filter Pills ---
-            function updateActiveFilterPills(searchTerm, methodVal, fromVal, toVal) {
+            function updateActiveFilterPills(searchTerm, fromVal, toVal) {
                 activeFilterPills.innerHTML = '';
                 var hasActiveFilters = false;
 
@@ -695,15 +611,6 @@
                     activeFilterPills.appendChild(createPill('Search: "' + displaySearch + '"', function() {
                         searchInput.value = '';
                         clearSearchBtn.classList.add('hidden');
-                        applyFilters();
-                    }));
-                }
-
-                if (methodVal) {
-                    hasActiveFilters = true;
-                    var methodLabel = methodVal.charAt(0).toUpperCase() + methodVal.slice(1);
-                    activeFilterPills.appendChild(createPill('Method: ' + methodLabel, function() {
-                        paymentMethodFilter.value = '';
                         applyFilters();
                     }));
                 }
@@ -762,7 +669,6 @@
             function clearAllFilters() {
                 searchInput.value = '';
                 clearSearchBtn.classList.add('hidden');
-                paymentMethodFilter.value = '';
                 sortFilter.value = 'newest';
                 dateFrom.value = '';
                 dateTo.value = '';
@@ -777,21 +683,6 @@
 
                 showToast('Filters cleared', 'info');
             }
-
-            // --- Metric Card Click to Filter ---
-            document.querySelectorAll('[data-filter-method]').forEach(function(card) {
-                card.style.cursor = 'pointer';
-                card.addEventListener('click', function() {
-                    var method = this.dataset.filterMethod;
-                    if (paymentMethodFilter.value === method) {
-                        paymentMethodFilter.value = '';
-                    } else {
-                        paymentMethodFilter.value = method;
-                    }
-                    applyFilters();
-                    document.getElementById('refundsTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                });
-            });
 
             // --- Keyboard Shortcuts ---
             document.addEventListener('keydown', function(e) {
@@ -846,7 +737,7 @@
                     this.querySelector('svg').style.opacity = '1';
                     this.querySelector('svg').style.transform = currentSort.direction === 'desc' ? 'rotate(180deg)' : '';
 
-                    // Sync sort dropdown
+                    // Sync sort dropdown if applicable
                     var sortDropdownMap = {
                         'date-asc': 'oldest',
                         'date-desc': 'newest',
@@ -954,7 +845,7 @@
                     return;
                 }
 
-                var headers = ['Order ID', 'Customer Name', 'Email', 'Phone', 'Order Date', 'Payment Method', 'Transaction ID', 'Refund Amount'];
+                var headers = ['Order ID', 'Customer Name', 'Email', 'Phone', 'Shipped Date', 'Items', 'Amount'];
                 var csvRows = [headers.join(',')];
 
                 visibleRows.forEach(function(row) {
@@ -962,12 +853,10 @@
                     var name = nameEl ? nameEl.textContent : '';
                     var emailEl = row.querySelector('td:nth-child(3) .text-xs');
                     var email = emailEl ? emailEl.textContent : '';
-                    var dateEl = row.querySelector('td:nth-child(4)');
+                    var dateEl = row.querySelector('td:nth-child(4) .text-sm');
                     var date = dateEl ? dateEl.textContent.trim() : '';
-                    var methodEl = row.querySelector('td:nth-child(5) .font-medium');
-                    var method = methodEl ? methodEl.textContent.trim() : '';
-                    var txnEl = row.querySelector('td:nth-child(5) .text-xs');
-                    var txn = txnEl ? txnEl.textContent.trim() : '';
+                    var itemsEl = row.querySelector('td:nth-child(5) .text-sm');
+                    var items = itemsEl ? itemsEl.textContent.trim() : '';
                     var amountEl = row.querySelector('td:nth-child(6) .font-bold');
                     var amountText = amountEl ? amountEl.textContent.replace(/[^0-9.-]/g, '') : '0';
 
@@ -977,8 +866,7 @@
                         '"' + email + '"',
                         '"' + row.dataset.customerPhone + '"',
                         '"' + date + '"',
-                        method,
-                        txn,
+                        items,
                         amountText
                     ];
                     csvRows.push(csvRow.join(','));
@@ -989,11 +877,11 @@
                 var url = URL.createObjectURL(blob);
                 var link = document.createElement('a');
                 link.href = url;
-                link.download = 'refund_requests_export_' + new Date().toISOString().slice(0, 10) + '.csv';
+                link.download = 'shipped_orders_export_' + new Date().toISOString().slice(0, 10) + '.csv';
                 link.click();
                 URL.revokeObjectURL(url);
 
-                showToast('Exported ' + visibleRows.length + ' refund requests to CSV', 'success');
+                showToast('Exported ' + visibleRows.length + ' shipped orders to CSV', 'success');
             });
 
 
@@ -1019,7 +907,7 @@
 
             var subLinks = document.querySelectorAll('.nav-item .submenu a');
             subLinks.forEach(function(link) {
-                if (link.textContent.trim() === 'Refunds') {
+                if (link.textContent.trim() === 'Shipped') {
                     link.classList.remove('text-white/60');
                     link.classList.add('text-amber-400', 'border-amber-500', 'border-l-2');
                 }

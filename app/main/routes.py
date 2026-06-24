@@ -766,7 +766,6 @@ def search():
     return render_template("search.html", current_year=datetime.now().year)
 
 # Checkout
-
 @main_bp.route("/checkout", methods=["GET"])
 def checkout():
     from flask_login import current_user
@@ -817,8 +816,315 @@ def checkout():
 
 import uuid
 
+import requests
+import base64
+from datetime import datetime
+from flask import jsonify, request, session, url_for, current_app
+
+@main_bp.route("/checkout/initiate-stk", methods=["POST"])
+def initiate_stk_push():
+    """Initiate M-Pesa STK Push"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"success": False, "message": "No data provided"}), 400
+            
+        phone = data.get("phone")
+        amount = data.get("amount")
+        
+        if not phone or not amount:
+            return jsonify({"success": False, "message": "Phone and amount are required"}), 400
+        
+        # Format phone number (remove leading 0 or +254)
+        phone = phone.replace(" ", "").replace("-", "")
+        if phone.startswith("0"):
+            phone = "254" + phone[1:]
+        elif phone.startswith("+"):
+            phone = phone[1:]
+        
+        # Ensure phone starts with 254
+        if not phone.startswith("254"):
+            phone = "254" + phone
+        
+        # M-Pesa credentials from config
+        consumer_key = current_app.config.get("MPESA_CONSUMER_KEY")
+        consumer_secret = current_app.config.get("MPESA_CONSUMER_SECRET")
+        passkey = current_app.config.get("MPESA_PASSKEY")
+        business_short_code = current_app.config.get("MPESA_BUSINESS_SHORT_CODE", "174379")
+        
+        # Check if credentials are configured
+        if not consumer_key or not consumer_secret or not passkey:
+            current_app.logger.error("M-Pesa credentials not configured")
+            return jsonify({
+                "success": False, 
+                "message": "Payment system not configured. Please contact support."
+            }), 500
+        
+        # Get access token
+        try:
+            api_url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+            response = requests.get(
+                api_url, 
+                auth=(consumer_key, consumer_secret),
+                timeout=30
+            )
+            
+            if response.status_code != 200:
+                current_app.logger.error(f"M-Pesa auth failed: {response.status_code} - {response.text}")
+                return jsonify({
+                    "success": False, 
+                    "message": "Failed to connect to M-Pesa. Please try again."
+                }), 503
+            
+            token_data = response.json()
+            access_token = token_data.get("access_token")
+            
+            if not access_token:
+                current_app.logger.error(f"No access token in response: {token_data}")
+                return jsonify({
+                    "success": False, 
+                    "message": "Failed to get M-Pesa access token."
+                }), 503
+                
+        except requests.exceptions.RequestException as e:
+            current_app.logger.error(f"M-Pesa auth request error: {str(e)}")
+            return jsonify({
+                "success": False, 
+                "message": "Network error connecting to M-Pesa. Please try again."
+            }), 503
+        
+        # Generate password
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        password_str = f"{business_short_code}{passkey}{timestamp}"
+        password = base64.b64encode(password_str.encode()).decode()
+        
+        # STK Push request
+        stk_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "BusinessShortCode": business_short_code,
+            "Password": password,
+            "Timestamp": timestamp,
+            "TransactionType": "CustomerPayBillOnline",
+            "Amount": int(round(amount)),
+            "PartyA": int(phone),
+            "PartyB": int(business_short_code),
+            "PhoneNumber": int(phone),
+            "CallBackURL": url_for("main.mpesa_callback", _external=True),
+            "AccountReference": "Cliffine",
+            "TransactionDesc": f"Order {int(round(amount))}"
+        }
+        
+        try:
+            response = requests.post(stk_url, json=payload, headers=headers, timeout=30)
+            result = response.json()
+        except requests.exceptions.RequestException as e:
+            current_app.logger.error(f"STK Push request error: {str(e)}")
+            return jsonify({
+                "success": False, 
+                "message": "Network error sending STK Push. Please try again."
+            }), 503
+        
+        if result.get("ResponseCode") == "0":
+            # Store the checkout request ID in session for verification
+            session["stk_checkout_request_id"] = result.get("CheckoutRequestID")
+            session["stk_phone"] = phone
+            session["stk_amount"] = amount
+            
+            return jsonify({
+                "success": True,
+                "message": "STK Push sent successfully. Check your phone.",
+                "checkout_request_id": result.get("CheckoutRequestID")
+            })
+        else:
+            error_code = result.get("errorCode", "Unknown")
+            error_desc = result.get("errorMessage", result.get("ResponseDescription", "Failed to initiate STK Push"))
+            
+            current_app.logger.error(f"STK Push failed: {error_code} - {error_desc}")
+            
+            # Provide user-friendly error messages
+            if "Invalid" in error_desc and "Phone" in error_desc:
+                error_desc = "Invalid phone number. Please check and try again."
+            elif "Invalid" in error_desc and "Amount" in error_desc:
+                error_desc = "Invalid amount. Please contact support."
+            elif "insufficient" in error_desc.lower():
+                error_desc = "Insufficient balance in your M-Pesa account."
+            
+            return jsonify({
+                "success": False,
+                "message": error_desc
+            }), 400
+            
+    except Exception as e:
+        current_app.logger.error(f"Unexpected error in initiate_stk_push: {str(e)}", exc_info=True)
+        return jsonify({
+            "success": False,
+            "message": "An unexpected error occurred. Please try again."
+        }), 500
+
+
+@main_bp.route("/checkout/check-stk-status", methods=["GET"])
+def check_stk_status():
+    """Check STK Push status"""
+    try:
+        checkout_request_id = request.args.get("checkout_request_id") or session.get("stk_checkout_request_id")
+        
+        if not checkout_request_id:
+            return jsonify({"success": False, "message": "No checkout request ID"}), 400
+        
+        # Check if already confirmed via callback
+        if session.get("payment_confirmed"):
+            return jsonify({
+                "success": True,
+                "status": "success",
+                "message": "Payment confirmed",
+                "receipt": session.get("mpesa_receipt", "")
+            })
+        
+        # M-Pesa credentials
+        consumer_key = current_app.config.get("MPESA_CONSUMER_KEY")
+        consumer_secret = current_app.config.get("MPESA_CONSUMER_SECRET")
+        passkey = current_app.config.get("MPESA_PASSKEY")
+        business_short_code = current_app.config.get("MPESA_BUSINESS_SHORT_CODE", "174379")
+        
+        if not consumer_key or not consumer_secret or not passkey:
+            return jsonify({"success": False, "message": "Payment system not configured"}), 500
+        
+        # Get access token
+        try:
+            api_url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+            response = requests.get(
+                api_url, 
+                auth=(consumer_key, consumer_secret),
+                timeout=30
+            )
+            access_token = response.json().get("access_token")
+            
+            if not access_token:
+                return jsonify({"success": False, "message": "Failed to get M-Pesa access token"}), 503
+        except requests.exceptions.RequestException:
+            return jsonify({"success": False, "message": "Network error"}), 503
+        
+        # Generate password
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        password = base64.b64encode(f"{business_short_code}{passkey}{timestamp}".encode()).decode()
+        
+        # Status request
+        status_url = "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "BusinessShortCode": business_short_code,
+            "Password": password,
+            "Timestamp": timestamp,
+            "CheckoutRequestID": checkout_request_id
+        }
+        
+        try:
+            response = requests.post(status_url, json=payload, headers=headers, timeout=30)
+            result = response.json()
+        except requests.exceptions.RequestException:
+            return jsonify({"success": False, "message": "Network error"}), 503
+        
+        result_code = result.get("ResultCode")
+        
+        if result_code == "0":
+            # Payment successful
+            session["payment_confirmed"] = True
+            metadata_items = result.get("CallbackMetadata", {}).get("Item", []) if result.get("CallbackMetadata") else []
+            mpesa_receipt = ""
+            for item in metadata_items:
+                if item.get("Name") == "MpesaReceiptNumber":
+                    mpesa_receipt = item.get("Value", "")
+            session["mpesa_receipt"] = mpesa_receipt
+            return jsonify({
+                "success": True,
+                "status": "success",
+                "message": "Payment confirmed",
+                "receipt": mpesa_receipt
+            })
+        elif result_code is not None and result_code != "0":
+            return jsonify({
+                "success": True,
+                "status": "failed",
+                "message": result.get("ResultDesc", "Payment failed or cancelled")
+            })
+        else:
+            return jsonify({
+                "success": True,
+                "status": "pending",
+                "message": result.get("ResultDesc", "Waiting for confirmation")
+            })
+            
+    except Exception as e:
+        current_app.logger.error(f"Error in check_stk_status: {str(e)}", exc_info=True)
+        return jsonify({"success": False, "message": "An error occurred"}), 500
+
+
+@main_bp.route("/mpesa/callback", methods=["POST"])
+def mpesa_callback():
+    """Handle M-Pesa STK Push callback"""
+    try:
+        data = request.get_json(force=True)
+        
+        # Log the callback for debugging
+        current_app.logger.info(f"M-Pesa callback received: {data}")
+        
+        # Extract the result
+        stk_callback = data.get("Body", {}).get("stkCallback", {})
+        checkout_request_id = stk_callback.get("CheckoutRequestID")
+        result_code = stk_callback.get("ResultCode")
+        result_desc = stk_callback.get("ResultDesc")
+        
+        current_app.logger.info(f"STK Callback - RequestID: {checkout_request_id}, Code: {result_code}, Desc: {result_desc}")
+        
+        if result_code == "0":
+            # Payment successful - extract metadata
+            metadata = stk_callback.get("CallbackMetadata", {}).get("Item", [])
+            mpesa_receipt = ""
+            phone = ""
+            amount = ""
+            
+            for item in metadata:
+                if item.get("Name") == "MpesaReceiptNumber":
+                    mpesa_receipt = item.get("Value")
+                elif item.get("Name") == "PhoneNumber":
+                    phone = str(item.get("Value"))
+                elif item.get("Name") == "Amount":
+                    amount = str(item.get("Value"))
+            
+            # Store in session
+            session["payment_confirmed"] = True
+            session["mpesa_receipt"] = mpesa_receipt
+            session["mpesa_phone"] = phone
+            session["mpesa_amount"] = amount
+            session["stk_checkout_request_id"] = checkout_request_id
+            
+            current_app.logger.info(f"Payment confirmed - Receipt: {mpesa_receipt}, Phone: {phone}, Amount: {amount}")
+    
+    except Exception as e:
+        current_app.logger.error(f"Error in mpesa_callback: {str(e)}", exc_info=True)
+    
+    # Always return success to M-Pesa
+    return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"}), 200
+
+
 @main_bp.route("/checkout/process", methods=["POST"])
 def checkout_process():
+    # --- Verify Payment First ---
+    payment_confirmed = session.get("payment_confirmed")
+    mpesa_receipt = session.get("mpesa_receipt")
+    
+    if not payment_confirmed or not mpesa_receipt:
+        flash("Please complete payment before placing your order.", "danger")
+        return redirect(url_for("main.checkout"))
+
     # --- Determine cart ---
     if current_user.is_authenticated:
         cart = Cart.query.filter_by(user_id=current_user.id).first()
@@ -866,7 +1172,8 @@ def checkout_process():
         total_amount=total_amount,
         delivery_fee=delivery_fee,
         status="pending",
-        payment_status="pending",
+        payment_status="paid",
+        mpesa_receipt=mpesa_receipt,
         created_at=datetime.utcnow()
     )
     db.session.add(order)
@@ -889,6 +1196,15 @@ def checkout_process():
     db.session.delete(cart)
     db.session.commit()
     session.pop("cart_session", None)
+    
+    # --- Clear payment session data ---
+    session.pop("payment_confirmed", None)
+    session.pop("mpesa_receipt", None)
+    session.pop("mpesa_phone", None)
+    session.pop("mpesa_amount", None)
+    session.pop("stk_checkout_request_id", None)
+    session.pop("stk_phone", None)
+    session.pop("stk_amount", None)
 
     flash("Order placed successfully!", "success")
     return redirect(url_for("main.index"))

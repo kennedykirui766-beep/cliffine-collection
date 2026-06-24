@@ -8,7 +8,7 @@
     
     <!-- Page Specific Action Buttons -->
     <div class="flex flex-wrap justify-end gap-3 mb-6">
-        <button class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm bg-white">
+        <button id="exportCsvBtn" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm bg-white">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
             Export CSV
         </button>
@@ -25,91 +25,149 @@
     {% set shipped_count = orders|selectattr('status', 'equalto', 'shipped')|list|length %}
     {% set delivered_count = orders|selectattr('status', 'equalto', 'delivered')|list|length %}
     {% set cancelled_count = orders|selectattr('status', 'equalto', 'cancelled')|list|length %}
-    {% set today_revenue = orders|selectattr('created_at', '>=', today)|sum(attribute='total_amount') %}
+    {% set total_revenue = orders|sum(attribute='total_amount') %}
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+    <div id="metricsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" data-metric="total">
             <p class="text-xs text-slate-500">Total Orders</p>
-            <h3 class="text-xl font-bold text-slate-800 mt-1">{{ "{:,}".format(total_orders) }}</h3>
+            <h3 class="text-xl font-bold text-slate-800 mt-1" data-metric-value="total">{{ "{:,}".format(total_orders) }}</h3>
         </div>
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-amber-500">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-amber-500 cursor-pointer hover:shadow-md transition-shadow" data-metric="pending" data-filter-status="pending">
             <p class="text-xs text-slate-500">Pending</p>
-            <h3 class="text-xl font-bold text-amber-600 mt-1">{{ pending_count }}</h3>
+            <h3 class="text-xl font-bold text-amber-600 mt-1" data-metric-value="pending">{{ pending_count }}</h3>
         </div>
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-blue-500">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-blue-500 cursor-pointer hover:shadow-md transition-shadow" data-metric="processing" data-filter-status="processing">
             <p class="text-xs text-slate-500">Processing</p>
-            <h3 class="text-xl font-bold text-blue-600 mt-1">{{ processing_count }}</h3>
+            <h3 class="text-xl font-bold text-blue-600 mt-1" data-metric-value="processing">{{ processing_count }}</h3>
         </div>
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-indigo-500">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-indigo-500 cursor-pointer hover:shadow-md transition-shadow" data-metric="shipped" data-filter-status="shipped">
             <p class="text-xs text-slate-500">Shipped</p>
-            <h3 class="text-xl font-bold text-indigo-600 mt-1">{{ shipped_count }}</h3>
+            <h3 class="text-xl font-bold text-indigo-600 mt-1" data-metric-value="shipped">{{ shipped_count }}</h3>
         </div>
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-green-500">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-green-500 cursor-pointer hover:shadow-md transition-shadow" data-metric="delivered" data-filter-status="delivered">
             <p class="text-xs text-slate-500">Delivered</p>
-            <h3 class="text-xl font-bold text-green-600 mt-1">{{ delivered_count }}</h3>
+            <h3 class="text-xl font-bold text-green-600 mt-1" data-metric-value="delivered">{{ delivered_count }}</h3>
         </div>
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-red-500">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-red-500 cursor-pointer hover:shadow-md transition-shadow" data-metric="cancelled" data-filter-status="cancelled">
             <p class="text-xs text-slate-500">Cancelled</p>
-            <h3 class="text-xl font-bold text-red-600 mt-1">{{ cancelled_count }}</h3>
+            <h3 class="text-xl font-bold text-red-600 mt-1" data-metric-value="cancelled">{{ cancelled_count }}</h3>
         </div>
         <div class="stat-card bg-gradient-to-br from-accent to-accent-dark rounded-xl p-4 shadow-sm border border-accent">
             <p class="text-xs text-slate-800/70">Total Revenue</p>
-            <h3 class="text-xl font-bold text-slate-900 mt-1">KES {{ "{:,.0f}".format(orders|sum(attribute='total_amount')) }}</h3>
+            <h3 class="text-xl font-bold text-slate-900 mt-1" data-metric-value="revenue">KES {{ "{:,.0f}".format(total_revenue) }}</h3>
         </div>
+    </div>
+
+    <!-- Active Filters Pills (hidden by default) -->
+    <div id="activeFiltersBar" class="hidden mb-4 flex flex-wrap items-center gap-2">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mr-1">Active Filters:</span>
+        <div id="activeFilterPills" class="flex flex-wrap gap-2"></div>
+        <button id="clearAllFiltersBtn" class="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 px-2.5 py-1 rounded-full transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            Clear All
+        </button>
     </div>
 
     <!-- Filters Bar -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-6">
-        <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex flex-col lg:flex-row gap-4">
+            <!-- Search Input -->
             <div class="flex-1 relative">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                     <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </span>
-                <input type="text" placeholder="Search Order ID, Customer..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm">
-            </div>
-            <div class="flex flex-wrap gap-3">
-                <select class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
-                    <option>All Status</option>
-                    <option>Pending</option>
-                    <option>Processing</option>
-                    <option>Shipped</option>
-                    <option>Delivered</option>
-                    <option>Cancelled</option>
-                </select>
-                 <select class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white">
-                    <option>Payment Status</option>
-                    <option>Paid</option>
-                    <option>Pending</option>
-                    <option>Failed</option>
-                    <option>Refunded</option>
-                </select>
-                <input type="date" class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50">
-                <button class="px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors">
-                    Filter
+                <input type="text" id="searchInput" placeholder="Search Order ID, Customer name, email, phone..." class="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm">
+                <button id="clearSearchBtn" class="hidden absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition-colors" title="Clear search">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
+            <div class="flex flex-wrap gap-3">
+                <!-- Status Filter -->
+                <div class="relative">
+                    <select id="statusFilter" class="appearance-none pl-4 pr-8 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white cursor-pointer">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <svg class="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <!-- Payment Status Filter -->
+                <div class="relative">
+                    <select id="paymentFilter" class="appearance-none pl-4 pr-8 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white cursor-pointer">
+                        <option value="">Payment Status</option>
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                        <option value="refunded">Refunded</option>
+                    </select>
+                    <svg class="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <!-- Date From -->
+                <div class="relative">
+                    <input type="date" id="dateFrom" class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50" title="From date">
+                </div>
+                <!-- Date To -->
+                <div class="relative">
+                    <input type="date" id="dateTo" class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50" title="To date">
+                </div>
+                <!-- Filter & Clear Buttons -->
+                <div class="flex gap-2">
+                    <button id="applyFilterBtn" class="px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                        Filter
+                    </button>
+                    <button id="clearFilterBtn" class="hidden px-5 py-2.5 border border-slate-200 text-slate-500 rounded-lg text-sm font-semibold hover:bg-slate-50 hover:text-slate-700 transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Keyboard Shortcut Hint -->
+        <div class="mt-2.5 flex items-center gap-4 text-xs text-slate-400">
+            <span class="hidden sm:inline-flex items-center gap-1">
+                <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono">/</kbd>
+                Focus search
+            </span>
+            <span class="hidden sm:inline-flex items-center gap-1">
+                <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono">Esc</kbd>
+                Clear filters
+            </span>
+            <span class="hidden md:inline-flex items-center gap-1">
+                <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono">Enter</kbd>
+                Apply filters
+            </span>
         </div>
     </div>
 
     <!-- Orders Table -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-left" id="ordersTable">
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">
-                            <input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary">
+                            <input type="checkbox" id="selectAllCheckbox" class="rounded border-slate-300 text-primary focus:ring-primary">
                         </th>
-                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Order ID</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none hover:text-slate-700 transition-colors" data-sort="order-id">
+                            <span class="inline-flex items-center gap-1">Order ID <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg></span>
+                        </th>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
-                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Date</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell cursor-pointer select-none hover:text-slate-700 transition-colors" data-sort="date">
+                            <span class="inline-flex items-center gap-1">Date <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg></span>
+                        </th>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Payment</th>
-                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Total</th>
+                        <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right cursor-pointer select-none hover:text-slate-700 transition-colors" data-sort="amount">
+                            <span class="inline-flex items-center gap-1 justify-end">Total <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg></span>
+                        </th>
                         <th class="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-100" id="ordersTableBody">
                     
                     {% for order in orders %}
                         {% set status_colors = {
@@ -131,17 +189,27 @@
                         {% elif order.status == 'cancelled' %}
                             {% set row_class = 'hover:bg-red-50 transition-colors opacity-75' %}
                         {% endif %}
-                        {% set avatar_colors = ['5423E7', 'D4AF37', '10B981', '3B82F6', 'EC4899', 'F59E0B', '8B5CF6'] %}
-                        {% set color_index = loop.index0 % mod avatar_colors|length %}
+                        
+                        {% set avatar_bg = loop.cycle('5423E7', 'D4AF37', '10B981', '3B82F6', 'EC4899', 'F59E0B', '8B5CF6') %}
 
-                        <tr class="{{ row_class }}">
-                            <td class="p-4"><input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary"></td>
+                        <tr class="{{ row_class }} order-row" 
+                            data-order-id="{{ order.id }}"
+                            data-customer-name="{{ (order.user.full_name if order.user else 'Guest User')|lower }}"
+                            data-customer-email="{{ (order.user.email if order.user and order.user.email else '')|lower }}"
+                            data-customer-phone="{{ (order.phone if order.phone else '')|lower }}"
+                            data-status="{{ order.status }}"
+                            data-payment-status="{{ order.payment_status }}"
+                            data-date="{{ order.created_at.strftime('%Y-%m-%d') if order.created_at else '' }}"
+                            data-date-iso="{{ order.created_at.isoformat() if order.created_at else '' }}"
+                            data-amount="{{ order.total_amount }}"
+                            data-payment-method="{{ order.payment_method if order.payment_method else '' }}">
+                            <td class="p-4"><input type="checkbox" class="order-checkbox rounded border-slate-300 text-primary focus:ring-primary"></td>
                             <td class="p-4">
-                                <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="font-semibold text-primary hover:underline">#ORD-{{ order.id }}</a>
+                                <a href="{{ url_for('admin.order_details', order_id=order.id) }}" class="font-semibold text-primary hover:underline">#ORD-{{ order.id }}</a>
                             </td>
                             <td class="p-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name={{ order.user.full_name|urlencode if order.user.full_name else 'User' }}&background={{ avatar_colors[color_index] }}&color=fff" 
+                                    <img src="https://ui-avatars.com/api/?name={{ order.user.full_name|urlencode if order.user.full_name else 'User' }}&background={{ avatar_bg }}&color=fff" 
                                          class="w-8 h-8 rounded-full {{ 'grayscale' if order.status == 'cancelled' else '' }}" 
                                          alt="{{ order.user.full_name if order.user else 'User' }}">
                                     <div>
@@ -173,22 +241,67 @@
                             </td>
                             <td class="p-4 text-center">
                                 <div class="flex items-center justify-center gap-1">
-                                    <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" 
-                                       class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors {{ 'opacity-50 pointer-events-none' if order.status == 'cancelled' else '' }}" 
+                                    
+                                    <!-- 1. View Details (Always visible) -->
+                                    <a href="{{ url_for('admin.order_details', order_id=order.id) }}" 
+                                       class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-colors" 
                                        title="View Details">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                     </a>
-                                    {% if order.status != 'cancelled' %}
-                                        <button onclick="window.print()" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-accent transition-colors" title="Print Invoice">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                        </button>
+
+                                    <!-- 2. Action: Pending -> Processing -->
+                                    {% if order.status == 'pending' %}
+                                    <button 
+                                        type="button"
+                                        class="status-action-btn p-2 hover:bg-blue-50 rounded-lg text-blue-500 hover:text-blue-700 transition-colors" 
+                                        title="Mark as Processing"
+                                        data-action="process"
+                                        data-order-id="{{ order.id }}"
+                                        data-customer="{{ order.user.full_name if order.user else 'Guest' }}"
+                                        data-amount="{{ '{:,.0f}'.format(order.total_amount) }}">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    </button>
+
+                                    <!-- 3. Action: Processing -> Shipped -->
+                                    {% elif order.status == 'processing' %}
+                                    <button 
+                                        type="button"
+                                        class="status-action-btn p-2 hover:bg-indigo-50 rounded-lg text-indigo-500 hover:text-indigo-700 transition-colors" 
+                                        title="Mark as Shipped"
+                                        data-action="ship"
+                                        data-order-id="{{ order.id }}"
+                                        data-customer="{{ order.user.full_name if order.user else 'Guest' }}"
+                                        data-amount="{{ '{:,.0f}'.format(order.total_amount) }}">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+                                    </button>
+
+                                    <!-- 4. Action: Shipped -> Delivered -->
+                                    {% elif order.status == 'shipped' %}
+                                    <button 
+                                        type="button"
+                                        class="status-action-btn p-2 hover:bg-green-50 rounded-lg text-green-500 hover:text-green-700 transition-colors" 
+                                        title="Mark as Delivered"
+                                        data-action="deliver"
+                                        data-order-id="{{ order.id }}"
+                                        data-customer="{{ order.user.full_name if order.user else 'Guest' }}"
+                                        data-amount="{{ '{:,.0f}'.format(order.total_amount) }}">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
                                     {% endif %}
+
+                                    <!-- 5. Print Invoice (Available if not Pending or Cancelled) -->
+                                    {% if order.status not in ['pending', 'cancelled'] %}
+                                    <button type="button" class="print-invoice-btn p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-accent transition-colors" title="Print Invoice">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                    </button>
+                                    {% endif %}
+
                                 </div>
                             </td>
                         </tr>
                     {% else %}
                         <!-- Empty State -->
-                        <tr>
+                        <tr id="emptyStateNoOrders">
                             <td colspan="8" class="p-12 text-center">
                                 <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                 <h3 class="text-lg font-semibold text-slate-600 mb-1">No Orders Found</h3>
@@ -196,58 +309,916 @@
                             </td>
                         </tr>
                     {% endfor %}
+
+                    <!-- Filtered Empty State (hidden by default) -->
+                    <tr id="emptyStateFiltered" class="hidden">
+                        <td colspan="8" class="p-12 text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-slate-600 mb-1">No Matching Orders</h3>
+                                <p class="text-sm text-slate-400 mb-4 max-w-md">No orders match your current filter criteria. Try adjusting your search or filters.</p>
+                                <button id="clearFiltersFromEmpty" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-dark transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    Clear All Filters
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
 
         <!-- Summary Footer (shown when there are orders) -->
-        {% if orders %}
-            <div class="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50">
-                <p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-700">{{ orders|length }}</span> order{{ 's' if orders|length != 1 else '' }}</p>
-                <div class="text-sm text-slate-600">
-                    <span class="text-slate-400">Total Value:</span> 
-                    <span class="font-bold text-slate-800">KES {{ "{:,.0f}".format(orders|sum(attribute='total_amount')) }}</span>
+        <div id="tableFooter" class="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50">
+            <div class="flex items-center gap-4">
+                <p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-700" id="showingCount">{{ orders|length }}</span> of <span class="font-medium text-slate-700" id="totalCount">{{ orders|length }}</span> order{{ 's' if orders|length != 1 else '' }}</p>
+                <div id="selectionActions" class="hidden items-center gap-3 pl-4 border-l border-slate-300">
+                    <span class="text-xs text-slate-500"><span id="selectedCount">0</span> selected</span>
+                    <button id="bulkDeleteBtn" class="text-xs text-red-500 hover:text-red-700 font-semibold hover:underline transition-colors">Delete Selected</button>
                 </div>
             </div>
-        {% endif %}
+            <div class="flex items-center gap-4">
+                <div id="filteredSummary" class="hidden text-sm text-slate-600">
+                    <span class="text-slate-400">Filtered Value:</span> 
+                    <span class="font-bold text-slate-800" id="filteredTotalValue">KES 0</span>
+                </div>
+                <div id="totalSummary" class="text-sm text-slate-600">
+                    <span class="text-slate-400">Total Value:</span> 
+                    <span class="font-bold text-slate-800">KES {{ "{:,.0f}".format(total_revenue) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Beautiful Custom Status Update Modal -->
+    <div id="statusUpdateModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="modalBackdrop"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modalContentWrapper">
+            
+            <!-- Header (Color changes dynamically) -->
+            <div id="modalHeader" class="p-6 border-b border-slate-100 bg-blue-50">
+                <div class="flex items-center gap-3">
+                    <div id="modalIconWrap" class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-sm">
+                        <!-- Default Icon: Zap for processing -->
+                        <svg id="modalIcon" class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 id="modalTitle" class="text-lg font-bold text-slate-800">Confirm Status Update</h3>
+                        <p id="modalSubtitle" class="text-sm text-slate-500">Moving to next stage</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 space-y-4">
+                <!-- Dynamic Warning Text -->
+                <div id="modalWarningBox" class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+                    <div class="mt-0.5">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <p id="modalWarningText" class="text-sm text-blue-800">
+                        You are about to mark this order as <strong id="modalStatusText">Processing</strong>. This will notify the customer.
+                    </p>
+                </div>
+
+                <!-- Order Summary Box -->
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2.5">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Order Summary</h4>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Order</span>
+                        <span class="font-mono font-bold text-slate-800" id="modalOrderId">#ORD-000</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Customer</span>
+                        <span class="font-medium text-slate-800" id="modalCustomer">Customer Name</span>
+                    </div>
+                    <div class="flex justify-between text-sm border-t border-slate-200 pt-2 mt-2">
+                        <span class="text-slate-500">Total Amount</span>
+                        <span class="font-bold text-slate-800" id="modalAmount">KES 0</span>
+                    </div>
+                </div>
+
+                <!-- Optional Note -->
+                <div>
+                    <label for="modalNote" class="block text-sm font-medium text-slate-700 mb-1">Internal Note (Optional)</label>
+                    <textarea id="modalNote" rows="2" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none" placeholder="E.g., Checked and packed by John..."></textarea>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+                <button type="button" id="modalCancelBtn" class="px-5 py-2.5 text-slate-600 font-medium rounded-xl hover:bg-slate-200 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" id="modalConfirmBtn" class="px-6 py-2.5 text-white font-semibold rounded-xl hover:opacity-90 transition-all shadow-md flex items-center gap-2 bg-blue-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span id="modalConfirmText">Confirm & Process</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-[60] transform translate-y-4 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-800 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 text-sm font-medium">
+            <svg id="toastIcon" class="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span id="toastMessage">Action completed</span>
+        </div>
     </div>
 
 {% endblock %}
 
 {% block scripts %}
     <script>
-        // --- Sidebar Active State Logic ---
-        document.addEventListener('DOMContentLoaded', function() {
-            // 1. Remove active from default Dashboard link
-            const dashLink = document.querySelector('.nav-link.active');
-            if (dashLink) dashLink.classList.remove('active');
+    // ============================================================
+    // GLOBAL MODAL FUNCTIONS — defined OUTSIDE DOMContentLoaded
+    // so they are always accessible to event listeners
+    // ============================================================
 
-            // 2. Find the 'Orders' button and make it active
-            const navButtons = document.querySelectorAll('.nav-group button');
-            navButtons.forEach(btn => {
-                // Check the text inside the span
-                const span = btn.querySelector('span');
-                if (span && span.textContent.trim() === 'Orders') {
-                    btn.classList.add('active');
-                    btn.classList.add('nav-link'); // Ensure styling hooks match
-                }
-            });
+    var modalConfigs = {
+        process: {
+            title: 'Confirm Processing',
+            subtitle: 'Moving to warehouse',
+            headerBg: 'bg-blue-50 border-blue-100',
+            iconBg: 'bg-blue-100',
+            iconColor: 'text-blue-600',
+            iconPath: 'M13 10V3L4 14h7v7l9-11h-7z',
+            warningBg: 'bg-blue-50 border-blue-200',
+            warningText: 'You are about to mark this order as <strong>Processing</strong>. The warehouse will be notified to pack the items.',
+            btnBg: 'bg-blue-600 hover:bg-blue-700',
+            confirmText: 'Confirm & Process'
+        },
+        ship: {
+            title: 'Confirm Shipment',
+            subtitle: 'Ready for dispatch',
+            headerBg: 'bg-indigo-50 border-indigo-100',
+            iconBg: 'bg-indigo-100',
+            iconColor: 'text-indigo-600',
+            iconPath: 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0',
+            warningBg: 'bg-indigo-50 border-indigo-200',
+            warningText: 'You are about to mark this order as <strong>Shipped</strong>. A tracking number can be added later from the order details page.',
+            btnBg: 'bg-indigo-600 hover:bg-indigo-700',
+            confirmText: 'Confirm Dispatch'
+        },
+        deliver: {
+            title: 'Confirm Delivery',
+            subtitle: 'Final step',
+            headerBg: 'bg-green-50 border-green-100',
+            iconBg: 'bg-green-100',
+            iconColor: 'text-green-600',
+            iconPath: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+            warningBg: 'bg-green-50 border-green-200',
+            warningText: 'You are about to mark this order as <strong>Delivered</strong>. This will close the order and notify the customer.',
+            btnBg: 'bg-green-600 hover:bg-green-700',
+            confirmText: 'Confirm Delivery'
+        }
+    };
 
-            // 3. Expand the 'Orders' sub-menu
-            const ordersMenu = document.getElementById('orders-menu');
-            if (ordersMenu) {
-                ordersMenu.classList.add('open');
-            }
-            
-            // 4. Highlight 'All Orders' link inside the submenu
-            // The base template has links with class 'block py-2 px-4...'
-            const subLinks = ordersMenu ? ordersMenu.querySelectorAll('a') : [];
-            subLinks.forEach(link => {
-                if (link.textContent.trim() === 'All Orders') {
-                    link.classList.remove('text-white/70');
-                    link.classList.add('text-white', 'border-l-2', 'border-accent'); // Active style for sub-link
-                }
+    var targetFormAction = null;
+
+    function openActionModal(action, orderId, customer, amount) {
+        var config = modalConfigs[action];
+        if (!config) return;
+
+        targetFormAction = '/admin/orders/' + orderId + '/' + action;
+
+        // Apply Theme
+        var header = document.getElementById('modalHeader');
+        header.className = 'p-6 border-b ' + config.headerBg;
+        
+        var iconWrap = document.getElementById('modalIconWrap');
+        iconWrap.className = 'w-12 h-12 rounded-xl ' + config.iconBg + ' flex items-center justify-center shadow-sm';
+        
+        var icon = document.getElementById('modalIcon');
+        icon.className = 'w-6 h-6 ' + config.iconColor;
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + config.iconPath + '"/>';
+
+        document.getElementById('modalTitle').textContent = config.title;
+        document.getElementById('modalSubtitle').textContent = config.subtitle;
+        
+        var warningBox = document.getElementById('modalWarningBox');
+        warningBox.className = config.warningBg + ' rounded-xl p-4 flex items-start gap-3';
+        document.getElementById('modalWarningText').innerHTML = config.warningText;
+        var warningSvg = warningBox.querySelector('svg');
+        if (warningSvg) {
+            warningSvg.className = 'w-5 h-5 ' + config.iconColor;
+        }
+        
+        document.getElementById('modalOrderId').textContent = '#ORD-' + orderId;
+        document.getElementById('modalCustomer').textContent = customer;
+        document.getElementById('modalAmount').textContent = 'KES ' + amount;
+        
+        var confirmBtn = document.getElementById('modalConfirmBtn');
+        confirmBtn.className = 'px-6 py-2.5 text-white font-semibold rounded-xl hover:opacity-90 transition-all shadow-md flex items-center gap-2 ' + config.btnBg;
+        document.getElementById('modalConfirmText').textContent = config.confirmText;
+
+        // Clear note from previous actions
+        document.getElementById('modalNote').value = '';
+
+        // Show Modal with Animation
+        var wrapper = document.getElementById('modalContentWrapper');
+        var modal = document.getElementById('statusUpdateModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        
+        requestAnimationFrame(function() {
+            wrapper.classList.remove('scale-95', 'opacity-0');
+            wrapper.classList.add('scale-100', 'opacity-100');
+        });
+        
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeActionModal() {
+        var wrapper = document.getElementById('modalContentWrapper');
+        var modal = document.getElementById('statusUpdateModal');
+        
+        wrapper.classList.remove('scale-100', 'opacity-100');
+        wrapper.classList.add('scale-95', 'opacity-0');
+        
+        setTimeout(function() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }, 150);
+    }
+
+    function confirmActionModal() {
+        if (!targetFormAction) return;
+
+        // Create a temporary form to POST the data
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = targetFormAction;
+        form.style.position = 'absolute';
+        form.style.visibility = 'hidden';
+
+        // Append note if provided
+        var noteVal = document.getElementById('modalNote').value.trim();
+        if (noteVal) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'note';
+            input.value = noteVal;
+            form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // ============================================================
+    // DOM READY — all other initialization
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- 1. Action Buttons (Process, Ship, Deliver) ---
+        // Reads values from data-* attributes set by Jinja in the template
+        document.querySelectorAll('.status-action-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openActionModal(
+                    this.dataset.action,
+                    this.dataset.orderId,
+                    this.dataset.customer,
+                    this.dataset.amount
+                );
             });
         });
+
+        // --- 2. Print Button ---
+        document.querySelectorAll('.print-invoice-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                window.print();
+            });
+        });
+
+        // --- 3. Cancel Button ---
+        document.getElementById('modalCancelBtn').addEventListener('click', closeActionModal);
+
+        // --- 4. Backdrop Click ---
+        document.getElementById('modalBackdrop').addEventListener('click', closeActionModal);
+
+        // --- 5. Confirm Button -> Submit Form ---
+        document.getElementById('modalConfirmBtn').addEventListener('click', confirmActionModal);
+
+        // --- 6. Escape Key to close ---
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var modal = document.getElementById('statusUpdateModal');
+                if (!modal.classList.contains('hidden')) {
+                    closeActionModal();
+                }
+            }
+        });
+
+
+        // ============================================================
+        // FILTERING & SEARCH ENGINE
+        // ============================================================
+
+        var searchInput = document.getElementById('searchInput');
+        var clearSearchBtn = document.getElementById('clearSearchBtn');
+        var statusFilter = document.getElementById('statusFilter');
+        var paymentFilter = document.getElementById('paymentFilter');
+        var dateFrom = document.getElementById('dateFrom');
+        var dateTo = document.getElementById('dateTo');
+        var applyFilterBtn = document.getElementById('applyFilterBtn');
+        var clearFilterBtn = document.getElementById('clearFilterBtn');
+        var clearAllFiltersBtn = document.getElementById('clearAllFiltersBtn');
+        var clearFiltersFromEmpty = document.getElementById('clearFiltersFromEmpty');
+        var activeFiltersBar = document.getElementById('activeFiltersBar');
+        var activeFilterPills = document.getElementById('activeFilterPills');
+        var ordersTableBody = document.getElementById('ordersTableBody');
+        var emptyStateNoOrders = document.getElementById('emptyStateNoOrders');
+        var emptyStateFiltered = document.getElementById('emptyStateFiltered');
+        var showingCount = document.getElementById('showingCount');
+        var totalCount = document.getElementById('totalCount');
+        var filteredTotalValue = document.getElementById('filteredTotalValue');
+        var filteredSummary = document.getElementById('filteredSummary');
+        var totalSummary = document.getElementById('totalSummary');
+        var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        var selectionActions = document.getElementById('selectionActions');
+        var selectedCountEl = document.getElementById('selectedCount');
+
+        var orderRows = document.querySelectorAll('.order-row');
+        var totalOrdersCount = orderRows.length;
+
+        var isFiltered = false;
+        var searchDebounceTimer = null;
+
+        // --- Real-time search with debounce ---
+        searchInput.addEventListener('input', function() {
+            clearSearchBtn.classList.toggle('hidden', !this.value.trim());
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(function() {
+                applyFilters();
+            }, 250);
+        });
+
+        // --- Live filter on dropdown change ---
+        statusFilter.addEventListener('change', applyFilters);
+        paymentFilter.addEventListener('change', applyFilters);
+        dateFrom.addEventListener('change', applyFilters);
+        dateTo.addEventListener('change', applyFilters);
+
+        // --- Apply button (explicit) ---
+        applyFilterBtn.addEventListener('click', applyFilters);
+
+        // --- Clear search X button ---
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            clearSearchBtn.classList.add('hidden');
+            searchInput.focus();
+            applyFilters();
+        });
+
+        // --- Clear buttons ---
+        clearFilterBtn.addEventListener('click', clearAllFilters);
+        clearAllFiltersBtn.addEventListener('click', clearAllFilters);
+        clearFiltersFromEmpty.addEventListener('click', clearAllFilters);
+
+        // --- Core Filter Logic ---
+        function applyFilters() {
+            var searchTerm = searchInput.value.trim().toLowerCase();
+            var statusVal = statusFilter.value;
+            var paymentVal = paymentFilter.value;
+            var fromVal = dateFrom.value;
+            var toVal = dateTo.value;
+
+            var visibleCount = 0;
+            var visibleRevenue = 0;
+            var statusCounts = { pending: 0, processing: 0, shipped: 0, delivered: 0, cancelled: 0 };
+
+            orderRows.forEach(function(row) {
+                var orderId = row.dataset.orderId;
+                var customerName = row.dataset.customerName;
+                var customerEmail = row.dataset.customerEmail;
+                var customerPhone = row.dataset.customerPhone;
+                var status = row.dataset.status;
+                var paymentStatus = row.dataset.paymentStatus;
+                var orderDate = row.dataset.date;
+                var amount = parseFloat(row.dataset.amount) || 0;
+
+                var matchesSearch = true;
+                var matchesStatus = true;
+                var matchesPayment = true;
+                var matchesDateFrom = true;
+                var matchesDateTo = true;
+
+                // Search: match against order ID, name, email, phone
+                if (searchTerm) {
+                    var searchFields = [orderId, customerName, customerEmail, customerPhone].join(' ');
+                    matchesSearch = searchFields.indexOf(searchTerm) !== -1;
+                }
+
+                // Status filter
+                if (statusVal) {
+                    matchesStatus = status === statusVal;
+                }
+
+                // Payment status filter
+                if (paymentVal) {
+                    matchesPayment = paymentStatus === paymentVal;
+                }
+
+                // Date from filter
+                if (fromVal) {
+                    matchesDateFrom = orderDate >= fromVal;
+                }
+
+                // Date to filter
+                if (toVal) {
+                    matchesDateTo = orderDate <= toVal;
+                }
+
+                var isVisible = matchesSearch && matchesStatus && matchesPayment && matchesDateFrom && matchesDateTo;
+                row.style.display = isVisible ? '' : 'none';
+
+                if (isVisible) {
+                    visibleCount++;
+                    if (status !== 'cancelled') {
+                        visibleRevenue += amount;
+                    }
+                    if (statusCounts.hasOwnProperty(status)) {
+                        statusCounts[status]++;
+                    }
+                }
+            });
+
+            // Update UI
+            isFiltered = !!(searchTerm || statusVal || paymentVal || fromVal || toVal);
+            updateMetrics(visibleCount, visibleRevenue, statusCounts);
+            updateFooter(visibleCount);
+            updateActiveFilterPills(searchTerm, statusVal, paymentVal, fromVal, toVal);
+            updateClearButtonVisibility();
+            handleEmptyStates(visibleCount);
+            updateSelectAllState();
+        }
+
+        // --- Update Metrics Cards ---
+        function updateMetrics(visibleCount, visibleRevenue, statusCounts) {
+            if (!isFiltered) {
+                document.querySelector('[data-metric-value="total"]').textContent = totalOrdersCount.toLocaleString();
+                var metricKeys = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+                metricKeys.forEach(function(key) {
+                    var el = document.querySelector('[data-metric-value="' + key + '"]');
+                    if (el && el.dataset.original) {
+                        el.textContent = el.dataset.original;
+                    }
+                });
+                var revEl = document.querySelector('[data-metric-value="revenue"]');
+                if (revEl && revEl.dataset.original) {
+                    revEl.textContent = 'KES ' + parseFloat(revEl.dataset.original).toLocaleString(undefined, {maximumFractionDigits: 0});
+                }
+                // Remove highlight from metric cards
+                document.querySelectorAll('[data-metric]').forEach(function(card) {
+                    card.classList.remove('ring-2', 'ring-primary/30', 'bg-primary/5');
+                });
+                return;
+            }
+
+            // Update with filtered values
+            document.querySelector('[data-metric-value="total"]').textContent = visibleCount.toLocaleString();
+            document.querySelector('[data-metric-value="pending"]').textContent = statusCounts.pending;
+            document.querySelector('[data-metric-value="processing"]').textContent = statusCounts.processing;
+            document.querySelector('[data-metric-value="shipped"]').textContent = statusCounts.shipped;
+            document.querySelector('[data-metric-value="delivered"]').textContent = statusCounts.delivered;
+            document.querySelector('[data-metric-value="cancelled"]').textContent = statusCounts.cancelled;
+            document.querySelector('[data-metric-value="revenue"]').textContent = 'KES ' + visibleRevenue.toLocaleString(undefined, {maximumFractionDigits: 0});
+
+            // Highlight active metric cards
+            document.querySelectorAll('[data-metric]').forEach(function(card) {
+                card.classList.remove('ring-2', 'ring-primary/30', 'bg-primary/5');
+            });
+            
+            var activeStatus = statusFilter.value;
+            if (activeStatus) {
+                var activeCard = document.querySelector('[data-filter-status="' + activeStatus + '"]');
+                if (activeCard) {
+                    activeCard.classList.add('ring-2', 'ring-primary/30', 'bg-primary/5');
+                }
+            }
+        }
+
+        // --- Store original metric values ---
+        function storeOriginalMetrics() {
+            document.querySelectorAll('[data-metric-value]').forEach(function(el) {
+                var text = el.textContent.replace(/[^0-9.-]/g, '');
+                el.dataset.original = text;
+            });
+        }
+        storeOriginalMetrics();
+
+        // --- Update Footer ---
+        function updateFooter(visibleCount) {
+            showingCount.textContent = visibleCount;
+            totalCount.textContent = totalOrdersCount;
+
+            if (isFiltered) {
+                var filteredRev = 0;
+                orderRows.forEach(function(row) {
+                    if (row.style.display !== 'none' && row.dataset.status !== 'cancelled') {
+                        filteredRev += parseFloat(row.dataset.amount) || 0;
+                    }
+                });
+                filteredTotalValue.textContent = 'KES ' + filteredRev.toLocaleString(undefined, {maximumFractionDigits: 0});
+                filteredSummary.classList.remove('hidden');
+                filteredSummary.classList.add('flex', 'items-center', 'gap-1');
+                totalSummary.classList.add('hidden');
+            } else {
+                filteredSummary.classList.add('hidden');
+                filteredSummary.classList.remove('flex');
+                totalSummary.classList.remove('hidden');
+            }
+        }
+
+        // --- Handle Empty States ---
+        function handleEmptyStates(visibleCount) {
+            if (totalOrdersCount === 0) {
+                emptyStateNoOrders.style.display = '';
+                emptyStateFiltered.classList.add('hidden');
+                return;
+            }
+
+            emptyStateNoOrders.style.display = 'none';
+
+            if (visibleCount === 0 && isFiltered) {
+                emptyStateFiltered.classList.remove('hidden');
+            } else {
+                emptyStateFiltered.classList.add('hidden');
+            }
+        }
+
+        // --- Active Filter Pills ---
+        function updateActiveFilterPills(searchTerm, statusVal, paymentVal, fromVal, toVal) {
+            activeFilterPills.innerHTML = '';
+            var hasActiveFilters = false;
+
+            if (searchTerm) {
+                hasActiveFilters = true;
+                var displaySearch = searchTerm.length > 20 ? searchTerm.substring(0, 20) + '...' : searchTerm;
+                activeFilterPills.appendChild(createPill('Search: "' + displaySearch + '"', function() {
+                    searchInput.value = '';
+                    clearSearchBtn.classList.add('hidden');
+                    applyFilters();
+                }));
+            }
+
+            if (statusVal) {
+                hasActiveFilters = true;
+                activeFilterPills.appendChild(createPill('Status: ' + statusVal.charAt(0).toUpperCase() + statusVal.slice(1), function() {
+                    statusFilter.value = '';
+                    applyFilters();
+                }));
+            }
+
+            if (paymentVal) {
+                hasActiveFilters = true;
+                activeFilterPills.appendChild(createPill('Payment: ' + paymentVal.charAt(0).toUpperCase() + paymentVal.slice(1), function() {
+                    paymentFilter.value = '';
+                    applyFilters();
+                }));
+            }
+
+            if (fromVal) {
+                hasActiveFilters = true;
+                activeFilterPills.appendChild(createPill('From: ' + formatDateDisplay(fromVal), function() {
+                    dateFrom.value = '';
+                    applyFilters();
+                }));
+            }
+
+            if (toVal) {
+                hasActiveFilters = true;
+                activeFilterPills.appendChild(createPill('To: ' + formatDateDisplay(toVal), function() {
+                    dateTo.value = '';
+                    applyFilters();
+                }));
+            }
+
+            if (hasActiveFilters) {
+                activeFiltersBar.classList.remove('hidden');
+                activeFiltersBar.classList.add('flex');
+            } else {
+                activeFiltersBar.classList.add('hidden');
+                activeFiltersBar.classList.remove('flex');
+            }
+        }
+
+        function createPill(text, onRemove) {
+            var pill = document.createElement('span');
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full border border-primary/20';
+            pill.innerHTML = text + ' <button class="hover:text-primary-dark transition-colors" title="Remove filter"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg></button>';
+            pill.querySelector('button').addEventListener('click', function(e) {
+                e.stopPropagation();
+                onRemove();
+            });
+            return pill;
+        }
+
+        function formatDateDisplay(dateStr) {
+            var d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // --- Clear Button Visibility ---
+        function updateClearButtonVisibility() {
+            if (isFiltered) {
+                clearFilterBtn.classList.remove('hidden');
+            } else {
+                clearFilterBtn.classList.add('hidden');
+            }
+        }
+
+        // --- Clear All Filters ---
+        function clearAllFilters() {
+            searchInput.value = '';
+            clearSearchBtn.classList.add('hidden');
+            statusFilter.value = '';
+            paymentFilter.value = '';
+            dateFrom.value = '';
+            dateTo.value = '';
+            applyFilters();
+            showToast('Filters cleared', 'info');
+        }
+
+        // --- Metric Card Click to Filter ---
+        document.querySelectorAll('[data-filter-status]').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var status = this.dataset.filterStatus;
+                if (statusFilter.value === status) {
+                    statusFilter.value = '';
+                } else {
+                    statusFilter.value = status;
+                }
+                applyFilters();
+                document.getElementById('ordersTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // --- Keyboard Shortcuts ---
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(document.activeElement.tagName) === -1) {
+                e.preventDefault();
+                searchInput.focus();
+            }
+            if (e.key === 'Escape') {
+                var modal = document.getElementById('statusUpdateModal');
+                if (!modal.classList.contains('hidden')) {
+                    closeActionModal();
+                    return;
+                }
+                if (isFiltered) {
+                    clearAllFilters();
+                    searchInput.blur();
+                }
+            }
+            if (e.key === 'Enter' && document.activeElement === searchInput) {
+                applyFilters();
+            }
+        });
+
+
+        // ============================================================
+        // COLUMN SORTING
+        // ============================================================
+
+        var currentSort = { column: null, direction: 'asc' };
+
+        document.querySelectorAll('[data-sort]').forEach(function(th) {
+            th.addEventListener('click', function() {
+                var column = this.dataset.sort;
+                
+                if (currentSort.column === column) {
+                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.column = column;
+                    currentSort.direction = 'asc';
+                }
+
+                // Update sort indicators
+                document.querySelectorAll('[data-sort]').forEach(function(header) {
+                    header.classList.remove('text-slate-800');
+                    header.querySelector('svg').style.opacity = '0.4';
+                    header.querySelector('svg').style.transform = '';
+                });
+                this.classList.add('text-slate-800');
+                this.querySelector('svg').style.opacity = '1';
+                this.querySelector('svg').style.transform = currentSort.direction === 'desc' ? 'rotate(180deg)' : '';
+
+                sortTable(column, currentSort.direction);
+            });
+        });
+
+        function sortTable(column, direction) {
+            var rows = Array.from(orderRows);
+            var multiplier = direction === 'asc' ? 1 : -1;
+
+            rows.sort(function(a, b) {
+                var valA, valB;
+
+                switch (column) {
+                    case 'order-id':
+                        valA = parseInt(a.dataset.orderId) || 0;
+                        valB = parseInt(b.dataset.orderId) || 0;
+                        return (valA - valB) * multiplier;
+                    case 'date':
+                        valA = a.dataset.dateIso || '';
+                        valB = b.dataset.dateIso || '';
+                        if (valA < valB) return -1 * multiplier;
+                        if (valA > valB) return 1 * multiplier;
+                        return 0;
+                    case 'amount':
+                        valA = parseFloat(a.dataset.amount) || 0;
+                        valB = parseFloat(b.dataset.amount) || 0;
+                        return (valA - valB) * multiplier;
+                    default:
+                        return 0;
+                }
+            });
+
+            // Re-append sorted rows
+            rows.forEach(function(row) {
+                ordersTableBody.appendChild(row);
+            });
+        }
+
+
+        // ============================================================
+        // SELECT ALL / BULK ACTIONS
+        // ============================================================
+
+        selectAllCheckbox.addEventListener('change', function() {
+            var checkboxes = document.querySelectorAll('.order-checkbox');
+            var isVisible = this.checked;
+            checkboxes.forEach(function(cb) {
+                var row = cb.closest('.order-row');
+                if (row && row.style.display !== 'none') {
+                    cb.checked = isVisible;
+                }
+            });
+            updateSelectionCount();
+        });
+
+        ordersTableBody.addEventListener('change', function(e) {
+            if (e.target.classList.contains('order-checkbox')) {
+                updateSelectionCount();
+                updateSelectAllState();
+            }
+        });
+
+        function updateSelectionCount() {
+            var checked = document.querySelectorAll('.order-checkbox:checked');
+            var count = checked.length;
+            selectedCountEl.textContent = count;
+            if (count > 0) {
+                selectionActions.classList.remove('hidden');
+                selectionActions.classList.add('flex');
+            } else {
+                selectionActions.classList.add('hidden');
+                selectionActions.classList.remove('flex');
+            }
+        }
+
+        function updateSelectAllState() {
+            var visibleCheckboxes = Array.from(document.querySelectorAll('.order-checkbox')).filter(function(cb) {
+                var row = cb.closest('.order-row');
+                return row && row.style.display !== 'none';
+            });
+            var allChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(function(cb) { return cb.checked; });
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = !allChecked && visibleCheckboxes.some(function(cb) { return cb.checked; });
+        }
+
+
+        // ============================================================
+        // EXPORT CSV (filtered data)
+        // ============================================================
+
+        document.getElementById('exportCsvBtn').addEventListener('click', function() {
+            var visibleRows = Array.from(orderRows).filter(function(row) { return row.style.display !== 'none'; });
+            
+            if (visibleRows.length === 0) {
+                showToast('No orders to export', 'warning');
+                return;
+            }
+
+            var headers = ['Order ID', 'Customer Name', 'Email', 'Phone', 'Date', 'Status', 'Payment Status', 'Payment Method', 'Amount'];
+            var csvRows = [headers.join(',')];
+
+            visibleRows.forEach(function(row) {
+                var nameEl = row.querySelector('td:nth-child(3) .font-medium');
+                var name = nameEl ? nameEl.textContent : '';
+                var emailEl = row.querySelector('td:nth-child(3) .text-xs');
+                var email = emailEl ? emailEl.textContent : '';
+                var dateEl = row.querySelector('td.hidden.md\\:table-cell');
+                var date = dateEl ? dateEl.textContent.trim() : '';
+                var statusBadge = row.querySelector('td:nth-child(5) span');
+                var status = statusBadge ? statusBadge.textContent.trim() : '';
+                var paymentBadge = row.querySelector('td.hidden.sm\\:table-cell span');
+                var paymentStatus = paymentBadge ? paymentBadge.textContent.trim() : '';
+                var amountEl = row.querySelector('td:nth-child(7) .font-bold');
+                var amountText = amountEl ? amountEl.textContent.replace(/[^0-9.-]/g, '') : '0';
+                var methodEl = row.querySelector('td:nth-child(7) .text-xs');
+                var paymentMethod = methodEl ? methodEl.textContent.trim() : '';
+
+                var csvRow = [
+                    'ORD-' + row.dataset.orderId,
+                    '"' + name + '"',
+                    '"' + email + '"',
+                    '"' + row.dataset.customerPhone + '"',
+                    '"' + date + '"',
+                    status,
+                    paymentStatus,
+                    paymentMethod,
+                    amountText
+                ];
+                csvRows.push(csvRow.join(','));
+            });
+
+            var csvContent = csvRows.join('\n');
+            var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = 'orders_export_' + new Date().toISOString().slice(0, 10) + '.csv';
+            link.click();
+            URL.revokeObjectURL(url);
+
+            showToast('Exported ' + visibleRows.length + ' orders to CSV', 'success');
+        });
+
+
+        // ============================================================
+        // TOAST NOTIFICATION
+        // ============================================================
+
+        function showToast(message, type) {
+            type = type || 'success';
+            var toast = document.getElementById('toast');
+            var toastIcon = document.getElementById('toastIcon');
+            var toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message;
+
+            var iconConfigs = {
+                success: { cls: 'text-green-400', path: 'M5 13l4 4L19 7' },
+                info: { cls: 'text-blue-400', path: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+                warning: { cls: 'text-amber-400', path: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z' },
+                error: { cls: 'text-red-400', path: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' }
+            };
+
+            var config = iconConfigs[type] || iconConfigs.success;
+            toastIcon.className = 'w-5 h-5 ' + config.cls + ' flex-shrink-0';
+            toastIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + config.path + '"/>';
+
+            toast.classList.remove('translate-y-4', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(function() {
+                toast.classList.add('translate-y-4', 'opacity-0', 'pointer-events-none');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+
+        // ============================================================
+        // SIDEBAR ACTIVE STATE LOGIC
+        // ============================================================
+
+        var dashLink = document.querySelector('.nav-link.active');
+        if (dashLink) dashLink.classList.remove('active');
+
+        var navButtons = document.querySelectorAll('.nav-group button');
+        navButtons.forEach(function(btn) {
+            var span = btn.querySelector('span');
+            if (span && span.textContent.trim() === 'Orders') {
+                btn.classList.add('active');
+                btn.classList.add('nav-link');
+            }
+        });
+
+        var ordersMenu = document.getElementById('orders-menu');
+        if (ordersMenu) {
+            ordersMenu.classList.add('open');
+        }
+        
+        var subLinks = ordersMenu ? ordersMenu.querySelectorAll('a') : [];
+        subLinks.forEach(function(link) {
+            if (link.textContent.trim() === 'All Orders') {
+                link.classList.remove('text-white/70');
+                link.classList.add('text-white', 'border-l-2', 'border-accent');
+            }
+        });
+
+    });
     </script>
 {% endblock %}

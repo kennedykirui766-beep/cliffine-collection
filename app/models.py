@@ -256,6 +256,7 @@ class OrderItem(db.Model):
     price = db.Column(db.Float, nullable=False)
 
     total_price = db.Column(db.Float)
+    shipped_at = db.Column(db.DateTime, nullable=True)
 
 
 # ===============================

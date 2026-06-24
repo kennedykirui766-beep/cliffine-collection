@@ -74,7 +74,7 @@
                             <!-- Location Dropdown -->
                             <div>
                                 <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Select Your Town / Location *</label>
-                                <select name="delivery_area_id" id="delivery-location" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-charcoal dark:text-white" onchange="updateOrderSummary()">
+                                <select name="delivery_area_id" id="delivery-location" required class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-charcoal dark:text-white">
                                     <option value="" data-fee="0">Select Location</option>
                                     
                                     {% if areas %}
@@ -100,7 +100,13 @@
                         </div>
                     </div>
 
-                    <!-- 5. Payment Method -->
+                    <!-- 7. Order Notes -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-4">Order Notes (Optional)</h2>
+                        <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="Special instructions for delivery..."></textarea>
+                    </div>
+
+                    <!-- 5. Payment Method (Moved to Bottom) -->
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-6 flex items-center gap-2">
                             <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
@@ -110,51 +116,20 @@
                         <div class="space-y-4">
                             <!-- Payment Option 1: STK Push -->
                             <div>
-                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" onclick="showPaymentDetails('stk')">
+                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" data-payment-type="stk">
                                     <input type="radio" name="payment_method" value="stk_push" checked class="w-5 h-5 text-accent">
                                     <span class="font-medium text-charcoal dark:text-white">M-Pesa STK Push (Lipa Na M-Pesa)</span>
                                 </label>
-                                <div id="stk-details" class="mt-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                                    <p class="font-bold text-green-800 dark:text-green-300 mb-3">Instant Payment</p>
-                                    
-                                    <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-sm text-green-700 dark:text-green-400 mb-1">Phone Number</label>
-                                            <input type="tel" name="stk_phone" id="stk-phone-input" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="0712345678">
-                                        </div>
-                                        
-                                        <button type="button" id="stk-push-btn" onclick="sendStkPush()" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                            <span id="stk-btn-text">Pay Now</span>
-                                        </button>
-
-                                        <div id="stk-status" class="text-sm text-center hidden"></div>
-                                    </div>
-                                </div>
                             </div>
 
                             <!-- Payment Option 2: Paybill -->
                             <div>
-                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" onclick="showPaymentDetails('manual')">
+                                <label class="flex items-center gap-3 p-4 bg-sand dark:bg-gray-700 rounded-lg cursor-pointer border-2 hover:border-accent transition-colors" data-payment-type="manual">
                                     <input type="radio" name="payment_method" value="manual" class="w-5 h-5 text-accent">
                                     <span class="font-medium text-charcoal dark:text-white">M-Pesa Paybill (Manual)</span>
                                 </label>
-                                <div id="manual-details" class="mt-2 p-4 bg-accent/10 border border-accent/30 rounded-lg hidden">
-                                    <p class="font-bold text-primary dark:text-white">Pay via M-Pesa Paybill</p>
-                                    <div class="mt-3 space-y-1">
-                                        <p class="text-sm text-muted dark:text-gray-300">Business Number: <span class="font-mono font-bold text-charcoal dark:text-white">714888</span></p>
-                                        <p class="text-sm text-muted dark:text-gray-300">Account Number: <span class="font-mono font-bold text-charcoal dark:text-white">196856</span></p>
-                                    </div>
-                                    <p class="text-xs text-red-500 mt-3 font-medium">Note: Order will be processed after payment confirmation.</p>
-                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- 7. Order Notes -->
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-                        <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-4">Order Notes (Optional)</h2>
-                        <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="Special instructions for delivery..."></textarea>
                     </div>
 
                     <!-- 9. Terms and Conditions -->
@@ -210,8 +185,16 @@
                             </div>
                         </div>
 
+                        <!-- Payment Status Badge -->
+                        <div id="payment-status-badge" class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-center">
+                            <p class="text-sm text-yellow-700 dark:text-yellow-400 font-medium">
+                                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Complete payment to place order
+                            </p>
+                        </div>
+
                         <!-- 8. Place Order Button -->
-                        <button type="submit" class="w-full mt-6 py-4 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-accent-dark transition-all transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                        <button type="submit" id="place-order-btn" disabled class="w-full mt-4 py-4 bg-gray-400 text-white font-bold rounded-xl shadow-lg cursor-not-allowed flex items-center justify-center gap-2 transition-all">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             Place Order
                         </button>
@@ -226,22 +209,240 @@
     </div>
 </section>
 
+<!-- STK Push Payment Modal -->
+<div id="stk-modal" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="stk-modal-backdrop"></div>
+    <!-- Modal Content -->
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md relative max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-display text-xl font-bold text-charcoal dark:text-white flex items-center gap-2">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        M-Pesa STK Push
+                    </h3>
+                    <button type="button" id="stk-modal-close" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <p class="text-sm text-muted dark:text-gray-400 mt-1">Enter your M-Pesa phone number to receive payment prompt</p>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4">
+                <!-- Amount Display -->
+                <div class="p-4 bg-sand dark:bg-gray-700 rounded-lg text-center">
+                    <p class="text-sm text-muted dark:text-gray-400">Amount to Pay</p>
+                    <p class="text-2xl font-bold text-charcoal dark:text-white mt-1" id="stk-modal-amount">KES 0</p>
+                </div>
+                
+                <!-- Phone Input -->
+                <div>
+                    <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Phone Number *</label>
+                    <input type="tel" id="stk-modal-phone" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="0712345678">
+                </div>
+                
+                <!-- Pay Button -->
+                <button type="button" id="stk-modal-pay-btn" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <span id="stk-modal-btn-text">Pay Now</span>
+                </button>
+
+                <!-- Status Message -->
+                <div id="stk-modal-status" class="text-sm text-center hidden"></div>
+                
+                <!-- Payment Success Indicator -->
+                <div id="stk-modal-success-box" class="hidden p-4 bg-green-100 dark:bg-green-900/40 border-2 border-green-500 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-8 h-8 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>
+                            <p class="font-bold text-green-800 dark:text-green-300">Payment Confirmed!</p>
+                            <p class="text-sm text-green-600 dark:text-green-400" id="stk-modal-receipt-text">Receipt: </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Failed Indicator -->
+                <div id="stk-modal-failed-box" class="hidden p-4 bg-red-100 dark:bg-red-900/40 border-2 border-red-500 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-8 h-8 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>
+                            <p class="font-bold text-red-800 dark:text-red-300">Payment Failed</p>
+                            <p class="text-sm text-red-600 dark:text-red-400" id="stk-modal-failed-text">Please try again.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-gray-100 dark:border-gray-700">
+                <button type="button" id="stk-modal-done-btn" class="hidden w-full py-3 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg transition-colors">
+                    Done - Continue to Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manual Payment Modal -->
+<div id="manual-modal" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="manual-modal-backdrop"></div>
+    <!-- Modal Content -->
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md relative max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-display text-xl font-bold text-charcoal dark:text-white flex items-center gap-2">
+                        <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        M-Pesa Paybill Payment
+                    </h3>
+                    <button type="button" id="manual-modal-close" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <p class="text-sm text-muted dark:text-gray-400 mt-1">Pay via M-Pesa then verify your payment</p>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4">
+                <!-- Amount Display -->
+                <div class="p-4 bg-sand dark:bg-gray-700 rounded-lg text-center">
+                    <p class="text-sm text-muted dark:text-gray-400">Amount to Pay</p>
+                    <p class="text-2xl font-bold text-charcoal dark:text-white mt-1" id="manual-modal-amount">KES 0</p>
+                </div>
+                
+                <!-- Paybill Instructions -->
+                <div class="p-4 bg-accent/10 border border-accent/30 rounded-lg">
+                    <p class="font-bold text-primary dark:text-white mb-2">Payment Instructions:</p>
+                    <div class="space-y-2">
+                        <p class="text-sm text-muted dark:text-gray-300">1. Go to M-Pesa on your phone</p>
+                        <p class="text-sm text-muted dark:text-gray-300">2. Select <strong class="text-charcoal dark:text-white">Lipa Na M-Pesa</strong></p>
+                        <p class="text-sm text-muted dark:text-gray-300">3. Select <strong class="text-charcoal dark:text-white">Paybill</strong></p>
+                        <p class="text-sm text-muted dark:text-gray-300">4. Enter Business Number: <span class="font-mono font-bold text-charcoal dark:text-white bg-white dark:bg-gray-700 px-2 py-0.5 rounded">714888</span></p>
+                        <p class="text-sm text-muted dark:text-gray-300">5. Enter Account Number: <span class="font-mono font-bold text-charcoal dark:text-white bg-white dark:bg-gray-700 px-2 py-0.5 rounded">196856</span></p>
+                        <p class="text-sm text-muted dark:text-gray-300">6. Enter Amount: <span class="font-bold text-charcoal dark:text-white" id="manual-modal-amount-instruction">KES 0</span></p>
+                        <p class="text-sm text-muted dark:text-gray-300">7. Enter your M-Pesa PIN and confirm</p>
+                    </div>
+                </div>
+                
+                <!-- M-Pesa Message/Code Input -->
+                <div>
+                    <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">M-Pesa Confirmation Message or Code *</label>
+                    <textarea id="manual-mpesa-message" rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition" placeholder="Paste the entire M-Pesa confirmation SMS message here, e.g.:&#10;KES1,000.00 sent to CLIFFINE COLLECTION on 25/12/2024 at 10:30 AM. M-Pesa Reference: QJK3LR5V4R..."></textarea>
+                    <p class="text-xs text-muted dark:text-gray-400 mt-1">You can paste the full SMS message or just the M-Pesa code (e.g., QJK3LR5V4R)</p>
+                </div>
+                
+                <!-- Verify Button -->
+                <button type="button" id="manual-verify-btn" class="w-full py-3 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span id="manual-verify-btn-text">Verify Payment</span>
+                </button>
+
+                <!-- Verification Status -->
+                <div id="manual-modal-status" class="text-sm text-center hidden"></div>
+                
+                <!-- Verification Success Indicator -->
+                <div id="manual-modal-success-box" class="hidden p-4 bg-green-100 dark:bg-green-900/40 border-2 border-green-500 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-8 h-8 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>
+                            <p class="font-bold text-green-800 dark:text-green-300">Payment Verified!</p>
+                            <p class="text-sm text-green-600 dark:text-green-400" id="manual-modal-success-text">Your payment has been confirmed.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Verification Failed Indicator -->
+                <div id="manual-modal-failed-box" class="hidden p-4 bg-red-100 dark:bg-red-900/40 border-2 border-red-500 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-8 h-8 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>
+                            <p class="font-bold text-red-800 dark:text-red-300">Verification Failed</p>
+                            <p class="text-sm text-red-600 dark:text-red-400" id="manual-modal-failed-text">Could not verify payment. Please check the message and try again.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-gray-100 dark:border-gray-700">
+                <button type="button" id="manual-modal-done-btn" class="hidden w-full py-3 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg transition-colors">
+                    Done - Continue to Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
     // Use Jinja to inject the subtotal safely into JS
     const subtotal = {{ subtotal if subtotal else 0 }};
+    
+    // Track payment state
+    let paymentConfirmed = false;
+    let checkoutRequestId = null;
+    let pollingInterval = null;
+    let pollingCount = 0;
+    const MAX_POLLING_ATTEMPTS = 30; // 30 attempts * 3 seconds = 90 seconds max
+
+    // DOM Elements
+    const deliveryLocationSelect = document.getElementById('delivery-location');
+    const deliveryNotesSection = document.getElementById('delivery-notes-section');
+    const deliveryFeeDisplay = document.getElementById('delivery-fee-display');
+    const totalAmountDisplay = document.getElementById('total-amount');
+    const phoneInput = document.getElementById('phone-input');
+    const checkoutForm = document.getElementById('checkout-form');
+    const placeOrderBtn = document.getElementById('place-order-btn');
+    const paymentStatusBadge = document.getElementById('payment-status-badge');
+    
+    // STK Modal Elements
+    const stkModal = document.getElementById('stk-modal');
+    const stkModalBackdrop = document.getElementById('stk-modal-backdrop');
+    const stkModalClose = document.getElementById('stk-modal-close');
+    const stkModalPhone = document.getElementById('stk-modal-phone');
+    const stkModalAmount = document.getElementById('stk-modal-amount');
+    const stkModalPayBtn = document.getElementById('stk-modal-pay-btn');
+    const stkModalBtnText = document.getElementById('stk-modal-btn-text');
+    const stkModalStatus = document.getElementById('stk-modal-status');
+    const stkModalSuccessBox = document.getElementById('stk-modal-success-box');
+    const stkModalReceiptText = document.getElementById('stk-modal-receipt-text');
+    const stkModalFailedBox = document.getElementById('stk-modal-failed-box');
+    const stkModalFailedText = document.getElementById('stk-modal-failed-text');
+    const stkModalDoneBtn = document.getElementById('stk-modal-done-btn');
+    
+    // Manual Modal Elements
+    const manualModal = document.getElementById('manual-modal');
+    const manualModalBackdrop = document.getElementById('manual-modal-backdrop');
+    const manualModalClose = document.getElementById('manual-modal-close');
+    const manualModalAmount = document.getElementById('manual-modal-amount');
+    const manualModalAmountInstruction = document.getElementById('manual-modal-amount-instruction');
+    const manualMpesaMessage = document.getElementById('manual-mpesa-message');
+    const manualVerifyBtn = document.getElementById('manual-verify-btn');
+    const manualVerifyBtnText = document.getElementById('manual-verify-btn-text');
+    const manualModalStatus = document.getElementById('manual-modal-status');
+    const manualModalSuccessBox = document.getElementById('manual-modal-success-box');
+    const manualModalSuccessText = document.getElementById('manual-modal-success-text');
+    const manualModalFailedBox = document.getElementById('manual-modal-failed-box');
+    const manualModalFailedText = document.getElementById('manual-modal-failed-text');
+    const manualModalDoneBtn = document.getElementById('manual-modal-done-btn');
+    
+    // Payment type labels
+    const paymentTypeLabels = document.querySelectorAll('[data-payment-type]');
 
     // Function to update order summary instantly on client side
     function updateOrderSummary() {
-        const select = document.getElementById('delivery-location');
-        const selectedOption = select.options[select.selectedIndex];
-        const deliveryNotesSection = document.getElementById('delivery-notes-section');
+        const selectedOption = deliveryLocationSelect.options[deliveryLocationSelect.selectedIndex];
         
         // Get fee from data attribute
         const fee = parseFloat(selectedOption.dataset.fee) || 0;
-        const locationId = select.value;
+        const locationId = deliveryLocationSelect.value;
 
         // Logic for showing 'free delivery' note (if fee is 0 and location is selected)
         if (locationId && fee === 0) {
@@ -254,68 +455,469 @@
         const total = subtotal + fee;
 
         // Update DOM
-        document.getElementById('delivery-fee-display').textContent = fee === 0 ? 'FREE' : `KES ${fee.toLocaleString()}`;
-        document.getElementById('total-amount').textContent = `KES ${total.toLocaleString()}`;
+        deliveryFeeDisplay.textContent = fee === 0 ? 'FREE' : `KES ${fee.toLocaleString()}`;
+        totalAmountDisplay.textContent = `KES ${total.toLocaleString()}`;
     }
 
-    // Function to toggle payment details visibility
-    function showPaymentDetails(type) {
-        document.getElementById('stk-details').classList.add('hidden');
-        document.getElementById('manual-details').classList.add('hidden');
+    // Function to get current total amount
+    function getCurrentTotal() {
+        const selectedOption = deliveryLocationSelect.options[deliveryLocationSelect.selectedIndex];
+        const fee = parseFloat(selectedOption.dataset.fee) || 0;
+        return subtotal + fee;
+    }
 
-        if(type === 'stk') {
-            document.getElementById('stk-details').classList.remove('hidden');
-            const stkPhone = document.getElementById('stk-phone-input');
-            const mainPhone = document.getElementById('phone-input').value;
-            if(stkPhone.value === "" && mainPhone) {
-                stkPhone.value = mainPhone;
-            }
-        } else if(type === 'manual') {
-            document.getElementById('manual-details').classList.remove('hidden');
+    // Function to format amount
+    function formatAmount(amount) {
+        return `KES ${amount.toLocaleString()}`;
+    }
+
+    // ==================== STK MODAL FUNCTIONS ====================
+    
+    function openStkModal() {
+        // Reset modal state
+        stkModalPhone.value = phoneInput.value || '';
+        stkModalAmount.textContent = formatAmount(getCurrentTotal());
+        stkModalStatus.classList.add('hidden');
+        stkModalSuccessBox.classList.add('hidden');
+        stkModalFailedBox.classList.add('hidden');
+        stkModalDoneBtn.classList.add('hidden');
+        resetStkModalButton();
+        stopPolling();
+        
+        // Show modal
+        stkModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Focus on phone input
+        setTimeout(() => stkModalPhone.focus(), 300);
+    }
+    
+    function closeStkModal() {
+        stkModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        stopPolling();
+    }
+    
+    function resetStkModalButton() {
+        stkModalPayBtn.disabled = false;
+        stkModalPayBtn.classList.remove('opacity-75', 'bg-green-800');
+        stkModalPayBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        stkModalBtnText.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg> Pay Now';
+    }
+    
+    function showStkModalStatus(message, type) {
+        stkModalStatus.classList.remove('hidden');
+        
+        if (type === 'loading') {
+            stkModalStatus.className = 'text-sm text-center text-blue-600 dark:text-blue-400 font-medium';
+            stkModalStatus.innerHTML = '<div class="flex items-center justify-center gap-2"><svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>' + message + '</div>';
+        } else if (type === 'success') {
+            stkModalStatus.className = 'text-sm text-center text-green-600 dark:text-green-400 font-medium';
+            stkModalStatus.innerHTML = '✓ ' + message;
+        } else if (type === 'error') {
+            stkModalStatus.className = 'text-sm text-center text-red-600 dark:text-red-400 font-medium';
+            stkModalStatus.innerHTML = '✗ ' + message;
         }
     }
-
-    // Function to simulate sending STK Push
+    
     function sendStkPush() {
-        const phoneInput = document.getElementById('stk-phone-input');
-        const btn = document.getElementById('stk-push-btn');
-        const btnText = document.getElementById('stk-btn-text');
-        const statusDiv = document.getElementById('stk-status');
-        const phone = phoneInput.value;
+        const phone = stkModalPhone.value;
+        const totalAmount = getCurrentTotal();
 
+        // Validate phone
         if(!phone || phone.length < 10) {
             alert("Please enter a valid phone number.");
             return;
         }
+        
+        // Validate amount
+        if(totalAmount <= 0) {
+            alert("Invalid order amount. Please select a delivery location.");
+            return;
+        }
 
-        btn.disabled = true;
-        btn.classList.add('opacity-75');
-        btnText.innerHTML = 'Processing...';
+        // Disable button and show loading
+        stkModalPayBtn.disabled = true;
+        stkModalPayBtn.classList.add('opacity-75');
+        stkModalBtnText.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...';
+        
+        // Hide any previous status boxes
+        stkModalSuccessBox.classList.add('hidden');
+        stkModalFailedBox.classList.add('hidden');
+        stkModalDoneBtn.classList.add('hidden');
+        
+        showStkModalStatus('Sending STK Push to ' + phone + '...', 'loading');
 
-        // Simulate API call
-        setTimeout(() => {
-            btn.disabled = false;
-            btn.classList.remove('opacity-75');
-            btnText.innerHTML = 'Pay Now';
-            
-            statusDiv.classList.remove('hidden');
-            statusDiv.className = "text-sm text-center text-green-600 font-medium mt-2";
-            statusDiv.innerHTML = "✓ Request sent to " + phone + ". Check your phone.";
-        }, 2000);
+        // Make API call
+        fetch('/checkout/initiate-stk', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            },
+            body: JSON.stringify({
+                phone: phone,
+                amount: totalAmount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                checkoutRequestId = data.checkout_request_id;
+                showStkModalStatus('STK Push sent! Check your phone and enter PIN...', 'loading');
+                
+                // Start polling for status
+                pollingCount = 0;
+                pollingInterval = setInterval(checkStkModalStatus, 3000);
+                
+                // Update button to show waiting state
+                stkModalBtnText.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Waiting...';
+                
+            } else {
+                // Failed to initiate
+                showStkModalStatus(data.message || 'Failed to initiate STK Push', 'error');
+                resetStkModalButton();
+            }
+        })
+        .catch(error => {
+            console.error('STK Push error:', error);
+            showStkModalStatus('Network error. Please check your connection and try again.', 'error');
+            resetStkModalButton();
+        });
+    }
+    
+    function checkStkModalStatus() {
+        pollingCount++;
+        
+        if (pollingCount > MAX_POLLING_ATTEMPTS) {
+            stopPolling();
+            showStkModalStatus('Payment request timed out. Please try again.', 'error');
+            resetStkModalButton();
+            return;
+        }
+        
+        fetch(`/checkout/check-stk-status?checkout_request_id=${checkoutRequestId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.status === 'success') {
+                        // Payment confirmed
+                        stopPolling();
+                        showStkModalStatus('Payment received successfully!', 'success');
+                        
+                        // Show success box
+                        stkModalSuccessBox.classList.remove('hidden');
+                        stkModalReceiptText.textContent = 'Receipt: ' + (data.receipt || 'Processing...');
+                        
+                        // Hide failed box if visible
+                        stkModalFailedBox.classList.add('hidden');
+                        
+                        // Disable pay button and show completed state
+                        stkModalPayBtn.disabled = true;
+                        stkModalPayBtn.classList.add('bg-green-800');
+                        stkModalPayBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                        stkModalBtnText.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Payment Complete';
+                        
+                        // Show done button
+                        stkModalDoneBtn.classList.remove('hidden');
+                        
+                        // Enable place order button
+                        enablePlaceOrderButton();
+                        
+                    } else if (data.status === 'failed') {
+                        // Payment failed
+                        stopPolling();
+                        showStkModalStatus(data.message || 'Payment failed', 'error');
+                        
+                        // Show failed box
+                        stkModalFailedBox.classList.remove('hidden');
+                        stkModalFailedText.textContent = data.message || 'Payment was cancelled or failed. Please try again.';
+                        
+                        // Hide success box if visible
+                        stkModalSuccessBox.classList.add('hidden');
+                        stkModalDoneBtn.classList.add('hidden');
+                        
+                        // Reset button
+                        resetStkModalButton();
+                        
+                    } else if (data.status === 'pending') {
+                        // Still waiting - update message with countdown
+                        const remainingAttempts = MAX_POLLING_ATTEMPTS - pollingCount;
+                        const remainingSeconds = remainingAttempts * 3;
+                        showStkModalStatus(`Waiting for confirmation... (${remainingSeconds}s)`, 'loading');
+                    }
+                } else {
+                    // API error - continue polling
+                    console.error('Status check error:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Status check fetch error:', error);
+            });
     }
 
+    // ==================== MANUAL MODAL FUNCTIONS ====================
+    
+    function openManualModal() {
+        // Reset modal state
+        const currentTotal = getCurrentTotal();
+        manualModalAmount.textContent = formatAmount(currentTotal);
+        manualModalAmountInstruction.textContent = formatAmount(currentTotal);
+        manualMpesaMessage.value = '';
+        manualModalStatus.classList.add('hidden');
+        manualModalSuccessBox.classList.add('hidden');
+        manualModalFailedBox.classList.add('hidden');
+        manualModalDoneBtn.classList.add('hidden');
+        resetManualVerifyButton();
+        
+        // Show modal
+        manualModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Focus on message input
+        setTimeout(() => manualMpesaMessage.focus(), 300);
+    }
+    
+    function closeManualModal() {
+        manualModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    
+    function resetManualVerifyButton() {
+        manualVerifyBtn.disabled = false;
+        manualVerifyBtn.classList.remove('opacity-75', 'bg-green-800');
+        manualVerifyBtn.classList.add('bg-accent', 'hover:bg-accent-dark');
+        manualVerifyBtnText.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Verify Payment';
+    }
+    
+    function showManualModalStatus(message, type) {
+        manualModalStatus.classList.remove('hidden');
+        
+        if (type === 'loading') {
+            manualModalStatus.className = 'text-sm text-center text-blue-600 dark:text-blue-400 font-medium';
+            manualModalStatus.innerHTML = '<div class="flex items-center justify-center gap-2"><svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>' + message + '</div>';
+        } else if (type === 'success') {
+            manualModalStatus.className = 'text-sm text-center text-green-600 dark:text-green-400 font-medium';
+            manualModalStatus.innerHTML = '✓ ' + message;
+        } else if (type === 'error') {
+            manualModalStatus.className = 'text-sm text-center text-red-600 dark:text-red-400 font-medium';
+            manualModalStatus.innerHTML = '✗ ' + message;
+        }
+    }
+    
+    function verifyManualPayment() {
+        const message = manualMpesaMessage.value.trim();
+        const totalAmount = getCurrentTotal();
+        
+        // Validate input
+        if (!message) {
+            alert('Please paste the M-Pesa confirmation message or code.');
+            return;
+        }
+        
+        if (message.length < 5) {
+            alert('Please provide a valid M-Pesa message or code.');
+            return;
+        }
+        
+        if (totalAmount <= 0) {
+            alert("Invalid order amount. Please select a delivery location.");
+            return;
+        }
+        
+        // Disable button and show loading
+        manualVerifyBtn.disabled = true;
+        manualVerifyBtn.classList.add('opacity-75');
+        manualVerifyBtnText.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Verifying...';
+        
+        // Hide any previous status boxes
+        manualModalSuccessBox.classList.add('hidden');
+        manualModalFailedBox.classList.add('hidden');
+        manualModalDoneBtn.classList.add('hidden');
+        
+        showManualModalStatus('Verifying your payment...', 'loading');
+        
+        // Make API call to verify
+        fetch('/checkout/verify-manual-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            },
+            body: JSON.stringify({
+                message: message,
+                amount: totalAmount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Payment verified
+                showManualModalStatus('Payment verified successfully!', 'success');
+                
+                // Show success box
+                manualModalSuccessBox.classList.remove('hidden');
+                manualModalSuccessText.textContent = data.message || 'Your payment has been confirmed. Reference: ' + (data.reference || '');
+                
+                // Hide failed box
+                manualModalFailedBox.classList.add('hidden');
+                
+                // Disable verify button
+                manualVerifyBtn.disabled = true;
+                manualVerifyBtn.classList.add('bg-green-800');
+                manualVerifyBtn.classList.remove('bg-accent', 'hover:bg-accent-dark');
+                manualVerifyBtnText.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Verified';
+                
+                // Show done button
+                manualModalDoneBtn.classList.remove('hidden');
+                
+                // Store reference in hidden field for form submission
+                let refField = document.getElementById('manual-payment-ref');
+                if (!refField) {
+                    refField = document.createElement('input');
+                    refField.type = 'hidden';
+                    refField.id = 'manual-payment-ref';
+                    refField.name = 'manual_payment_ref';
+                    checkoutForm.appendChild(refField);
+                }
+                refField.value = data.reference || message;
+                
+                // Enable place order button
+                enablePlaceOrderButton();
+                
+            } else {
+                // Verification failed
+                showManualModalStatus(data.message || 'Verification failed', 'error');
+                
+                // Show failed box
+                manualModalFailedBox.classList.remove('hidden');
+                manualModalFailedText.textContent = data.message || 'Could not verify payment. Please check the message and try again.';
+                
+                // Hide success box
+                manualModalSuccessBox.classList.add('hidden');
+                manualModalDoneBtn.classList.add('hidden');
+                
+                // Reset button
+                resetManualVerifyButton();
+            }
+        })
+        .catch(error => {
+            console.error('Verification error:', error);
+            showManualModalStatus('Network error. Please check your connection and try again.', 'error');
+            resetManualVerifyButton();
+        });
+    }
+
+    // ==================== SHARED FUNCTIONS ====================
+    
+    // Function to enable place order button after payment confirmation
+    function enablePlaceOrderButton() {
+        paymentConfirmed = true;
+        
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        placeOrderBtn.classList.add('bg-accent', 'hover:bg-accent-dark', 'shadow-lg', 'hover:scale-[1.01]', 'transform');
+        
+        paymentStatusBadge.className = 'mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-center';
+        paymentStatusBadge.innerHTML = '<p class="text-sm text-green-700 dark:text-green-400 font-medium"><svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Payment confirmed - Ready to place order</p>';
+    }
+
+    // Function to disable place order button
+    function disablePlaceOrderButton() {
+        paymentConfirmed = false;
+        
+        placeOrderBtn.disabled = true;
+        placeOrderBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+        placeOrderBtn.classList.remove('bg-accent', 'hover:bg-accent-dark', 'shadow-lg', 'hover:scale-[1.01]', 'transform');
+        
+        paymentStatusBadge.className = 'mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-center';
+        paymentStatusBadge.innerHTML = '<p class="text-sm text-yellow-700 dark:text-yellow-400 font-medium"><svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Complete payment to place order</p>';
+    }
+
+    // Function to stop polling
+    function stopPolling() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+        pollingCount = 0;
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    
+    // Delivery location change - replaces onclick="updateOrderSummary()"
+    deliveryLocationSelect.addEventListener('change', updateOrderSummary);
+    
+    // Payment type selection - opens modals instead of inline details
+    paymentTypeLabels.forEach(label => {
+        label.addEventListener('click', function() {
+            // Let the radio button get checked first
+            setTimeout(() => {
+                const paymentType = this.dataset.paymentType;
+                if (paymentType === 'stk') {
+                    openStkModal();
+                } else if (paymentType === 'manual') {
+                    openManualModal();
+                }
+            }, 50);
+        });
+    });
+    
+    // STK Modal event listeners - replaces onclick="sendStkPush()"
+    stkModalBackdrop.addEventListener('click', closeStkModal);
+    stkModalClose.addEventListener('click', closeStkModal);
+    stkModalPayBtn.addEventListener('click', sendStkPush);
+    stkModalDoneBtn.addEventListener('click', closeStkModal);
+    
+    // Manual Modal event listeners
+    manualModalBackdrop.addEventListener('click', closeManualModal);
+    manualModalClose.addEventListener('click', closeManualModal);
+    manualVerifyBtn.addEventListener('click', verifyManualPayment);
+    manualModalDoneBtn.addEventListener('click', closeManualModal);
+    
     // Sync phone numbers
-    document.getElementById('phone-input').addEventListener('change', function() {
-        const stkPhone = document.getElementById('stk-phone-input');
-        if(stkPhone.value === "") {
-            stkPhone.value = this.value;
+    phoneInput.addEventListener('change', function() {
+        if(stkModalPhone.value === "") {
+            stkModalPhone.value = this.value;
+        }
+    });
+    
+    // Prevent form submission if payment not confirmed
+    checkoutForm.addEventListener('submit', function(e) {
+        // Check if STK push is selected
+        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        
+        if (paymentMethod === 'stk_push' && !paymentConfirmed) {
+            e.preventDefault();
+            alert('Please complete the M-Pesa payment before placing your order.');
+            return false;
+        }
+        
+        // If payment confirmed, allow submission
+        return true;
+    });
+    
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (!stkModal.classList.contains('hidden')) {
+                closeStkModal();
+            }
+            if (!manualModal.classList.contains('hidden')) {
+                closeManualModal();
+            }
         }
     });
     
     // Initialize on Load
     document.addEventListener('DOMContentLoaded', function() {
-        showPaymentDetails('stk');
         updateOrderSummary(); // Run once to set initial state
+        disablePlaceOrderButton(); // Ensure button starts disabled
+    });
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        stopPolling();
     });
 </script>
 {% endblock %}

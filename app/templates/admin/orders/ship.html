@@ -1,0 +1,264 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Order Shipped - Cliffine Collection{% endblock %}
+
+{% block page_title %}Shipment Update{% endblock %}
+
+{% block head %}
+<style>
+    /* Hide default sidebar/content padding for a full-screen effect if needed, 
+       but keeping it inside the content block is safer for admin layouts */
+    .ship-animation-container {
+        animation: fadeUp 0.6s ease-out forwards;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Truck Animation */
+    .truck-scene {
+        position: relative;
+        width: 100%;
+        height: 120px;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    .truck-body {
+        position: absolute;
+        left: -150px;
+        animation: driveTruck 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s forwards;
+    }
+    @keyframes driveTruck {
+        0% { left: -150px; opacity: 0; }
+        10% { opacity: 1; }
+        100% { left: 100%; opacity: 0; }
+    }
+    .smoke-puff {
+        position: absolute;
+        bottom: 15px;
+        left: 10px;
+        width: 8px;
+        height: 8px;
+        background: #cbd5e1;
+        border-radius: 50%;
+        animation: smoke 2s ease-out infinite;
+        opacity: 0;
+    }
+    .smoke-puff:nth-child(2) { animation-delay: 0.4s; bottom: 25px; left: 5px; }
+    .smoke-puff:nth-child(3) { animation-delay: 0.8s; bottom: 10px; left: 15px; }
+    @keyframes smoke {
+        0% { transform: scale(0.5) translateX(0); opacity: 0.8; }
+        100% { transform: scale(2) translateX(-30px); opacity: 0; }
+    }
+
+    /* Success Checkmark */
+    .success-circle {
+        width: 80px;
+        height: 80px;
+        background: #4f46e5;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+        animation: popIn 0.5s 1.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+    @keyframes popIn {
+        0% { transform: scale(0); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Progress Timeline */
+    .timeline-step {
+        position: relative;
+        transition: all 0.5s ease;
+    }
+    .timeline-step.completed .step-circle {
+        background: #4f46e5;
+        border-color: #4f46e5;
+        color: white;
+    }
+    .timeline-step.active .step-circle {
+        background: white;
+        border-color: #4f46e5;
+        color: #4f46e5;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+    }
+    .timeline-line-fill {
+        height: 100%;
+        background: #4f46e5;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0%;
+        border-radius: 9999px;
+        animation: fillLine 0.5s 2.2s ease-out forwards;
+    }
+    @keyframes fillLine {
+        to { width: 66.66%; } /* Fills up to the 3rd step (Shipped) */
+    }
+
+    /* Redirecting text pulse */
+    .redirect-text {
+        animation: pulse-opacity 2s infinite;
+    }
+    @keyframes pulse-opacity {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="shipSuccessPage" class="flex items-center justify-center min-h-[70vh] p-6">
+    <div class="ship-animation-container w-full max-w-lg text-center">
+        
+        <!-- Main Card -->
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 md:p-12 relative overflow-hidden">
+            
+            <!-- Background Decoration -->
+            <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-50 rounded-full -translate-y-1/2 translate-x-1/2 z-0"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-indigo-50 rounded-full translate-y-1/2 -translate-x-1/2 z-0"></div>
+
+            <div class="relative z-10">
+                <!-- Truck Animation Scene -->
+                <div class="truck-scene">
+                    <div class="truck-body">
+                        <svg width="140" height="80" viewBox="0 0 140 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Package -->
+                            <rect x="5" y="15" width="50" height="45" rx="4" fill="#E0E7FF" stroke="#4F46E5" stroke-width="2"/>
+                            <path d="M20 35H40M30 25V50" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+                            <!-- Cab -->
+                            <path d="M55 25H95L105 40V55C105 58.313 102.313 61 99 61H85V50H55V25Z" fill="#4F46E5"/>
+                            <!-- Window -->
+                            <path d="M60 30H85V45H60V30Z" fill="#EEF2FF" stroke="#3730A3" stroke-width="1.5"/>
+                            <!-- Wheels -->
+                            <circle cx="35" cy="65" r="8" fill="#1E293B" stroke="#334155" stroke-width="2"/>
+                            <circle cx="35" cy="65" r="3" fill="#64748B"/>
+                            <circle cx="90" cy="65" r="8" fill="#1E293B" stroke="#334155" stroke-width="2"/>
+                            <circle cx="90" cy="65" r="3" fill="#64748B"/>
+                        </svg>
+                    </div>
+                    <!-- Smoke puffs -->
+                    <div class="smoke-puff"></div>
+                    <div class="smoke-puff"></div>
+                    <div class="smoke-puff"></div>
+                </div>
+
+                <!-- Success Icon -->
+                <div class="flex justify-center mb-6">
+                    <div class="success-circle">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                </div>
+
+                <!-- Text Content -->
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2">
+                    Order Shipped Successfully!
+                </h2>
+                <p class="text-slate-500 mb-8">
+                    {% if order %}
+                        Order <span class="font-bold text-indigo-600">#ORD-{{ order.id }}</span> is now on its way to the customer.
+                    {% else %}
+                        The order has been dispatched.
+                    {% endif %}
+                </p>
+
+                <!-- Progress Timeline -->
+                <div class="flex items-center justify-between mb-8 px-4 relative">
+                    <!-- Background Line -->
+                    <div class="absolute top-5 left-8 right-8 h-1 bg-slate-100 rounded-full"></div>
+                    <!-- Animated Fill Line -->
+                    <div class="timeline-line-fill absolute top-5 left-8 h-1 bg-indigo-600 rounded-full z-10"></div>
+                    
+                    <!-- Step 1: Pending -->
+                    <div class="timeline-step completed flex flex-col items-center z-20 relative">
+                        <div class="step-circle w-10 h-10 rounded-full border-2 border-indigo-600 bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="text-xs text-slate-500 mt-2 font-medium">Pending</span>
+                    </div>
+
+                    <!-- Step 2: Processing -->
+                    <div class="timeline-step completed flex flex-col items-center z-20 relative">
+                        <div class="step-circle w-10 h-10 rounded-full border-2 border-indigo-600 bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="text-xs text-slate-500 mt-2 font-medium">Processing</span>
+                    </div>
+
+                    <!-- Step 3: Shipped (Active) -->
+                    <div class="timeline-step active flex flex-col items-center z-20 relative">
+                        <div class="step-circle w-10 h-10 rounded-full border-2 border-indigo-600 bg-white text-indigo-600 flex items-center justify-center text-xs font-bold">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+                        </div>
+                        <span class="text-xs text-indigo-600 mt-2 font-bold">Shipped</span>
+                    </div>
+
+                    <!-- Step 4: Delivered (Pending) -->
+                    <div class="timeline-step flex flex-col items-center z-20 relative">
+                        <div class="step-circle w-10 h-10 rounded-full border-2 border-slate-200 bg-white text-slate-400 flex items-center justify-center text-xs font-bold">
+                            4
+                        </div>
+                        <span class="text-xs text-slate-400 mt-2 font-medium">Delivered</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="{{ url_for('admin.shipped_orders') }}" class="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-md flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        View Shipped Orders
+                    </a>
+                    <a href="{{ url_for('admin.all_orders') }}" class="px-6 py-2.5 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
+                        Back to All Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redirecting text -->
+        <p class="redirect-text text-sm text-slate-400 mt-6 flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Auto-redirecting to Shipped Orders...
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Auto-redirect to shipped orders page after 3.5 seconds to ensure user sees the animation
+        setTimeout(function() {
+            window.location.href = "{{ url_for('admin.shipped_orders') }}";
+        }, 3500);
+
+        // --- Sidebar Active State Logic ---
+        document.addEventListener('DOMContentLoaded', function() {
+            var activeLink = document.querySelector('.nav-link.active');
+            if (activeLink) activeLink.classList.remove('active');
+
+            var navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(function(item) {
+                var link = item.querySelector('.nav-link');
+                if (link) {
+                    var span = link.querySelector('span');
+                    if (span && span.textContent.trim() === 'Orders') {
+                        item.classList.add('expanded');
+                        link.classList.add('active');
+                        link.classList.add('nav-link');
+                    }
+                }
+            });
+
+            var subLinks = document.querySelectorAll('.nav-item .submenu a');
+            subLinks.forEach(function(link) {
+                if (link.textContent.trim() === 'Shipped') {
+                    link.classList.remove('text-white/60');
+                    link.classList.add('text-amber-400', 'border-amber-500', 'border-l-2');
+                }
+            });
+        });
+    </script>
+{% endblock %}
