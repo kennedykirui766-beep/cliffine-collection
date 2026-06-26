@@ -114,11 +114,25 @@
                                         </div>
                                         
                                         {% if is_in_stock %}
-                                            <a href="{{ url_for('main.add_to_cart', product_id=product.id) }}" 
-                                               class="w-full py-2.5 bg-accent text-white font-medium rounded-lg hover:bg-accent-dark transition-colors flex items-center justify-center gap-2 text-center">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                                Move to Cart
-                                            </a>
+                                            <!-- Move to Cart Button (JSON via JS) -->
+                                            <button type="button"
+                                                    class="move-to-cart-btn w-full py-2.5 bg-accent text-white font-medium rounded-lg hover:bg-accent-dark transition-colors flex items-center justify-center gap-2 text-center"
+                                                    data-product-id="{{ product.id }}"
+                                                    data-product-name="{{ product.name|e }}"
+                                                    title="Move to Cart">
+                                                <!-- Cart icon (default state) -->
+                                                <svg class="w-5 h-5 btn-icon-cart" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                                </svg>
+                                                <!-- Check icon (added state, hidden by default) -->
+                                                <svg class="w-5 h-5 btn-icon-check hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                                <span class="btn-label">Move to Cart</span>
+                                            </button>
                                         {% else %}
                                             <button disabled class="w-full py-2.5 bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 font-medium rounded-lg cursor-not-allowed flex items-center justify-center gap-2">
                                                 Notify Me
@@ -191,4 +205,136 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+<!-- Toast Notification Container -->
+<div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ── Attach listeners to all "Move to Cart" buttons ───
+    var moveButtons = document.querySelectorAll('.move-to-cart-btn');
+    moveButtons.forEach(function(btn) {
+        btn.addEventListener('click', handleMoveToCart);
+    });
+
+    // ── MOVE TO CART HANDLER ─────────────────────────────
+    function handleMoveToCart(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var btn = event.currentTarget;
+        var productId = parseInt(btn.getAttribute('data-product-id'), 10);
+        var productName = btn.getAttribute('data-product-name');
+
+        // Prevent double-clicks while request is in flight
+        if (btn.disabled) return;
+        btn.disabled = true;
+
+        // ── Call existing /add-to-cart (expects JSON) ────
+        fetch('/add-to-cart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ product_id: productId, quantity: 1 })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                // ── Update button to "Added" state ─────────
+                setMovedToCartUI(btn, true);
+                updateCartBadge(data.cart_count);
+                showToast(productName + ' moved to cart', 'success');
+            } else {
+                showToast(data.message || 'Could not add to cart', 'error');
+                btn.disabled = false;
+            }
+        })
+        .catch(function() {
+            showToast('Network error. Please try again.', 'error');
+            btn.disabled = false;
+        });
+    }
+
+    // ── UI Helper ─────────────────────────────────────────
+    function setMovedToCartUI(btn, isAdded) {
+        var cartIcon = btn.querySelector('.btn-icon-cart');
+        var checkIcon = btn.querySelector('.btn-icon-check');
+        var label = btn.querySelector('.btn-label');
+
+        if (isAdded) {
+            btn.classList.remove('bg-accent', 'hover:bg-accent-dark');
+            btn.classList.add('bg-green-500', 'hover:bg-green-600');
+            cartIcon.classList.add('hidden');
+            checkIcon.classList.remove('hidden');
+            if (label) label.textContent = 'Added to Cart';
+        } else {
+            btn.classList.add('bg-accent', 'hover:bg-accent-dark');
+            btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+            cartIcon.classList.remove('hidden');
+            checkIcon.classList.add('hidden');
+            if (label) label.textContent = 'Move to Cart';
+        }
+    }
+
+    function updateCartBadge(count) {
+        var badgeSelectors = [
+            '#cart-count',
+            '.cart-count',
+            '.cart-badge',
+            '[data-cart-count]',
+            'a[href="/cart"] .badge',
+            'a[href*="cart"] span'
+        ];
+        var badge = null;
+        for (var i = 0; i < badgeSelectors.length; i++) {
+            badge = document.querySelector(badgeSelectors[i]);
+            if (badge) break;
+        }
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+    }
+
+    // ── Toast Notification System ──────────────────────────
+    function showToast(message, type) {
+        var container = document.getElementById('toast-container');
+        var toast = document.createElement('div');
+
+        var bgClass = 'bg-gray-800 dark:bg-gray-700';
+        var iconSvg = '';
+        if (type === 'success') {
+            bgClass = 'bg-green-600';
+            iconSvg = '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+        } else if (type === 'info') {
+            bgClass = 'bg-gray-700 dark:bg-gray-600';
+            iconSvg = '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>';
+        } else if (type === 'error') {
+            bgClass = 'bg-red-600';
+            iconSvg = '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>';
+        }
+
+        toast.className = 'pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-2xl transform translate-x-full opacity-0 transition-all duration-300 ' + bgClass;
+        toast.innerHTML = iconSvg + '<span>' + message + '</span>';
+
+        container.appendChild(toast);
+
+        requestAnimationFrame(function() {
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            toast.classList.add('translate-x-0', 'opacity-100');
+        });
+
+        setTimeout(function() {
+            toast.classList.add('translate-x-full', 'opacity-0');
+            toast.classList.remove('translate-x-0', 'opacity-100');
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 2500);
+    }
+});
+</script>
 {% endblock %}

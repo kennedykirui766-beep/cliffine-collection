@@ -5,46 +5,131 @@
 {% block content %}
 <!-- 1. Hero Section -->
 <section class="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
-    <!-- Background Image Placeholder -->
-    <div class="absolute inset-0 z-0">
     <!-- Background Image -->
-    <img src="static/images/hero_section_placeholder.jpg"
-         alt="Ecommerce Background"
-         class="w-full h-full object-cover object-center scale-105">
-
-    <!-- Dark + Red overlay (matches image theme) -->
-    <div class="absolute inset-0 
-                bg-gradient-to-r 
-                from-black/80 
-                via-black/70 
-                to-black/60">
+    <div class="absolute inset-0 z-0">
+        <img src="static/images/hero_section_placeholder.jpg"
+             alt="Cliffine Collection Store"
+             class="w-full h-full object-cover object-center scale-105">
+        <!-- Dark overlay -->
+        <div class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/50"></div>
+        <!-- Subtle red glow -->
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_50%,rgba(255,0,0,0.2),transparent_60%)]"></div>
+        <!-- Bottom fade for seamless transition -->
+        <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a0a0a] to-transparent"></div>
     </div>
 
-    <!-- Optional subtle red glow -->
-    <div class="absolute inset-0 
-                bg-[radial-gradient(circle_at_center,rgba(255,0,0,0.25),transparent_70%)]">
-    </div>
-</div>
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
+        <div class="grid lg:grid-cols-2 gap-10 xl:gap-16 items-center">
 
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <span class="inline-block px-4 py-1.5 bg-primary/10 dark:bg-accent/20 text-primary dark:text-accent rounded-full text-sm font-semibold mb-6 tracking-wide uppercase">
-            Quality Living, Affordable Prices
-        </span>
-        <h1 class="font-display text-4xl sm:text-5xl lg:text-7xl font-bold text-primary dark:text-white leading-tight mb-6">
-            Welcome to <br>
-            <span class="text-accent">Cliffine Collection</span>
-        </h1>
-        <p class="max-w-2xl mx-auto text-lg sm:text-xl text-muted dark:text-gray-300 mb-10">
-            Your trusted destination for Quality Household Items, Electronics, Men's Shoes, Ladies Handbags, and more. Delivery countrywide.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/products" class="px-8 py-4 bg-accent text-white font-bold rounded-full shadow-lg hover:bg-accent-dark transform hover:scale-105 transition-all duration-300">
-                Shop Now
-            </a>
-            <a href="#chama-section" class="px-8 py-4 bg-primary text-white font-bold rounded-full shadow-lg hover:bg-primary-dark transform hover:scale-105 transition-all duration-300">
-                Join a Chama
-            </a>
+            <!-- Left: Text Content -->
+            <div class="text-center lg:text-left order-2 lg:order-1">
+                <!-- Tag -->
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-accent/15 border border-accent/30 text-accent rounded-full text-sm font-semibold mb-6 tracking-wide uppercase">
+                    <span class="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+                    About Cliffine Collection
+                </span>
+
+                <!-- Heading -->
+                <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] mb-6">
+                    A Trusted Shop
+                    <span class="block text-accent mt-1">You Can Rely On</span>
+                </h1>
+
+                <!-- Description -->
+                <p class="max-w-xl mx-auto lg:mx-0 text-base sm:text-lg text-gray-300 leading-relaxed mb-8">
+                    Offering quality household items, electronics, shoes, and handbags at affordable prices with flexible payment options. Delivery countrywide.
+                </p>
+
+                <!-- Trust Indicators -->
+                <div class="flex flex-wrap items-center justify-center lg:justify-start gap-6 mb-10 text-sm text-gray-400">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        Quality Products
+                    </span>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        Affordable Prices
+                    </span>
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        Flexible Payments
+                    </span>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    <a href="/products"
+                       class="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-accent text-white font-bold rounded-full shadow-lg shadow-accent/25 hover:bg-accent-dark hover:shadow-accent/40 transform hover:scale-105 transition-all duration-300">
+                        Shop Now
+                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                    <a href="#chama-section"
+                       class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold rounded-full shadow-lg hover:bg-white/20 transform hover:scale-105 transition-all duration-300">
+                        Join a Chama
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right: Product Showcase Grid -->
+            <div class="order-1 lg:order-2">
+                <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                    <!-- Handbags (top-left) — larger -->
+                    <div class="col-span-2 sm:col-span-1 row-span-2 group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-[3/4]">
+                        <img src="https://picsum.photos/seed/cliffine-bags/400/530.jpg"
+                             alt="Ladies Handbags"
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-4">
+                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Bags</span>
+                            <p class="text-white font-bold text-lg">Ladies Handbags</p>
+                        </div>
+                    </div>
+
+                    <!-- Shoes (top-right) -->
+                    <div class="group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-square">
+                        <img src="https://picsum.photos/seed/cliffine-shoes/300/300.jpg"
+                             alt="Men's Shoes"
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-3">
+                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Shoes</span>
+                            <p class="text-white font-bold text-sm">Men's Shoes</p>
+                        </div>
+                    </div>
+
+                    <!-- Electronics (bottom-right) -->
+                    <div class="group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-square">
+                        <img src="https://picsum.photos/seed/cliffine-electronics/300/300.jpg"
+                             alt="Electronics"
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-3">
+                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Electronics</span>
+                            <p class="text-white font-bold text-sm">Home Appliances</p>
+                        </div>
+                    </div>
+
+                    <!-- Household (bottom-wide, hidden on small) -->
+                    <div class="col-span-2 hidden sm:block group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-[2.5/1]">
+                        <img src="https://picsum.photos/seed/cliffine-household/600/240.jpg"
+                             alt="Household Items"
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-4">
+                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Household</span>
+                            <p class="text-white font-bold text-lg">Quality Household Items</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 animate-bounce">
+        <span class="text-xs text-gray-500 uppercase tracking-widest">Scroll</span>
+        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
     </div>
 </section>
 
@@ -386,7 +471,8 @@
                     <p class="text-muted dark:text-gray-300">Nairobi pickup available. Delivery fee applies based on location.</p>
                 </div>
             </div>
-            <a href="/delivery" class="px-6 py-2 border border-primary dark:border-accent text-primary dark:text-accent rounded-full font-semibold hover:bg-primary hover:text-white transition-colors">
+            <a href="{{ url_for('main.delivery_areas') }}"
+            class="px-6 py-2 border border-primary dark:border-accent text-primary dark:text-accent rounded-full font-semibold hover:bg-primary hover:text-white transition-colors">
                 Check Rates
             </a>
         </div>
@@ -504,10 +590,10 @@
         </div>
         
         <div class="flex justify-center gap-4">
-             <a href="#" class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow hover:text-accent transition-colors text-primary dark:text-white">
+             <a href="https://instagram.com/cliffine_collection" class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow hover:text-accent transition-colors text-primary dark:text-white">
                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
              </a>
-             <a href="#" class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow hover:text-accent transition-colors text-primary dark:text-white">
+             <a href="https://facebook.com/cliffinecollection" class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow hover:text-accent transition-colors text-primary dark:text-white">
                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
              </a>
         </div>
@@ -531,36 +617,55 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- Server-provided initial state passed to JavaScript -->
+<script id="server-cart-data" type="application/json">
+{
+    "cart_product_ids": {{ cart_product_ids | tojson }},
+    "wishlist_product_ids": {{ wishlist_product_ids | tojson }}
+}
+</script>
+
 <!-- Toast Notification Container -->
 <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ── State ──────────────────────────────────────────────
-    var cart = JSON.parse(sessionStorage.getItem('cliffine_cart') || '[]');
-    var wishlist = JSON.parse(sessionStorage.getItem('cliffine_wishlist') || '[]');
+    // ── Read initial state from server-rendered JSON ─────
+    var serverDataEl = document.getElementById('server-cart-data');
+    var serverCartIds = [];
+    var serverWishlistIds = [];
 
-    // ── Pre-fill button states from saved state ───────────
-    wishlist.forEach(function(id) {
+    if (serverDataEl) {
+        try {
+            var parsed = JSON.parse(serverDataEl.textContent);
+            serverCartIds = parsed.cart_product_ids || [];
+            serverWishlistIds = parsed.wishlist_product_ids || [];
+        } catch (e) {
+            console.warn('Could not parse server cart data', e);
+        }
+    }
+
+    // ── Pre-fill button states from server data ───────────
+    serverWishlistIds.forEach(function(id) {
         var btn = document.querySelector('.wishlist-btn[data-product-id="' + id + '"]');
         if (btn) setWishlistedUI(btn, true);
     });
-    cart.forEach(function(item) {
-        var btn = document.querySelector('.cart-btn[data-product-id="' + item.id + '"]');
+    serverCartIds.forEach(function(id) {
+        var btn = document.querySelector('.cart-btn[data-product-id="' + id + '"]');
         if (btn) setCartedUI(btn, true);
     });
-    updateCartBadge();
+    updateCartBadge(serverCartIds.length);
 
-    // ── Attach event listeners to all cart buttons ────────
-    var cartButtons = document.querySelectorAll('.cart-btn');
-    cartButtons.forEach(function(btn) {
+    // ── Local cache (kept in sync with server responses) ─
+    var localCartIds = serverCartIds.slice();
+    var localWishlistIds = serverWishlistIds.slice();
+
+    // ── Attach event listeners ────────────────────────────
+    document.querySelectorAll('.cart-btn').forEach(function(btn) {
         btn.addEventListener('click', handleCartClick);
     });
-
-    // ── Attach event listeners to all wishlist buttons ─────
-    var wishlistButtons = document.querySelectorAll('.wishlist-btn');
-    wishlistButtons.forEach(function(btn) {
+    document.querySelectorAll('.wishlist-btn').forEach(function(btn) {
         btn.addEventListener('click', handleWishlistClick);
     });
 
@@ -570,33 +675,61 @@ document.addEventListener('DOMContentLoaded', function() {
         event.stopPropagation();
 
         var btn = event.currentTarget;
-        var productId = btn.getAttribute('data-product-id');
+        var productId = parseInt(btn.getAttribute('data-product-id'), 10);
         var productName = btn.getAttribute('data-product-name');
-        var productPrice = parseFloat(btn.getAttribute('data-product-price'));
         var card = btn.closest('.product-card');
 
-        // Check if already in cart — if so, remove it (toggle behaviour)
-        var existingIndex = -1;
-        for (var i = 0; i < cart.length; i++) {
-            if (cart[i].id == productId) {
-                existingIndex = i;
-                break;
-            }
-        }
+        var isInCart = localCartIds.indexOf(productId) > -1;
 
-        if (existingIndex > -1) {
-            cart.splice(existingIndex, 1);
-            setCartedUI(btn, false);
-            showToast(productName + ' removed from cart', 'info');
+        if (isInCart) {
+            // ── Remove: call /api/cart/remove-item ───────
+            fetch('/api/cart/remove-item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success !== undefined) {
+                    var idx = localCartIds.indexOf(productId);
+                    if (idx > -1) localCartIds.splice(idx, 1);
+                    setCartedUI(btn, false);
+                    updateCartBadge(data.cart_count);
+                    showToast(productName + ' removed from cart', 'info');
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', 'error');
+            });
         } else {
-            cart.push({ id: productId, name: productName, price: productPrice, qty: 1 });
-            setCartedUI(btn, true);
-            flashAddedIndicator(card);
-            showToast(productName + ' added to cart', 'success');
+            // ── Add: call existing /add-to-cart ──────────
+            fetch('/add-to-cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ product_id: productId, quantity: 1 })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    localCartIds.push(productId);
+                    setCartedUI(btn, true);
+                    flashAddedIndicator(card);
+                    updateCartBadge(data.cart_count);
+                    showToast(productName + ' added to cart', 'success');
+                } else {
+                    showToast(data.message || 'Could not add to cart', 'error');
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', 'error');
+            });
         }
-
-        sessionStorage.setItem('cliffine_cart', JSON.stringify(cart));
-        updateCartBadge();
     }
 
     // ── WISHLIST CLICK HANDLER ────────────────────────────
@@ -605,31 +738,56 @@ document.addEventListener('DOMContentLoaded', function() {
         event.stopPropagation();
 
         var btn = event.currentTarget;
-        var productId = btn.getAttribute('data-product-id');
+        var productId = parseInt(btn.getAttribute('data-product-id'), 10);
         var productName = btn.getAttribute('data-product-name');
 
-        var existingIndex = -1;
-        for (var i = 0; i < wishlist.length; i++) {
-            if (wishlist[i] === productId) {
-                existingIndex = i;
-                break;
-            }
-        }
+        var isInWishlist = localWishlistIds.indexOf(productId) > -1;
 
-        if (existingIndex > -1) {
-            wishlist.splice(existingIndex, 1);
-            setWishlistedUI(btn, false);
-            showToast(productName + ' removed from wishlist', 'info');
+        if (isInWishlist) {
+            // ── Remove: call /api/wishlist/remove-by-product ─
+            fetch('/api/wishlist/remove-by-product/' + productId, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var idx = localWishlistIds.indexOf(productId);
+                    if (idx > -1) localWishlistIds.splice(idx, 1);
+                    setWishlistedUI(btn, false);
+                    showToast(productName + ' removed from wishlist', 'info');
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', 'error');
+            });
         } else {
-            wishlist.push(productId);
-            setWishlistedUI(btn, true);
-            // Small pop animation
-            btn.style.transform = 'scale(1.3)';
-            setTimeout(function() { btn.style.transform = 'scale(1)'; }, 200);
-            showToast(productName + ' added to wishlist', 'success');
+            // ── Add: call existing /wishlist/add/<id> ────
+            fetch('/wishlist/add/' + productId, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.status === 'success') {
+                    localWishlistIds.push(productId);
+                    setWishlistedUI(btn, true);
+                    btn.style.transform = 'scale(1.3)';
+                    setTimeout(function() { btn.style.transform = 'scale(1)'; }, 200);
+                    showToast(productName + ' added to wishlist', 'success');
+                } else if (data.status === 'exists') {
+                    // Already in wishlist — sync UI anyway
+                    if (localWishlistIds.indexOf(productId) === -1) {
+                        localWishlistIds.push(productId);
+                    }
+                    setWishlistedUI(btn, true);
+                    showToast(data.message || 'Already in wishlist', 'info');
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', 'error');
+            });
         }
-
-        sessionStorage.setItem('cliffine_wishlist', JSON.stringify(wishlist));
     }
 
     // ── UI Helpers ─────────────────────────────────────────
@@ -678,8 +836,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1200);
     }
 
-    function updateCartBadge() {
-        // Try to find a cart badge in the navbar — common patterns:
+    function updateCartBadge(count) {
         var badgeSelectors = [
             '#cart-count',
             '.cart-count',
@@ -694,7 +851,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (badge) break;
         }
         if (badge) {
-            var count = cart.length;
             badge.textContent = count;
             badge.style.display = count > 0 ? 'flex' : 'none';
         }
@@ -705,7 +861,6 @@ document.addEventListener('DOMContentLoaded', function() {
         var container = document.getElementById('toast-container');
         var toast = document.createElement('div');
 
-        // Color scheme by type
         var bgClass = 'bg-gray-800 dark:bg-gray-700';
         var iconSvg = '';
         if (type === 'success') {
@@ -724,29 +879,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         container.appendChild(toast);
 
-        // Animate in
         requestAnimationFrame(function() {
             toast.classList.remove('translate-x-full', 'opacity-0');
             toast.classList.add('translate-x-0', 'opacity-100');
         });
 
-        // Auto remove after 2.5s
         setTimeout(function() {
             toast.classList.add('translate-x-full', 'opacity-0');
             toast.classList.remove('translate-x-0', 'opacity-100');
             setTimeout(function() { toast.remove(); }, 300);
         }, 2500);
     }
-
-    // ── Optional: Send cart/wishlist to backend on page unload ─
-    // Uncomment below if you have backend sync endpoints
-    /*
-    window.addEventListener('beforeunload', function() {
-        if (cart.length > 0) {
-            navigator.sendBeacon('/api/cart/sync', JSON.stringify({ cart: cart }));
-        }
-    });
-    */
 });
 </script>
 {% endblock %}

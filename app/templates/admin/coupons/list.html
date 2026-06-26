@@ -1,0 +1,480 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}All Coupons{% endblock %}
+{% block page_title %}All Coupons{% endblock %}
+
+{% block head %}
+<style>
+    .coupon-row { transition: background-color 0.15s ease; }
+    .coupon-row:hover { background-color: #f8fafc; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .discount-badge {
+        font-family: 'Space Grotesk', monospace;
+        letter-spacing: 0.03em;
+    }
+    .filter-chip {
+        transition: all 0.15s ease;
+        cursor: pointer;
+        user-select: none;
+    }
+    .filter-chip:hover { background-color: #f1f5f9; }
+    .filter-chip.active {
+        background-color: #5423E7;
+        color: white;
+        border-color: #5423E7;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    .toast-enter { animation: toastIn 0.35s ease-out; }
+    .toast-exit { animation: toastOut 0.3s ease-in forwards; }
+    @keyframes toastIn {
+        from { opacity: 0; transform: translateX(40px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes toastOut {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(40px); }
+    }
+    /* Modal backdrop */
+    .modal-backdrop {
+        background: rgba(15, 18, 26, 0.6);
+        backdrop-filter: blur(4px);
+        transition: opacity 0.25s ease;
+    }
+    .modal-content {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header Row -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h2 class="text-lg font-bold text-slate-800">Coupon Management</h2>
+            <p class="text-sm text-slate-500 mt-0.5" id="statsLine">Loading stats...</p>
+        </div>
+        <a href="{{ url_for('admin.coupon_generate') }}" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Generate Coupon
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl border border-slate-200 p-4 stat-card">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-slate-800" id="statTotal">-</p>
+                    <p class="text-xs text-slate-500">Total Coupons</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 stat-card">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-slate-800" id="statActive">-</p>
+                    <p class="text-xs text-slate-500">Active</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 stat-card">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-slate-800" id="statRedeemed">-</p>
+                    <p class="text-xs text-slate-500">Total Redemptions</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 stat-card">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-slate-800" id="statExpired">-</p>
+                    <p class="text-xs text-slate-500">Expired (Active)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 mb-4">
+        <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+            <!-- Search -->
+            <div class="relative flex-1 min-w-0">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="text" id="searchInput" value="{{ search }}" placeholder="Search by code, label, or description..." class="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500 transition-all">
+            </div>
+
+            <!-- Category Filter -->
+            <select id="categoryFilter" class="text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500 bg-white min-w-[150px]">
+                <option value="">All Categories</option>
+                {% for cat_key, cat_data in coupon_events.items() %}
+                <option value="{{ cat_key }}" {% if category == cat_key %}selected{% endif %}>{{ cat_data.label }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Discount Type -->
+            <select id="discountTypeFilter" class="text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500 bg-white min-w-[130px]">
+                <option value="">All Types</option>
+                <option value="percentage" {% if discount_type == 'percentage' %}selected{% endif %}>Percentage</option>
+                <option value="fixed" {% if discount_type == 'fixed' %}selected{% endif %}>Fixed Amount</option>
+                <option value="free_shipping" {% if discount_type == 'free_shipping' %}selected{% endif %}>Free Shipping</option>
+            </select>
+
+            <!-- Status Chips -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="filter-chip text-xs font-medium px-3 py-1.5 rounded-full border border-slate-200 {% if status == '' %}active{% endif %}" data-status="">All</span>
+                <span class="filter-chip text-xs font-medium px-3 py-1.5 rounded-full border border-slate-200 {% if status == 'active' %}active{% endif %}" data-status="active">Active</span>
+                <span class="filter-chip text-xs font-medium px-3 py-1.5 rounded-full border border-slate-200 {% if status == 'inactive' %}active{% endif %}" data-status="inactive">Inactive</span>
+                <span class="filter-chip text-xs font-medium px-3 py-1.5 rounded-full border border-slate-200 {% if status == 'expired' %}active{% endif %}" data-status="expired">Expired</span>
+                <span class="filter-chip text-xs font-medium px-3 py-1.5 rounded-full border border-slate-200 {% if status == 'exhausted' %}active{% endif %}" data-status="exhausted">Exhausted</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-200 bg-slate-50/80">
+                        <th class="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Code</th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Event</th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Discount</th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Usage</th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Validity</th>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Status</th>
+                        <th class="text-right py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="couponTableBody" class="divide-y divide-slate-100">
+                    {% if coupons %}
+                        {% for coupon in coupons %}
+                        <tr class="coupon-row" data-id="{{ coupon.id }}">
+                            <td class="py-3 px-4">
+                                <button onclick="showDetail({{ coupon.id }})" class="discount-badge font-bold text-slate-800 hover:text-primary transition-colors text-sm">{{ coupon.code }}</button>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex items-center gap-2">
+                                    {% set cat_color = coupon_events.get(coupon.event_category, {}).get('color', 'blue') %}
+                                    {% set colors = color_map.get(cat_color, color_map.blue) %}
+                                    <span class="w-2 h-2 rounded-full {{ colors.dot }} flex-shrink-0"></span>
+                                    <div>
+                                        <p class="text-slate-800 font-medium text-sm leading-tight">{{ coupon.event_label }}</p>
+                                        <p class="text-slate-400 text-xs">{{ coupon.event_category }} / {{ coupon.event_type }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                {% if coupon.discount_type == 'percentage' %}
+                                <span class="discount-badge inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-bold">{{ coupon.discount_value }}%</span>
+                                {% elif coupon.discount_type == 'fixed' %}
+                                <span class="discount-badge inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg text-xs font-bold">KSh {{ coupon.discount_value|int }}</span>
+                                {% else %}
+                                <span class="discount-badge inline-flex items-center gap-1 bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-bold">Free Ship</span>
+                                {% endif %}
+                                {% if coupon.min_order_amount > 0 %}
+                                <p class="text-[11px] text-slate-400 mt-0.5">Min KSh {{ coupon.min_order_amount|int }}</p>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        {% set usage_pct = (coupon.used_count / coupon.total_uses * 100) if coupon.total_uses > 0 else 0 %}
+                                        <div class="h-full rounded-full transition-all {% if usage_pct > 90 %}bg-red-500{% elif usage_pct > 60 %}bg-amber-500{% else %}bg-emerald-500{% endif %}" style="width: {{ usage_pct }}%"></div>
+                                    </div>
+                                    <span class="text-xs text-slate-600 font-medium whitespace-nowrap">{{ coupon.used_count }}/{{ coupon.total_uses }}</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400">{{ coupon.uses_per_customer }}/customer</p>
+                            </td>
+                            <td class="py-3 px-4">
+                                <p class="text-xs text-slate-600">{{ coupon.valid_from.strftime('%b %d, %Y') }}</p>
+                                {% if coupon.valid_until %}
+                                <p class="text-xs text-slate-400">{{ coupon.valid_until.strftime('%b %d, %Y') }}</p>
+                                {% else %}
+                                <p class="text-xs text-slate-400">No expiry</p>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4">
+                                {% set now = none %}
+                                {% set is_expired = coupon.valid_until and coupon.valid_until < now() if now else false %}
+                                {% set is_exhausted = coupon.total_uses > 0 and coupon.used_count >= coupon.total_uses %}
+                                <div class="flex items-center gap-1.5">
+                                    {% if is_exhausted %}
+                                    <span class="status-dot bg-orange-500"></span>
+                                    <span class="text-xs font-medium text-orange-600">Exhausted</span>
+                                    {% elif not coupon.is_active %}
+                                    <span class="status-dot bg-slate-400"></span>
+                                    <span class="text-xs font-medium text-slate-500">Inactive</span>
+                                    {% elif is_expired %}
+                                    <span class="status-dot bg-red-500"></span>
+                                    <span class="text-xs font-medium text-red-600">Expired</span>
+                                    {% else %}
+                                    <span class="status-dot bg-emerald-500"></span>
+                                    <span class="text-xs font-medium text-emerald-600">Active</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    <button onclick="showDetail({{ coupon.id }})" class="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="View Details">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </button>
+                                    <button onclick="toggleCoupon({{ coupon.id }}, this)" class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors toggle-btn" data-active="{{ coupon.is_active }}" title="{{ 'Deactivate' if coupon.is_active else 'Activate' }}">
+                                        {% if coupon.is_active %}
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                        {% else %}
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        {% endif %}
+                                    </button>
+                                    <button onclick="deleteCoupon({{ coupon.id }}, this)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="py-16 text-center">
+                                <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                                    <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                </div>
+                                <p class="font-semibold text-slate-600 mb-1">No coupons found</p>
+                                <p class="text-sm text-slate-400">Try adjusting your filters or <a href="{{ url_for('admin.coupon_generate') }}" class="text-purple-600 hover:underline font-medium">generate a new coupon</a>.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50/50">
+            <p class="text-xs text-slate-500">Showing {{ pagination.per_page * (pagination.page - 1) + 1 }}–{{ pagination.per_page * pagination.page if pagination.per_page * pagination.page < pagination.total else pagination.total }} of {{ pagination.total }}</p>
+            <div class="flex items-center gap-1">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('admin.coupon_list', page=pagination.prev_num, search=search, category=category, status=status, discount_type=discount_type) }}" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-white border border-slate-200 rounded-lg transition-colors">Prev</a>
+                {% endif %}
+                {% for p in pagination.iter_pages() %}
+                    {% if p %}
+                        {% if p == pagination.page %}
+                        <span class="px-3 py-1.5 text-xs font-bold text-white bg-primary rounded-lg">{{ p }}</span>
+                        {% else %}
+                        <a href="{{ url_for('admin.coupon_list', page=p, search=search, category=category, status=status, discount_type=discount_type) }}" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-white border border-slate-200 rounded-lg transition-colors">{{ p }}</a>
+                        {% endif %}
+                    {% else %}
+                        <span class="px-2 text-slate-400">...</span>
+                    {% endif %}
+                {% endfor %}
+                {% if pagination.has_next %}
+                <a href="{{ url_for('admin.coupon_list', page=pagination.next_num, search=search, category=category, status=status, discount_type=discount_type) }}" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-white border border-slate-200 rounded-lg transition-colors">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div id="detailModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDetailModal()"></div>
+    <div class="flex items-center justify-center min-h-full p-4">
+        <div class="modal-content relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto z-10" id="detailModalContent">
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-20 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ─── Stats ───
+function loadStats() {
+    fetch('/admin/coupons/stats')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('statTotal').textContent = data.total;
+            document.getElementById('statActive').textContent = data.active;
+            document.getElementById('statRedeemed').textContent = data.redeemed;
+            document.getElementById('statExpired').textContent = data.expired;
+            document.getElementById('statsLine').textContent = `${data.active} active · ${data.redeemed} redeemed · ${data.total} total`;
+        })
+        .catch(() => {
+            document.getElementById('statsLine').textContent = 'Stats unavailable';
+        });
+}
+loadStats();
+
+// ─── Filters ───
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(applyFilters, 400);
+});
+document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+document.getElementById('discountTypeFilter').addEventListener('change', applyFilters);
+document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        applyFilters();
+    });
+});
+
+function applyFilters() {
+    const search = document.getElementById('searchInput').value;
+    const category = document.getElementById('categoryFilter').value;
+    const discountType = document.getElementById('discountTypeFilter').value;
+    const status = document.querySelector('.filter-chip.active')?.dataset.status || '';
+
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (category) params.set('category', category);
+    if (discountType) params.set('discount_type', discountType);
+    if (status) params.set('status', status);
+
+    window.location.href = '/admin/coupons' + (params.toString() ? '?' + params.toString() : '');
+}
+
+// ─── Toggle ───
+function toggleCoupon(id, btn) {
+    const isActive = btn.dataset.active === 'true';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    fetch(`/admin/coupons/${id}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            btn.dataset.active = data.is_active;
+            const row = btn.closest('tr');
+            const statusCell = row.querySelector('td:nth-child(6)');
+
+            if (data.is_active) {
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>';
+                btn.title = 'Deactivate';
+                statusCell.innerHTML = '<div class="flex items-center gap-1.5"><span class="status-dot bg-emerald-500"></span><span class="text-xs font-medium text-emerald-600">Active</span></div>';
+            } else {
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+                btn.title = 'Activate';
+                statusCell.innerHTML = '<div class="flex items-center gap-1.5"><span class="status-dot bg-slate-400"></span><span class="text-xs font-medium text-slate-500">Inactive</span></div>';
+            }
+            showToast(data.message, 'success');
+            loadStats();
+        }
+    })
+    .catch(() => showToast('Failed to toggle coupon.', 'error'));
+}
+
+// ─── Delete ───
+function deleteCoupon(id, btn) {
+    const row = btn.closest('tr');
+    const code = row.querySelector('.discount-badge').textContent;
+
+    if (!confirm(`Delete coupon "${code}"?\n\nIf it has been used, it will be deactivated instead.`)) return;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    fetch(`/admin/coupons/${id}/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (data.soft_deleted) {
+                const statusCell = row.querySelector('td:nth-child(6)');
+                statusCell.innerHTML = '<div class="flex items-center gap-1.5"><span class="status-dot bg-slate-400"></span><span class="text-xs font-medium text-slate-500">Inactive</span></div>';
+                const toggleBtn = row.querySelector('.toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.dataset.active = 'false';
+                    toggleBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+                }
+                showToast(data.message, 'warning');
+            } else {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(20px)';
+                setTimeout(() => row.remove(), 300);
+                showToast(data.message, 'success');
+            }
+            loadStats();
+        }
+    })
+    .catch(() => showToast('Failed to delete coupon.', 'error'));
+}
+
+// ─── Detail Modal ───
+function showDetail(id) {
+    const modal = document.getElementById('detailModal');
+    const content = document.getElementById('detailModalContent');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    content.innerHTML = '<div class="p-10 text-center"><div class="w-8 h-8 border-3 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto" style="border-width:3px"></div></div>';
+
+    fetch(`/admin/coupons/${id}/details`)
+        .then(r => r.json())
+        .then(data => { content.innerHTML = data.html; })
+        .catch(() => { content.innerHTML = '<div class="p-10 text-center text-red-500">Failed to load details.</div>'; });
+}
+
+function closeDetailModal() {
+    document.getElementById('detailModal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDetailModal();
+});
+
+// ─── Toast ───
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const colors = {
+        success: 'bg-emerald-600',
+        error: 'bg-red-600',
+        warning: 'bg-amber-600',
+        info: 'bg-blue-600'
+    };
+    const icons = {
+        success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+        error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+        warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>',
+        info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `toast-enter pointer-events-auto flex items-center gap-3 ${colors[type]} text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium max-w-sm`;
+    toast.innerHTML = `<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[type]}</svg><span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+</script>
+{% endblock %}

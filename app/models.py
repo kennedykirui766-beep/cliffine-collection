@@ -259,32 +259,6 @@ class OrderItem(db.Model):
     shipped_at = db.Column(db.DateTime, nullable=True)
 
 
-
-
-# ===============================
-# COUPONS
-# ===============================
-class Coupon(db.Model):
-    __tablename__ = "coupons"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    code = db.Column(db.String(50), unique=True)
-
-    discount_type = db.Column(db.String(50))  
-    # percentage or fixed
-
-    discount_value = db.Column(db.Float)
-
-    minimum_order = db.Column(db.Float)
-
-    usage_limit = db.Column(db.Integer)
-
-    expires_at = db.Column(db.DateTime)
-
-    is_active = db.Column(db.Boolean, default=True)
-
-
 # ===============================
 # REVIEWS
 # ===============================
@@ -634,3 +608,124 @@ class Payment(db.Model):
     )
 
     paid_at = db.Column(db.DateTime)
+
+
+
+    # ═══════════════════════════════════════════════════════════════
+# ... YOUR EXISTING IMPORTS AND MODELS STAY ABOVE ...
+# ═══════════════════════════════════════════════════════════════
+
+import secrets
+import string
+from datetime import datetime
+
+
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║  COUPON MODELS — PASTE THIS BLOCK INTO YOUR models.py       ║
+# ╚═══════════════════════════════════════════════════════════════╝
+
+class Coupon(db.Model):
+    __tablename__ = 'coupons'
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False, index=True)
+
+    # Event categorization
+    event_category = db.Column(db.String(50), nullable=False)   # account, purchase, cart, loyalty, referral, birthday
+    event_type = db.Column(db.String(100), nullable=False)      # new_registration, first_order, etc.
+    event_label = db.Column(db.String(200), nullable=False)     # "New Account Registration"
+
+    # Discount details
+    discount_type = db.Column(db.String(20), nullable=False)    # percentage, fixed, free_shipping
+    discount_value = db.Column(db.Float, nullable=False)        # 10.0 for 10%, 500.0 for KSh 500
+    min_order_amount = db.Column(db.Float, default=0.0)
+    max_discount_amount = db.Column(db.Float, nullable=True)
+
+    # Usage limits
+    total_uses = db.Column(db.Integer, default=100)
+    used_count = db.Column(db.Integer, default=0)
+    uses_per_customer = db.Column(db.Integer, default=1)
+
+    # Validity
+    valid_from = db.Column(db.DateTime, default=datetime.utcnow)
+    valid_until = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+
+    # Targeting (JSON strings)
+    target_customers = db.Column(db.Text, nullable=True)        # "all" or "specific_ids:[1,2,3]"
+    target_products = db.Column(db.Text, nullable=True)         # "all" or "category:electronics"
+    min_loyalty_points = db.Column(db.Integer, default=0)
+
+    # Metadata
+    description = db.Column(db.Text, nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    usages = db.relationship('CouponUsage', backref='coupon', lazy='dynamic')
+
+    def is_valid(self, user=None):
+        """Check if coupon is currently redeemable"""
+        now = datetime.utcnow()
+        if not self.is_active:
+            return False, "Coupon is inactive"
+        if self.valid_from and now < self.valid_from:
+            return False, "Coupon is not yet active"
+        if self.valid_until and now > self.valid_until:
+            return False, "Coupon has expired"
+        if self.total_uses > 0 and self.used_count >= self.total_uses:
+            return False, "Coupon usage limit reached"
+        if user and self.uses_per_customer > 0:
+            user_uses = self.usages.filter_by(user_id=user.id).count()
+            if user_uses >= self.uses_per_customer:
+                return False, f"You can only use this coupon {self.uses_per_customer} time(s)"
+        return True, "Valid"
+
+    def calculate_discount(self, cart_amount):
+        """Calculate discount amount given a cart total"""
+        if cart_amount < self.min_order_amount:
+            return 0
+        if self.discount_type == 'percentage':
+            discount = cart_amount * (self.discount_value / 100)
+            if self.max_discount_amount:
+                discount = min(discount, self.max_discount_amount)
+            return round(discount, 2)
+        elif self.discount_type == 'fixed':
+            return min(self.discount_value, cart_amount)
+        elif self.discount_type == 'free_shipping':
+            return 0  # handled separately at checkout
+        return 0
+
+    @staticmethod
+    def generate_code(prefix='', length=8):
+        """Generate a guaranteed-unique coupon code"""
+        chars = string.ascii_uppercase + string.digits
+        while True:
+            code = prefix + ''.join(secrets.choice(chars) for _ in range(length))
+            if not Coupon.query.filter_by(code=code).first():
+                return code
+
+
+class CouponUsage(db.Model):
+    __tablename__ = 'coupon_usages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    coupon_id = db.Column(db.Integer, db.ForeignKey('coupons.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=True)
+    discount_amount = db.Column(db.Float, default=0)
+    used_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('coupon_id', 'user_id', 'order_id', name='unique_coupon_usage'),
+    )
+
+
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║  END COUPON MODELS                                            ║
+# ╚═══════════════════════════════════════════════════════════════╝
+
+# ═══════════════════════════════════════════════════════════════
+# ... YOUR EXISTING MODELS CONTINUE BELOW ...
+# ═══════════════════════════════════════════════════════════════

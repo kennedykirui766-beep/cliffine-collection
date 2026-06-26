@@ -1,0 +1,293 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Generate Coupon{% endblock %}
+{% block page_title %}Generate Coupon{% endblock %}
+
+{% block head %}
+<style>
+    .event-card {
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+    .event-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px -8px rgba(0,0,0,0.12);
+    }
+    .event-card.selected {
+        ring: 2px;
+        transform: translateY(-2px);
+    }
+    .category-header {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        backdrop-filter: blur(8px);
+    }
+    #formPanel {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .form-section {
+        border-left: 3px solid transparent;
+        transition: border-color 0.2s ease;
+    }
+    .form-section:hover {
+        border-left-color: #5423E7;
+    }
+    .code-preview {
+        font-family: 'Space Grotesk', monospace;
+        letter-spacing: 0.15em;
+    }
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .slide-in { animation: slideInRight 0.35s ease-out; }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in-up { animation: fadeInUp 0.4s ease-out both; }
+    .fade-in-up:nth-child(1) { animation-delay: 0.05s; }
+    .fade-in-up:nth-child(2) { animation-delay: 0.1s; }
+    .fade-in-up:nth-child(3) { animation-delay: 0.15s; }
+    .fade-in-up:nth-child(4) { animation-delay: 0.2s; }
+    .fade-in-up:nth-child(5) { animation-delay: 0.25s; }
+    .fade-in-up:nth-child(6) { animation-delay: 0.3s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-slate-500 mb-6">
+        <a href="{{ url_for('admin.coupon_list') }}" class="hover:text-purple-600 transition-colors">Coupons</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        <span class="text-slate-800 font-medium">Generate New</span>
+    </nav>
+
+    <div class="flex flex-col xl:flex-row gap-6">
+        <!-- Left: Event Selector -->
+        <div class="flex-1 min-w-0">
+            <div class="mb-5">
+                <h2 class="text-lg font-bold text-slate-800">Choose a Trigger Event</h2>
+                <p class="text-sm text-slate-500 mt-1">Select the customer action that will generate this coupon. Each event comes with recommended defaults you can customize.</p>
+            </div>
+
+            <div class="space-y-6" id="eventSelector">
+                {% for cat_key, cat_data in coupon_events.items() %}
+                {% set colors = color_map[cat_data.color] %}
+                <div class="fade-in-up">
+                    <!-- Category Header -->
+                    <div class="category-header {{ colors.bg }} border {{ colors.border }} rounded-t-xl px-5 py-3 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg {{ colors.badge }} flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {% if cat_data.icon == 'user-plus' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                {% elif cat_data.icon == 'shopping-bag' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                {% elif cat_data.icon == 'shopping-cart' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
+                                {% elif cat_data.icon == 'award' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                {% elif cat_data.icon == 'users' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                {% elif cat_data.icon == 'gift' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+                                {% endif %}
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-sm">{{ cat_data.label }}</h3>
+                        <span class="ml-auto text-xs {{ colors.text }} font-medium">{{ cat_data.events|length }} events</span>
+                    </div>
+
+                    <!-- Event Cards -->
+                    <div class="border border-t-0 border-slate-200 rounded-b-xl bg-white divide-y divide-slate-100">
+                        {% for event in cat_data.events %}
+                        <div class="event-card p-4 flex items-start gap-4 hover:{{ colors.bg }}/50 group"
+                             data-category="{{ cat_key }}"
+                             data-event="{{ event.key }}"
+                             onclick="selectEvent(this, '{{ cat_key }}', '{{ event.key }}')">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="w-2 h-2 rounded-full {{ colors.dot }} flex-shrink-0"></span>
+                                    <h4 class="font-semibold text-slate-800 text-sm group-hover:text-primary transition-colors">{{ event.label }}</h4>
+                                </div>
+                                <p class="text-xs text-slate-500 leading-relaxed ml-4">{{ event.description }}</p>
+                                <div class="flex items-center gap-3 mt-2 ml-4">
+                                    <span class="text-[11px] code-preview {{ colors.text }} font-medium bg-white border border-slate-200 px-2 py-0.5 rounded">{{ event.example_code }}</span>
+                                    {% if event.default_discount_type == 'percentage' %}
+                                    <span class="text-[11px] text-slate-500">{{ event.default_discount_value }}% off</span>
+                                    {% elif event.default_discount_type == 'fixed' %}
+                                    <span class="text-[11px] text-slate-500">KSh {{ event.default_discount_value|int }} off</span>
+                                    {% else %}
+                                    <span class="text-[11px] text-slate-500">Free Shipping</span>
+                                    {% endif %}
+                                    <span class="text-[11px] text-slate-400">{{ event.default_validity_days }}d validity</span>
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0 mt-1">
+                                <div class="w-8 h-8 rounded-full border-2 border-slate-200 flex items-center justify-center group-hover:border-primary/40 transition-colors event-radio">
+                                    <div class="w-0 h-0 rounded-full bg-primary transition-all duration-200"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right: Form Panel -->
+        <div class="xl:w-[480px] flex-shrink-0">
+            <div id="formPanel" class="xl:sticky xl:top-24">
+                <!-- Placeholder before selection -->
+                <div id="formPlaceholder" class="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-bold text-slate-700 mb-1">No Event Selected</h3>
+                    <p class="text-sm text-slate-500">Click on any event from the left panel to configure and generate your coupon.</p>
+                </div>
+
+                <!-- Dynamic form container -->
+                <div id="formContainer" class="hidden"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let selectedCategory = null;
+let selectedEvent = null;
+
+function selectEvent(el, category, eventKey) {
+    // Remove previous selections
+    document.querySelectorAll('.event-card').forEach(card => {
+        card.classList.remove('selected', 'bg-purple-50/50', 'bg-blue-50/50', 'bg-emerald-50/50', 'bg-orange-50/50', 'bg-purple-50/50', 'bg-teal-50/50', 'bg-pink-50/50');
+        const radio = card.querySelector('.event-radio div');
+        if (radio) { radio.style.width = '0'; radio.style.height = '0'; }
+        const radioOuter = card.querySelector('.event-radio');
+        if (radioOuter) radioOuter.classList.remove('border-primary', 'bg-primary/5');
+    });
+
+    // Highlight selected
+    el.classList.add('selected');
+    const radio = el.querySelector('.event-radio div');
+    const radioOuter = el.querySelector('.event-radio');
+    if (radio) { radio.style.width = '14px'; radio.style.height = '14px'; }
+    if (radioOuter) { radioOuter.classList.add('border-primary', 'bg-primary/5'); }
+
+    selectedCategory = category;
+    selectedEvent = eventKey;
+
+    // Show loading state
+    document.getElementById('formPlaceholder').classList.add('hidden');
+    document.getElementById('formContainer').classList.remove('hidden');
+    document.getElementById('formContainer').innerHTML = `
+        <div class="bg-white rounded-2xl border border-slate-200 p-10 text-center">
+            <div class="w-8 h-8 border-3 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3" style="border-width:3px"></div>
+            <p class="text-sm text-slate-500">Loading form...</p>
+        </div>
+    `;
+
+    // Fetch form HTML
+    fetch(`/admin/coupons/event-details/${category}/${eventKey}`)
+        .then(r => {
+            if (!r.ok) throw new Error('Not found');
+            return r.json();
+        })
+        .then(data => {
+            document.getElementById('formContainer').innerHTML = data.html;
+            document.getElementById('formContainer').querySelector('.slide-in').classList.add('slide-in');
+            initFormLogic();
+        })
+        .catch(err => {
+            document.getElementById('formContainer').innerHTML = `
+                <div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+                    <p class="text-sm text-red-600">Failed to load event form. Please try again.</p>
+                </div>
+            `;
+        });
+}
+
+function initFormLogic() {
+    const autoGenToggle = document.getElementById('autoGenerate');
+    const codeInput = document.getElementById('codeInput');
+    const prefixInput = document.getElementById('codePrefix');
+    const codePreview = document.getElementById('codePreview');
+    const bulkCount = document.getElementById('bulkCount');
+    const discountType = document.getElementById('discountType');
+    const discountValueGroup = document.getElementById('discountValueGroup');
+    const maxDiscountGroup = document.getElementById('maxDiscountGroup');
+
+    function updateCodePreview() {
+        if (!codePreview) return;
+        const prefix = prefixInput ? prefixInput.value.trim().toUpperCase() : '';
+        const dummy = prefix + 'ABCD12';
+        codePreview.textContent = dummy;
+    }
+
+    function toggleCodeInput() {
+        if (!autoGenToggle || !codeInput || !prefixInput) return;
+        if (autoGenToggle.checked) {
+            codeInput.disabled = true;
+            codeInput.classList.add('opacity-50', 'bg-slate-50');
+            prefixInput.disabled = false;
+            prefixInput.classList.remove('opacity-50', 'bg-slate-50');
+        } else {
+            codeInput.disabled = false;
+            codeInput.classList.remove('opacity-50', 'bg-slate-50');
+            prefixInput.disabled = true;
+            prefixInput.classList.add('opacity-50', 'bg-slate-50');
+        }
+        updateCodePreview();
+    }
+
+    function toggleDiscountFields() {
+        if (!discountType) return;
+        if (discountType.value === 'free_shipping') {
+            if (discountValueGroup) discountValueGroup.classList.add('hidden');
+            if (maxDiscountGroup) maxDiscountGroup.classList.add('hidden');
+        } else {
+            if (discountValueGroup) discountValueGroup.classList.remove('hidden');
+            if (discountType.value === 'percentage') {
+                if (maxDiscountGroup) maxDiscountGroup.classList.remove('hidden');
+            } else {
+                if (maxDiscountGroup) maxDiscountGroup.classList.add('hidden');
+            }
+        }
+    }
+
+    function toggleBulkFields() {
+        if (!bulkCount) return;
+        const bulkSection = document.getElementById('bulkSection');
+        if (bulkSection) {
+            bulkSection.classList.toggle('hidden', parseInt(bulkCount.value) <= 1);
+        }
+        // If bulk > 1, force auto-generate
+        if (autoGenToggle && parseInt(bulkCount.value) > 1) {
+            autoGenToggle.checked = true;
+            autoGenToggle.disabled = true;
+            toggleCodeInput();
+        } else if (autoGenToggle) {
+            autoGenToggle.disabled = false;
+        }
+    }
+
+    if (autoGenToggle) autoGenToggle.addEventListener('change', toggleCodeInput);
+    if (prefixInput) prefixInput.addEventListener('input', updateCodePreview);
+    if (bulkCount) bulkCount.addEventListener('input', toggleBulkFields);
+    if (discountType) discountType.addEventListener('change', toggleDiscountFields);
+
+    // Initialize states
+    toggleCodeInput();
+    toggleDiscountFields();
+    toggleBulkFields();
+}
+</script>
+{% endblock %}

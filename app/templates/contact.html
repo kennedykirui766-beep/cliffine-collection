@@ -5,43 +5,48 @@
 {% block content %}
 
 <!-- Breadcrumb Navigation -->
-<nav class="bg-slate-50 py-4">
+<nav class="bg-sand dark:bg-gray-800/50 py-4">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ol class="flex items-center space-x-2 text-sm">
             <li>
-                <a href="{{ url_for('main.index') }}" class="text-slate-500 hover:text-[#5423E7] transition-colors duration-300">
+                <a href="{{ url_for('main.index') }}" class="text-muted dark:text-gray-400 hover:text-primary dark:hover:text-accent transition-colors duration-300">
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                     </svg>
                     Home
                 </a>
             </li>
-            <li class="text-slate-400">/</li>
-            <li class="text-[#5423E7] font-medium">Contact Us</li>
+            <li class="text-muted/50">/</li>
+            <li class="text-primary dark:text-accent font-medium">Contact Us</li>
         </ol>
     </div>
 </nav>
 
 <!-- Page Header -->
-<section class="bg-gradient-to-br from-[#5423E7] to-[#6333f0] py-12 lg:py-16">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mb-3">
+<section class="bg-gradient-to-br from-primary via-primary-dark to-primary py-12 lg:py-20 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-10 left-10 w-72 h-72 bg-accent rounded-full blur-3xl"></div>
+        <div class="absolute bottom-10 right-10 w-96 h-96 bg-accent rounded-full blur-3xl"></div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight mb-4">
             Contact Us
         </h1>
-        <p class="text-white/80 text-lg max-w-2xl mx-auto">
+        <p class="text-white/70 text-lg max-w-2xl mx-auto font-body">
             We would love to hear from you. Send us a message or reach us using the details below.
         </p>
     </div>
 </section>
 
 <!-- Main Content -->
-<section class="py-12 lg:py-16 bg-slate-50">
+<section class="py-12 lg:py-20 bg-sand dark:bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-2 gap-12">
             
             <!-- Left Column: Contact Form -->
-            <div class="bg-white rounded-3xl p-8 shadow-xl border border-slate-200/50 order-2 lg:order-1">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h2>
+            <div class="bg-cream dark:bg-gray-800 rounded-3xl p-8 shadow-xl border border-gray-200/50 dark:border-gray-700/50 order-2 lg:order-1">
+                <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-accent mb-2">Get in Touch</span>
+                <h2 class="font-display text-2xl lg:text-3xl font-bold text-charcoal dark:text-white mb-6">Send us a Message</h2>
                 
                 <!-- Flash Messages -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -49,7 +54,7 @@
                         <div class="mb-6 space-y-2">
                             {% for category, message in messages %}
                                 <div class="flex items-center p-4 rounded-lg border 
-                                    {% if category == 'success' %} bg-green-50 border-green-200 text-green-800 {% elif category == 'danger' or category == 'error' %} bg-red-50 border-red-200 text-red-800 {% else %} bg-blue-50 border-blue-200 text-blue-800 {% endif %}"
+                                    {% if category == 'success' %} bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 {% elif category == 'danger' or category == 'error' %} bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 {% else %} bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300 {% endif %}"
                                     role="alert">
                                     <svg class="w-5 h-5 flex-shrink-0 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         {% if category == 'success' %}
@@ -58,8 +63,8 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         {% endif %}
                                     </svg>
-                                    <span class="text-sm font-medium">{{ message }}</span>
-                                    <button type="button" class="ml-auto flex-shrink-0 p-1 rounded-full hover:bg-black/5 transition-colors" onclick="this.parentElement.remove()">
+                                    <span class="text-sm font-medium font-body">{{ message }}</span>
+                                    <button type="button" class="ml-auto flex-shrink-0 p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onclick="this.parentElement.remove()">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                     </button>
                                 </div>
@@ -70,14 +75,14 @@
 
                 <!-- Form Error Summary -->
                 {% if form.errors %}
-                <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-lg" role="alert">
+                <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-300 p-4 mb-6 rounded-r-lg" role="alert">
                     <div class="flex items-start">
                         <svg class="w-5 h-5 flex-shrink-0 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                         </svg>
                         <div>
-                            <p class="font-bold mb-1">Please correct the errors below.</p>
-                            <ul class="mt-1 text-sm list-disc list-inside space-y-0.5">
+                            <p class="font-bold mb-1 font-body">Please correct the errors below.</p>
+                            <ul class="mt-1 text-sm list-disc list-inside space-y-0.5 font-body">
                                 {% for field_name, field_errors in form.errors.items() %}
                                     {% for error in field_errors %}
                                     <li>{{ form[field_name].label.text if form[field_name].label else field_name }}: {{ error }}</li>
@@ -95,13 +100,13 @@
                     <div class="grid sm:grid-cols-2 gap-5">
                         <!-- Full Name -->
                         <div>
-                            <label for="{{ form.name.id }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            <label for="{{ form.name.id }}" class="block text-sm font-medium text-charcoal dark:text-gray-200 mb-1 font-body">
                                 {{ form.name.label.text }} <span class="text-red-500">*</span>
                             </label>
-                            {{ form.name(class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all" + (" border-red-500 bg-red-50" if form.name.errors else ""), placeholder="John Doe") }}
+                            {{ form.name(class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-cream dark:bg-gray-700 text-charcoal dark:text-white placeholder-muted dark:placeholder-gray-400 focus:ring-2 focus:ring-primary dark:focus:ring-accent focus:border-transparent outline-none transition-all font-body" + (" border-red-500 bg-red-50 dark:bg-red-900/20" if form.name.errors else ""), placeholder="John Doe") }}
                             {% if form.name.errors %}
                                 {% for error in form.name.errors %}
-                                <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                                <p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1 font-body">
                                     <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     {{ error }}
                                 </p>
@@ -111,13 +116,13 @@
 
                         <!-- Phone Number -->
                         <div>
-                            <label for="{{ form.phone.id }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            <label for="{{ form.phone.id }}" class="block text-sm font-medium text-charcoal dark:text-gray-200 mb-1 font-body">
                                 {{ form.phone.label.text if form.phone.label else "Phone Number" }} <span class="text-red-500">*</span>
                             </label>
-                            {{ form.phone(class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all" + (" border-red-500 bg-red-50" if form.phone.errors else ""), placeholder="+254 7XX XXX XXX") }}
+                            {{ form.phone(class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-cream dark:bg-gray-700 text-charcoal dark:text-white placeholder-muted dark:placeholder-gray-400 focus:ring-2 focus:ring-primary dark:focus:ring-accent focus:border-transparent outline-none transition-all font-body" + (" border-red-500 bg-red-50 dark:bg-red-900/20" if form.phone.errors else ""), placeholder="+254 7XX XXX XXX") }}
                             {% if form.phone.errors %}
                                 {% for error in form.phone.errors %}
-                                <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                                <p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1 font-body">
                                     <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     {{ error }}
                                 </p>
@@ -128,13 +133,13 @@
 
                     <!-- Email Address -->
                     <div>
-                        <label for="{{ form.email.id }}" class="block text-sm font-medium text-slate-700 mb-1">
+                        <label for="{{ form.email.id }}" class="block text-sm font-medium text-charcoal dark:text-gray-200 mb-1 font-body">
                             {{ form.email.label.text }} <span class="text-red-500">*</span>
                         </label>
-                        {{ form.email(class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all" + (" border-red-500 bg-red-50" if form.email.errors else ""), placeholder="you@example.com") }}
+                        {{ form.email(class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-cream dark:bg-gray-700 text-charcoal dark:text-white placeholder-muted dark:placeholder-gray-400 focus:ring-2 focus:ring-primary dark:focus:ring-accent focus:border-transparent outline-none transition-all font-body" + (" border-red-500 bg-red-50 dark:bg-red-900/20" if form.email.errors else ""), placeholder="you@example.com") }}
                         {% if form.email.errors %}
                             {% for error in form.email.errors %}
-                            <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                            <p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1 font-body">
                                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 {{ error }}
                             </p>
@@ -144,13 +149,13 @@
 
                     <!-- Inquiry Type / Subject -->
                     <div>
-                        <label for="{{ form.subject.id }}" class="block text-sm font-medium text-slate-700 mb-1">
+                        <label for="{{ form.subject.id }}" class="block text-sm font-medium text-charcoal dark:text-gray-200 mb-1 font-body">
                             {{ form.subject.label.text if form.subject.label else "Inquiry Type" }} <span class="text-red-500">*</span>
                         </label>
-                        {{ form.subject(class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all bg-white" + (" border-red-500 bg-red-50" if form.subject.errors else "")) }}
+                        {{ form.subject(class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-cream dark:bg-gray-700 text-charcoal dark:text-white focus:ring-2 focus:ring-primary dark:focus:ring-accent focus:border-transparent outline-none transition-all font-body" + (" border-red-500 bg-red-50 dark:bg-red-900/20" if form.subject.errors else "")) }}
                         {% if form.subject.errors %}
                             {% for error in form.subject.errors %}
-                            <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                            <p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1 font-body">
                                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 {{ error }}
                             </p>
@@ -160,13 +165,13 @@
 
                     <!-- Message -->
                     <div>
-                        <label for="{{ form.message.id }}" class="block text-sm font-medium text-slate-700 mb-1">
+                        <label for="{{ form.message.id }}" class="block text-sm font-medium text-charcoal dark:text-gray-200 mb-1 font-body">
                             {{ form.message.label.text }} <span class="text-red-500">*</span>
                         </label>
-                        {{ form.message(class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#5423E7] focus:border-transparent outline-none transition-all resize-none" + (" border-red-500 bg-red-50" if form.message.errors else ""), placeholder="Write your message here...", rows=5) }}
+                        {{ form.message(class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-cream dark:bg-gray-700 text-charcoal dark:text-white placeholder-muted dark:placeholder-gray-400 focus:ring-2 focus:ring-primary dark:focus:ring-accent focus:border-transparent outline-none transition-all resize-none font-body" + (" border-red-500 bg-red-50 dark:bg-red-900/20" if form.message.errors else ""), placeholder="Write your message here...", rows=5) }}
                         {% if form.message.errors %}
                             {% for error in form.message.errors %}
-                            <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                            <p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1 font-body">
                                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 {{ error }}
                             </p>
@@ -175,7 +180,7 @@
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" class="w-full bg-amber-400 text-slate-900 py-4 rounded-xl font-bold hover:bg-amber-500 transition-all duration-300 hover:-translate-y-1 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0" id="submitBtn">
+                    <button type="submit" class="w-full bg-accent text-primary-dark dark:text-primary-dark py-4 rounded-xl font-bold font-body hover:bg-accent-light transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0" id="submitBtn">
                         <span id="btnText">Send Message</span>
                         <svg id="btnArrow" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
@@ -189,43 +194,45 @@
             <div class="space-y-8 order-1 lg:order-2">
                 
                 <!-- Contact Info Card -->
-                <div class="bg-white rounded-3xl p-8 shadow-lg border border-slate-200/50">
-                    <h3 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                        <svg class="w-6 h-6 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
+                <div class="bg-cream dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
+                    <h3 class="font-display text-xl font-bold text-charcoal dark:text-white mb-6 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-primary dark:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
                         Contact Information
                     </h3>
                     
-                    <div class="space-y-4">
+                    <div class="space-y-5">
                         <div>
-                            <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Business Name</h4>
-                            <p class="text-slate-900 font-medium text-lg">Cliffine Collection</p>
+                            <h4 class="text-xs font-bold uppercase tracking-[0.15em] text-muted dark:text-gray-500 mb-1.5 font-body">Business Name</h4>
+                            <p class="text-charcoal dark:text-white font-medium text-lg font-body">Cliffine Collection</p>
                         </div>
                         
                         <div>
-                            <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Locations</h4>
-                            <ul class="space-y-2 text-slate-700">
-                                <li class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                                    <span><strong>Kericho</strong> (Main Branch)</span>
+                            <h4 class="text-xs font-bold uppercase tracking-[0.15em] text-muted dark:text-gray-500 mb-2.5 font-body">Locations</h4>
+                            <ul class="space-y-2.5 text-charcoal dark:text-gray-200">
+                                <li class="flex items-start gap-2.5 font-body">
+                                    <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    <span><strong class="text-charcoal dark:text-white">Kericho</strong> (Main Branch)</span>
                                 </li>
-                                <li class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                                    <span><strong>Bomet</strong></span>
+                                <li class="flex items-start gap-2.5 font-body">
+                                    <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    <span><strong class="text-charcoal dark:text-white">Bomet</strong></span>
                                 </li>
-                                <li class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-amber-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"></path></svg>
-                                    <span><strong>Nairobi</strong> (Parcel Dispatch/Pickup)</span>
+                                <li class="flex items-start gap-2.5 font-body">
+                                    <svg class="w-5 h-5 text-accent mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                                    <span><strong class="text-charcoal dark:text-white">Nairobi</strong> (Parcel Dispatch/Pickup)</span>
                                 </li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Delivery</h4>
-                            <p class="text-slate-700 flex items-center gap-2">
-                                <svg class="w-5 h-5 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <h4 class="text-xs font-bold uppercase tracking-[0.15em] text-muted dark:text-gray-500 mb-1.5 font-body">Delivery</h4>
+                            <p class="text-charcoal dark:text-gray-200 flex items-center gap-2 font-body">
+                                <svg class="w-5 h-5 text-primary dark:text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 Countrywide delivery available (Fee applies)
@@ -235,36 +242,38 @@
                 </div>
 
                 <!-- Business Hours -->
-                <div class="bg-white rounded-3xl p-8 shadow-lg border border-slate-200/50">
-                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                        <svg class="w-6 h-6 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                <div class="bg-cream dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
+                    <h3 class="font-display text-xl font-bold text-charcoal dark:text-white mb-5 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-primary dark:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
                         Business Hours
                     </h3>
-                    <ul class="space-y-2 text-slate-700">
-                        <li class="flex justify-between">
-                            <span>Monday – Friday</span>
-                            <span class="font-semibold">8:00 AM – 6:00 PM</span>
+                    <ul class="space-y-3 font-body">
+                        <li class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                            <span class="text-charcoal dark:text-gray-200">Monday – Friday</span>
+                            <span class="font-semibold text-charcoal dark:text-white bg-sand dark:bg-gray-700 px-3 py-1 rounded-lg text-sm">8:00 AM – 6:00 PM</span>
                         </li>
-                        <li class="flex justify-between">
-                            <span>Saturday</span>
-                            <span class="font-semibold">9:00 AM – 4:00 PM</span>
+                        <li class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                            <span class="text-charcoal dark:text-gray-200">Saturday</span>
+                            <span class="font-semibold text-charcoal dark:text-white bg-sand dark:bg-gray-700 px-3 py-1 rounded-lg text-sm">9:00 AM – 4:00 PM</span>
                         </li>
-                        <li class="flex justify-between text-slate-400">
-                            <span>Sunday</span>
-                            <span class="font-semibold">Closed</span>
+                        <li class="flex justify-between items-center py-2">
+                            <span class="text-muted dark:text-gray-500">Sunday</span>
+                            <span class="font-semibold text-muted dark:text-gray-500 bg-sand dark:bg-gray-700/50 px-3 py-1 rounded-lg text-sm">Closed</span>
                         </li>
                     </ul>
                 </div>
 
                 <!-- Social Links -->
                 <div class="flex gap-4">
-                     <a href="https://wa.me/2547XXXXXXXX" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-4 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors shadow-lg">
+                     <a href="https://wa.me/254717857049" target="_blank" rel="noopener noreferrer" class="flex-1 flex items-center justify-center gap-2 py-4 bg-green-500 text-white rounded-xl font-semibold font-body hover:bg-green-600 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-300">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                         WhatsApp
                     </a>
-                    <a href="#" class="flex-1 flex items-center justify-center gap-2 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg">
+                    <a href="#" target="_blank" rel="noopener noreferrer" class="flex-1 flex items-center justify-center gap-2 py-4 bg-blue-600 text-white rounded-xl font-semibold font-body hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-300">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                         Facebook
                     </a>
@@ -275,68 +284,74 @@
 </section>
 
 <!-- Payment Information Section -->
-<section class="py-12 lg:py-16 bg-white">
+<section class="py-12 lg:py-20 bg-cream dark:bg-[#0F0715]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-10">
-            <h2 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-3">Payment Information</h2>
-            <p class="text-slate-500">Use the details below to make payments for orders or Chamas.</p>
+        <div class="text-center mb-12">
+            <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-accent mb-3">M-Pesa Details</span>
+            <h2 class="font-display text-3xl lg:text-4xl font-bold text-charcoal dark:text-white mb-3">Payment Information</h2>
+            <p class="text-muted dark:text-gray-400 font-body">Use the details below to make payments for orders or Chamas.</p>
         </div>
 
         <div class="grid md:grid-cols-3 gap-8">
             <!-- Shop Payments -->
-            <div class="bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
-                <div class="w-16 h-16 bg-[#5423E7]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-[#5423E7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-sand dark:bg-gray-800 border border-gray-200/50 dark:border-gray-700/50 rounded-3xl p-8 text-center hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
+                <div class="w-16 h-16 bg-primary/10 dark:bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                    <svg class="w-8 h-8 text-primary dark:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-4">Shop Payments</h3>
+                <h3 class="font-display text-xl font-bold text-charcoal dark:text-white mb-4">Shop Payments</h3>
                 <div class="space-y-2">
-                    <p class="text-sm text-slate-500">Paybill Number</p>
-                    <p class="text-3xl font-bold text-amber-500 tracking-wider">714888</p>
-                    <div class="border-t border-slate-200 my-4 pt-4">
-                        <p class="text-sm text-slate-500">Account Number</p>
-                        <p class="text-xl font-semibold text-slate-800">196856</p>
+                    <p class="text-sm text-muted dark:text-gray-400 font-body">Paybill Number</p>
+                    <p class="text-3xl font-bold text-accent tracking-wider font-mono">714888</p>
+                    <div class="border-t border-gray-200 dark:border-gray-700 my-4 pt-4">
+                        <p class="text-sm text-muted dark:text-gray-400 font-body">Account Number</p>
+                        <p class="text-xl font-semibold text-charcoal dark:text-white font-mono">196856</p>
                     </div>
-                    <p class="text-sm text-slate-400 mt-2">Name: Cliphine Chepkoech</p>
+                    <p class="text-sm text-muted dark:text-gray-500 mt-2 font-body">Name: Cliphine Chepkoech</p>
                 </div>
             </div>
 
             <!-- Chama Payments -->
-            <div class="bg-gradient-to-br from-[#5423E7] to-[#6333f0] rounded-3xl p-8 text-center shadow-xl text-white transform scale-105 hover:scale-110 transition-transform duration-500 z-10">
-                <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
+            <div class="bg-gradient-to-br from-primary via-primary-dark to-primary rounded-3xl p-8 text-center shadow-xl text-white transform md:scale-105 hover:scale-110 transition-transform duration-500 z-10 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10">
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-accent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                 </div>
-                <h3 class="text-xl font-bold mb-4">Chama Payments</h3>
-                <div class="space-y-2">
-                    <p class="text-sm text-white/70">Paybill Number</p>
-                    <p class="text-3xl font-bold text-amber-400 tracking-wider">522522</p>
-                    <div class="border-t border-white/20 my-4 pt-4">
-                        <p class="text-sm text-white/70">Account Number</p>
-                        <p class="text-xl font-semibold text-white">6339086</p>
+                <div class="relative z-10">
+                    <div class="w-16 h-16 bg-white/15 rounded-2xl flex items-center justify-center mx-auto mb-5 backdrop-blur-sm">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
                     </div>
-                    <p class="text-sm text-white/60 mt-2">Name: Cliffine Collections</p>
+                    <h3 class="font-display text-xl font-bold mb-4">Chama Payments</h3>
+                    <div class="space-y-2">
+                        <p class="text-sm text-white/60 font-body">Paybill Number</p>
+                        <p class="text-3xl font-bold text-accent tracking-wider font-mono">522522</p>
+                        <div class="border-t border-white/20 my-4 pt-4">
+                            <p class="text-sm text-white/60 font-body">Account Number</p>
+                            <p class="text-xl font-semibold text-white font-mono">6339086</p>
+                        </div>
+                        <p class="text-sm text-white/50 mt-2 font-body">Name: Cliffine Collections</p>
+                    </div>
                 </div>
             </div>
 
             <!-- Lipa Pole Pole / Cash -->
-            <div class="bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
-                <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-sand dark:bg-gray-800 border border-gray-200/50 dark:border-gray-700/50 rounded-3xl p-8 text-center hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
+                <div class="w-16 h-16 bg-green-50 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-4">Lipa Pole Pole & Cash Chamas</h3>
+                <h3 class="font-display text-xl font-bold text-charcoal dark:text-white mb-4">Lipa Pole Pole & Cash Chamas</h3>
                 <div class="space-y-2">
-                    <p class="text-sm text-slate-500">Buy Goods Till</p>
-                    <p class="text-3xl font-bold text-amber-500 tracking-wider">4106106</p>
-                    <div class="border-t border-slate-200 my-4 pt-4">
-                        <p class="text-sm text-slate-500">Payment Type</p>
-                        <p class="text-sm font-semibold text-slate-800 mt-1">Direct to Till</p>
+                    <p class="text-sm text-muted dark:text-gray-400 font-body">Buy Goods Till</p>
+                    <p class="text-3xl font-bold text-accent tracking-wider font-mono">4106106</p>
+                    <div class="border-t border-gray-200 dark:border-gray-700 my-4 pt-4">
+                        <p class="text-sm text-muted dark:text-gray-400 font-body">Payment Type</p>
+                        <p class="text-sm font-semibold text-charcoal dark:text-white mt-1">Direct to Till</p>
                     </div>
-                    <p class="text-sm text-slate-400 mt-2">Name: Cliphine Chepkoech</p>
+                    <p class="text-sm text-muted dark:text-gray-500 mt-2 font-body">Name: Cliphine Chepkoech</p>
                 </div>
             </div>
         </div>
@@ -344,39 +359,43 @@
 </section>
 
 <!-- Map Section -->
-<section class="bg-slate-50 py-12">
+<section class="bg-sand dark:bg-gray-900 py-12 lg:py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold text-slate-900">Find Us</h2>
-            <p class="text-slate-500">Locations in Kericho, Bomet, and Nairobi</p>
+            <span class="inline-block text-xs font-bold uppercase tracking-[0.2em] text-accent mb-3">Our Location</span>
+            <h2 class="font-display text-3xl font-bold text-charcoal dark:text-white">Find Us</h2>
+            <p class="text-muted dark:text-gray-400 font-body">Locations in Kericho, Bomet, and Nairobi</p>
         </div>
-        <div class="rounded-3xl overflow-hidden shadow-xl h-96 bg-slate-200 border border-slate-200">
-            <!-- Replace src with actual Google Maps embed URL -->
+        <div class="rounded-3xl overflow-hidden shadow-xl h-96 bg-gray-200 dark:bg-gray-800 border border-gray-200/50 dark:border-gray-700/50">
             <iframe 
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127584.5034!2d35.264!3d-0.369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x18297df0!2sKericho%2C%20Kenya!5e0!3m2!1sen!2s!4v1620000000000!5m2!1sen!2s" 
                 width="100%" 
                 height="100%" 
                 style="border:0;" 
                 allowfullscreen="" 
-                loading="lazy">
+                loading="lazy"
+                title="Cliffine Collection Location">
             </iframe>
         </div>
     </div>
 </section>
 
 <!-- Call to Action -->
-<section class="py-16 bg-white">
-    <div class="max-w-4xl mx-auto px-4 text-center">
-        <h2 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-4">Ready to Shop?</h2>
-        <p class="text-slate-500 mb-8">Explore our latest collection or join a Chama today to save more.</p>
+<section class="py-16 lg:py-20 bg-cream dark:bg-[#0F0715]">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="font-display text-3xl lg:text-4xl font-bold text-charcoal dark:text-white mb-4">Ready to Shop?</h2>
+        <p class="text-muted dark:text-gray-400 mb-10 font-body text-lg">Explore our latest collection or join a Chama today to save more.</p>
         <div class="flex flex-col sm:flex-row justify-center gap-4">
-            <a href="{{ url_for('main.products') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#5423E7] text-white rounded-xl font-semibold hover:bg-[#6333f0] transition-all duration-300 shadow-lg hover:-translate-y-1">
+            <a href="{{ url_for('main.products') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary dark:bg-accent text-white dark:text-primary-dark rounded-xl font-semibold font-body hover:bg-primary-light dark:hover:bg-accent-light transition-all duration-300 shadow-lg hover:-translate-y-1 hover:shadow-xl">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                 Shop Products
             </a>
-            <a href="{{ url_for('main.chama') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-amber-400 text-slate-900 rounded-xl font-semibold hover:bg-amber-500 transition-all duration-300 shadow-lg hover:-translate-y-1">
+            <a href="{{ url_for('main.chama') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-accent text-primary-dark rounded-xl font-semibold font-body hover:bg-accent-light transition-all duration-300 shadow-lg hover:-translate-y-1 hover:shadow-xl">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 Join a Chama
             </a>
-            <a href="{{ url_for('main.faq') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
+            <a href="{{ url_for('main.faq') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-sand dark:bg-gray-800 text-charcoal dark:text-white rounded-xl font-semibold font-body hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 border border-gray-200 dark:border-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549 1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 Read FAQs
             </a>
         </div>
@@ -384,11 +403,14 @@
 </section>
 
 <!-- Floating WhatsApp Button (Mobile Friendly) -->
-<a href="https://wa.me/2547XXXXXXXX" target="_blank" class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-2xl hover:bg-green-600 transition-all duration-300 hover:scale-110 z-50 flex items-center gap-2 group">
-    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-    <span class="hidden group-hover:inline font-semibold whitespace-nowrap">Chat with us</span>
+<a href="https://wa.me/254717857049" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-2xl hover:bg-green-600 transition-all duration-300 hover:scale-110 z-50 flex items-center gap-2 group" aria-label="Chat on WhatsApp">
+    <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span class="hidden group-hover:inline font-semibold whitespace-nowrap font-body">Chat with us</span>
 </a>
 
+{% endblock %}
+
+{% block scripts %}
 <script>
 // Form submission handling
 const form = document.getElementById('contactForm');
@@ -399,7 +421,6 @@ const btnSpinner = document.getElementById('btnSpinner');
 
 if (form) {
     form.addEventListener('submit', function() {
-        // Show loading state
         submitBtn.disabled = true;
         btnText.textContent = 'Sending...';
         btnArrow.classList.add('hidden');
@@ -407,5 +428,4 @@ if (form) {
     });
 }
 </script>
-
 {% endblock %}

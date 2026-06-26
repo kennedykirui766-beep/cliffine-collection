@@ -108,8 +108,13 @@
         <!-- Section Header -->
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-gray-100 dark:border-gray-700 pb-6">
             <div class="mb-4 md:mb-0">
+                {% if category %}
+                <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white">{{ category.name }}</h2>
+                <p class="text-sm text-muted dark:text-gray-400">{{ products|length }} products found</p>
+                {% else %}
                 <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white">Trending in Electronics</h2>
                 <p class="text-sm text-muted dark:text-gray-400">Top picks from our Electronics category</p>
+                {% endif %}
             </div>
 
             <!-- 6. Sorting / Filtering Options -->
@@ -128,21 +133,28 @@
             {% if products %}
                 {% for product in products %}
                 <!-- Dynamic Product Card -->
-                <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
+                <div class="group bg-sand dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all product-card" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}" data-product-price="{{ product.price }}">
                     <div class="relative overflow-hidden">
-                        <img src="{{ product.images[0].image_url if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=' ~ product.name|urlencode }}"
-                             alt="{{ product.name }}" 
-                             class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
-                        <button class="absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full shadow hover:bg-accent hover:text-white transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        <a href="{{ url_for('main.product_detail', product_id=product.id) }}">
+                            <img src="{{ product.images[0].image_url if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=' ~ product.name|urlencode }}"
+                                 alt="{{ product.name }}" 
+                                 class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        </a>
+                        <button class="wishlist-btn absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full shadow hover:bg-accent hover:text-white transition-colors" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}" title="Add to Wishlist">
+                            <svg class="w-4 h-4 heart-outline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                            <svg class="w-4 h-4 heart-filled hidden" fill="currentColor" viewBox="0 0 24 24" style="color:#ef4444"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                         </button>
+                        <div class="added-indicator absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300">
+                            <span class="bg-accent text-white px-4 py-2 rounded-full font-bold text-sm transform scale-75 transition-transform duration-300">Added!</span>
+                        </div>
                     </div>
                     <div class="p-4">
-                        <h3 class="font-bold text-charcoal dark:text-white mb-1">{{ product.name }}</h3>
-                        <p class="text-primary dark:text-accent font-bold text-lg">KES {{ product.price }}</p>
-                        <button class="mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                            Add to Cart
+                        <h3 class="font-bold text-charcoal dark:text-white mb-1 truncate">{{ product.name }}</h3>
+                        <p class="text-primary dark:text-accent font-bold text-lg">KES {{ "{:,.0f}".format(product.price) }}</p>
+                        <button class="cart-btn mt-3 w-full py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}" data-product-price="{{ product.price }}" title="Add to Cart">
+                            <svg class="w-4 h-4 cart-icon-plus" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            <svg class="w-4 h-4 cart-icon-check hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <span class="cart-label">Add to Cart</span>
                         </button>
                     </div>
                 </div>
@@ -159,9 +171,15 @@
         </div>
         
         <div class="text-center mt-8">
+            {% if category %}
+            <a href="{{ url_for('main.category_products', slug=category.slug) }}" class="inline-flex items-center gap-2 text-accent font-semibold hover:underline">
+                View All {{ category.name }} <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+            {% else %}
             <a href="/categories/electronics" class="inline-flex items-center gap-2 text-accent font-semibold hover:underline">
                 View All Electronics <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
             </a>
+            {% endif %}
         </div>
     </div>
 </section>
@@ -184,4 +202,285 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+<!-- Server-provided initial state passed to JavaScript -->
+<script id="server-cart-data" type="application/json">
+{
+    "cart_product_ids": {{ cart_product_ids | tojson }},
+    "wishlist_product_ids": {{ wishlist_product_ids | tojson }}
+}
+</script>
+
+<!-- Toast Notification Container -->
+<div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ── Read initial state from server-rendered JSON ─────
+    var serverDataEl = document.getElementById('server-cart-data');
+    var serverCartIds = [];
+    var serverWishlistIds = [];
+
+    if (serverDataEl) {
+        try {
+            var parsed = JSON.parse(serverDataEl.textContent);
+            serverCartIds = parsed.cart_product_ids || [];
+            serverWishlistIds = parsed.wishlist_product_ids || [];
+        } catch (e) {
+            console.warn('Could not parse server cart data', e);
+        }
+    }
+
+    // ── Pre-fill button states from server data ───────────
+    serverWishlistIds.forEach(function(id) {
+        var btn = document.querySelector('.wishlist-btn[data-product-id="' + id + '"]');
+        if (btn) setWishlistedUI(btn, true);
+    });
+    serverCartIds.forEach(function(id) {
+        var btn = document.querySelector('.cart-btn[data-product-id="' + id + '"]');
+        if (btn) setCartedUI(btn, true);
+    });
+    updateCartBadge(serverCartIds.length);
+
+    // ── Local cache (kept in sync with server responses) ─
+    var localCartIds = serverCartIds.slice();
+    var localWishlistIds = serverWishlistIds.slice();
+
+    // ── Attach event listeners ────────────────────────────
+    document.querySelectorAll('.cart-btn').forEach(function(btn) {
+        btn.addEventListener('click', handleCartClick);
+    });
+    document.querySelectorAll('.wishlist-btn').forEach(function(btn) {
+        btn.addEventListener('click', handleWishlistClick);
+    });
+
+    // ── CART CLICK HANDLER ────────────────────────────────
+    function handleCartClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var btn = event.currentTarget;
+        var productId = parseInt(btn.getAttribute('data-product-id'), 10);
+        var productName = btn.getAttribute('data-product-name');
+        var card = btn.closest('.product-card');
+
+        var isInCart = localCartIds.indexOf(productId) > -1;
+
+        if (isInCart) {
+            // ── Remove: call /api/cart/remove-item ───────
+            fetch('/api/cart/remove-item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success !== undefined) {
+                    var idx = localCartIds.indexOf(productId);
+                    if (idx > -1) localCartIds.splice(idx, 1);
+                    setCartedUI(btn, false);
+                    updateCartBadge(data.cart_count);
+                    showToast(productName + ' removed from cart', 'info');
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', 'error');
+            });
+        } else {
+            // ── Add: call existing /add-to-cart ──────────
+            fetch('/add-to-cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ product_id: productId, quantity: 1 })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    localCartIds.push(productId);
+                    setCartedUI(btn, true);
+                    flashAddedIndicator(card);
+                    updateCartBadge(data.cart_count);
+                    showToast(productName + ' added to cart', 'success');
+                } else {
+                    showToast(data.message || 'Could not add to cart', 'error');
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', 'error');
+            });
+        }
+    }
+
+    // ── WISHLIST CLICK HANDLER ────────────────────────────
+    function handleWishlistClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var btn = event.currentTarget;
+        var productId = parseInt(btn.getAttribute('data-product-id'), 10);
+        var productName = btn.getAttribute('data-product-name');
+
+        var isInWishlist = localWishlistIds.indexOf(productId) > -1;
+
+        if (isInWishlist) {
+            // ── Remove: call /api/wishlist/remove-by-product ─
+            fetch('/api/wishlist/remove-by-product/' + productId, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var idx = localWishlistIds.indexOf(productId);
+                    if (idx > -1) localWishlistIds.splice(idx, 1);
+                    setWishlistedUI(btn, false);
+                    showToast(productName + ' removed from wishlist', 'info');
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', 'error');
+            });
+        } else {
+            // ── Add: call existing /wishlist/add/<id> ────
+            fetch('/wishlist/add/' + productId, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.status === 'success') {
+                    localWishlistIds.push(productId);
+                    setWishlistedUI(btn, true);
+                    btn.style.transform = 'scale(1.3)';
+                    setTimeout(function() { btn.style.transform = 'scale(1)'; }, 200);
+                    showToast(productName + ' added to wishlist', 'success');
+                } else if (data.status === 'exists') {
+                    // Already in wishlist — sync UI anyway
+                    if (localWishlistIds.indexOf(productId) === -1) {
+                        localWishlistIds.push(productId);
+                    }
+                    setWishlistedUI(btn, true);
+                    showToast(data.message || 'Already in wishlist', 'info');
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', 'error');
+            });
+        }
+    }
+
+    // ── UI Helpers ─────────────────────────────────────────
+    function setCartedUI(btn, isAdded) {
+        var plusIcon = btn.querySelector('.cart-icon-plus');
+        var checkIcon = btn.querySelector('.cart-icon-check');
+        var label = btn.querySelector('.cart-label');
+        if (isAdded) {
+            btn.classList.remove('bg-primary', 'hover:bg-primary-dark');
+            btn.classList.add('bg-green-500', 'hover:bg-green-600');
+            plusIcon.classList.add('hidden');
+            checkIcon.classList.remove('hidden');
+            if (label) label.textContent = 'Added to Cart';
+        } else {
+            btn.classList.add('bg-primary', 'hover:bg-primary-dark');
+            btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+            plusIcon.classList.remove('hidden');
+            checkIcon.classList.add('hidden');
+            if (label) label.textContent = 'Add to Cart';
+        }
+    }
+
+    function setWishlistedUI(btn, isWishlisted) {
+        var outline = btn.querySelector('.heart-outline');
+        var filled = btn.querySelector('.heart-filled');
+        if (isWishlisted) {
+            btn.classList.add('bg-accent', 'text-white');
+            btn.classList.remove('bg-white', 'dark:bg-gray-900');
+            outline.classList.add('hidden');
+            filled.classList.remove('hidden');
+        } else {
+            btn.classList.remove('bg-accent', 'text-white');
+            btn.classList.add('bg-white', 'dark:bg-gray-900');
+            outline.classList.remove('hidden');
+            filled.classList.add('hidden');
+        }
+    }
+
+    function flashAddedIndicator(card) {
+        if (!card) return;
+        var indicator = card.querySelector('.added-indicator');
+        if (!indicator) return;
+        indicator.style.opacity = '1';
+        var label = indicator.querySelector('span');
+        if (label) label.style.transform = 'scale(1)';
+        setTimeout(function() {
+            indicator.style.opacity = '0';
+            if (label) label.style.transform = 'scale(0.75)';
+        }, 1200);
+    }
+
+    function updateCartBadge(count) {
+        var badgeSelectors = [
+            '#cart-count',
+            '.cart-count',
+            '.cart-badge',
+            '[data-cart-count]',
+            'a[href="/cart"] .badge',
+            'a[href*="cart"] span'
+        ];
+        var badge = null;
+        for (var i = 0; i < badgeSelectors.length; i++) {
+            badge = document.querySelector(badgeSelectors[i]);
+            if (badge) break;
+        }
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+    }
+
+    // ── Toast Notification System ──────────────────────────
+    function showToast(message, type) {
+        var container = document.getElementById('toast-container');
+        var toast = document.createElement('div');
+
+        var bgClass = 'bg-gray-800 dark:bg-gray-700';
+        var iconSvg = '';
+        if (type === 'success') {
+            bgClass = 'bg-green-600';
+            iconSvg = '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+        } else if (type === 'info') {
+            bgClass = 'bg-gray-700 dark:bg-gray-600';
+            iconSvg = '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>';
+        } else if (type === 'error') {
+            bgClass = 'bg-red-600';
+            iconSvg = '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>';
+        }
+
+        toast.className = 'pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-2xl transform translate-x-full opacity-0 transition-all duration-300 ' + bgClass;
+        toast.innerHTML = iconSvg + '<span>' + message + '</span>';
+
+        container.appendChild(toast);
+
+        requestAnimationFrame(function() {
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            toast.classList.add('translate-x-0', 'opacity-100');
+        });
+
+        setTimeout(function() {
+            toast.classList.add('translate-x-full', 'opacity-0');
+            toast.classList.remove('translate-x-0', 'opacity-100');
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 2500);
+    }
+});
+</script>
 {% endblock %}

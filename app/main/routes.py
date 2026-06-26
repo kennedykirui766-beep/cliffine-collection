@@ -27,36 +27,50 @@ def index():
     cart_product_ids = []
     wishlist_product_ids = []
 
-    # ── Cart IDs (database, no create for guests) ────────
-    try:
-        cart = _get_cart(create=False)
-        if cart:
-            cart_product_ids = [item.product_id for item in cart.items]
-    except Exception:
-        cart_product_ids = []
-
-    # ── Wishlist IDs (safe column detection) ─────────────
     if current_user.is_authenticated:
+        # ── Cart: User → Cart → CartItem ─────────────────
         try:
-            wish_model = WishlistItem
-            user_fk_col = None
-            product_fk_col = None
-            for col in wish_model.__table__.columns:
-                if col.name in ("user_id", "customer_id", "buyer_id"):
-                    user_fk_col = col.name
-                if col.name in ("product_id", "item_id"):
-                    product_fk_col = col.name
-
-            if user_fk_col and product_fk_col:
-                filters = {user_fk_col: current_user.id}
-                wish_items = wish_model.query.filter_by(**filters).all()
-                wishlist_product_ids = [
-                    getattr(item, product_fk_col) for item in wish_items
-                ]
+            cart = Cart.query.filter_by(user_id=current_user.id).first()
+            if cart:
+                cart_product_ids = [item.product_id for item in cart.items]
         except Exception:
-            wishlist_product_ids = []
+            pass
+
+        # ── Wishlist: User → Wishlist → WishlistItem ──────
+        try:
+            wishlist = Wishlist.query.filter_by(
+                user_id=current_user.id,
+                is_active=True
+            ).first()
+            if wishlist:
+                wishlist_product_ids = [item.product_id for item in wishlist.items]
+        except Exception:
+            pass
     else:
-        wishlist_product_ids = session.get("guest_wishlist", [])
+        # ── Guest Cart: session_id → Cart → CartItem ─────
+        try:
+            session_id = session.get("cart_session")
+            if session_id:
+                cart = Cart.query.filter_by(session_id=session_id).first()
+                if cart:
+                    cart_product_ids = [item.product_id for item in cart.items]
+        except Exception:
+            pass
+
+        # ── Guest Wishlist: session_id → Wishlist → Items ─
+        try:
+            wishlist_session_id = session.get("wishlist_session_id")
+            if wishlist_session_id:
+                wishlist = Wishlist.query.filter_by(
+                    session_id=wishlist_session_id,
+                    is_active=True
+                ).first()
+                if wishlist:
+                    wishlist_product_ids = [
+                        item.product_id for item in wishlist.items
+                    ]
+        except Exception:
+            pass
 
     return render_template(
         "index.html",
@@ -67,8 +81,6 @@ def index():
         wishlist_product_ids=wishlist_product_ids,
     )
 
-
-
 # ── Helper: get or create the user's Cart ─────────────────
 def _get_or_create_cart(user_id):
     cart = Cart.query.filter_by(user_id=user_id).first()
@@ -77,7 +89,6 @@ def _get_or_create_cart(user_id):
         db.session.add(cart)
         db.session.commit()
     return cart
-
 @main_bp.route("/categories/<slug>")
 def category_products(slug):
     category = Category.query.filter_by(slug=slug, is_active=True).first_or_404()
@@ -87,12 +98,58 @@ def category_products(slug):
         is_active=True
     ).all()
 
-    return render_template(
-        "category_products.html",
-        category=category,
-        products=products
-    )
+    # ── Resolve cart & wishlist product IDs ──────────────
+    cart_product_ids = []
+    wishlist_product_ids = []
 
+    if current_user.is_authenticated:
+        try:
+            cart = Cart.query.filter_by(user_id=current_user.id).first()
+            if cart:
+                cart_product_ids = [item.product_id for item in cart.items]
+        except Exception:
+            pass
+
+        try:
+            wishlist = Wishlist.query.filter_by(
+                user_id=current_user.id,
+                is_active=True
+            ).first()
+            if wishlist:
+                wishlist_product_ids = [item.product_id for item in wishlist.items]
+        except Exception:
+            pass
+    else:
+        try:
+            session_id = session.get("cart_session")
+            if session_id:
+                cart = Cart.query.filter_by(session_id=session_id).first()
+                if cart:
+                    cart_product_ids = [item.product_id for item in cart.items]
+        except Exception:
+            pass
+
+        try:
+            wishlist_session_id = session.get("wishlist_session_id")
+            if wishlist_session_id:
+                wishlist = Wishlist.query.filter_by(
+                    session_id=wishlist_session_id,
+                    is_active=True
+                ).first()
+                if wishlist:
+                    wishlist_product_ids = [
+                        item.product_id for item in wishlist.items
+                    ]
+        except Exception:
+            pass
+
+    return render_template(
+        "categories.html",
+        category=category,
+        products=products,
+        cart_product_ids=cart_product_ids,
+        wishlist_product_ids=wishlist_product_ids,
+    )
 
 
 @main_bp.route("/categories")
@@ -106,10 +163,57 @@ def all_categories():
         Product.is_active == True
     ).all()
 
+    # ── Resolve cart & wishlist product IDs ──────────────
+    cart_product_ids = []
+    wishlist_product_ids = []
+
+    if current_user.is_authenticated:
+        try:
+            cart = Cart.query.filter_by(user_id=current_user.id).first()
+            if cart:
+                cart_product_ids = [item.product_id for item in cart.items]
+        except Exception:
+            pass
+
+        try:
+            wishlist = Wishlist.query.filter_by(
+                user_id=current_user.id,
+                is_active=True
+            ).first()
+            if wishlist:
+                wishlist_product_ids = [item.product_id for item in wishlist.items]
+        except Exception:
+            pass
+    else:
+        try:
+            session_id = session.get("cart_session")
+            if session_id:
+                cart = Cart.query.filter_by(session_id=session_id).first()
+                if cart:
+                    cart_product_ids = [item.product_id for item in cart.items]
+        except Exception:
+            pass
+
+        try:
+            wishlist_session_id = session.get("wishlist_session_id")
+            if wishlist_session_id:
+                wishlist = Wishlist.query.filter_by(
+                    session_id=wishlist_session_id,
+                    is_active=True
+                ).first()
+                if wishlist:
+                    wishlist_product_ids = [
+                        item.product_id for item in wishlist.items
+                    ]
+        except Exception:
+            pass
+
     return render_template(
         "categories.html",
         categories=categories,
-        products=trending_products
+        products=trending_products,
+        cart_product_ids=cart_product_ids,
+        wishlist_product_ids=wishlist_product_ids,
     )
 
 
@@ -620,28 +724,6 @@ def update_cart():
 
     return jsonify({"success": True})
 
-@main_bp.route("/cart/coupon/apply", methods=["POST"])
-def apply_coupon():
-    from flask import request, jsonify
-
-    data = request.get_json()
-    code = data.get("code")
-
-    # Example logic (replace with DB later)
-    if code == "SAVE10":
-        return jsonify({
-            "success": True,
-            "message": "Coupon applied!",
-            "discount_amount": 100,
-            "new_total": 900  # you should calculate this dynamically
-        })
-
-    return jsonify({
-        "success": False,
-        "message": "Invalid coupon"
-    }), 400
-
-
 @main_bp.route("/cart/remove", methods=["POST"])
 def remove_from_cart():
     from flask import request, redirect, url_for, session, flash
@@ -676,6 +758,27 @@ def remove_from_cart():
         flash("Item not found in cart", "error")
 
     return redirect(url_for("main.cart"))
+
+@main_bp.route("/cart/coupon/apply", methods=["POST"])
+def apply_coupon():
+    from flask import request, jsonify
+
+    data = request.get_json()
+    code = data.get("code")
+
+    # Example logic (replace with DB later)
+    if code == "SAVE10":
+        return jsonify({
+            "success": True,
+            "message": "Coupon applied!",
+            "discount_amount": 100,
+            "new_total": 900  # you should calculate this dynamically
+        })
+
+    return jsonify({
+        "success": False,
+        "message": "Invalid coupon"
+    }), 400
 
 
 # Account
@@ -1464,3 +1567,21 @@ def password_reset():
 
     return render_template("password_reset.html")
 
+@main_bp.route("/delivery")
+@main_bp.route("/delivery-areas")
+def delivery_areas():
+    from app.models import DeliveryArea
+
+    areas = (
+        DeliveryArea.query
+        .filter_by(is_active=True)
+        .order_by(DeliveryArea.name.asc())
+        .all()
+    )
+
+    return render_template(
+        "delivery.html",
+        areas=areas
+    )
+
+    # Group areas

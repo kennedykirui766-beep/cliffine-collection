@@ -1,8 +1,10 @@
 from datetime import datetime
-from flask import current_app, redirect, render_template, url_for
+from flask import current_app, jsonify, redirect, render_template, url_for
 from flask import Blueprint, render_template
+from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy import func
 from app import db
-from app.models import User, Product, Order, Coupon, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
+from app.models import User, Product, Order, Coupon, CouponUsage, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
 from flask import render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import os
@@ -11,33 +13,225 @@ from app.utils.helpers import generate_unique_slug
 import cloudinary.uploader
 import uuid
 from sqlalchemy.orm import joinedload
-
+from functools import wraps
+from werkzeug.security import check_password_hash
+from markupsafe import Markup
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
-@admin_bp.route("/")
-@admin_bp.route("/dashboard")
-def admin_dashboard():
-    # Top Metrics
-    from sqlalchemy import func
 
-    total_revenue = db.session.query(func.coalesce(func.sum(Order.total_amount), 0)).scalar()
+def admin_required(f):
+    @wraps(f)
+    @login_required
+    def decorated_function(*args, **kwargs):
+        if current_user.role != "admin":
+            flash("You are not authorized to access the admin panel.", "danger")
+            return redirect(url_for("admin.admin_login"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# -------------------------------------------------
+# Admin Home
+# -------------------------------------------------
+@admin_bp.route("/")
+def admin_home():
+    # If already logged in as admin, go to dashboard
+    if current_user.is_authenticated and current_user.is_admin:
+        return redirect(url_for("admin.admin_dashboard"))
+
+    # Otherwise go to login page
+    return redirect(url_for("admin.admin_login"))
+
+
+# -------------------------------------------------
+# Admin Dashboard
+# -------------------------------------------------
+@admin_bp.route("/dashboard")
+@admin_required
+def admin_dashboard():
+    from sqlalchemy import extract
+    from datetime import datetime
+    from calendar import month_name
+
+    now = datetime.utcnow()
+    this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    if now.month == 1:
+        last_month_start = now.replace(year=now.year - 1, month=12, day=1,
+                                       hour=0, minute=0, second=0, microsecond=0)
+    else:
+        last_month_start = now.replace(month=now.month - 1, day=1,
+                                       hour=0, minute=0, second=0, microsecond=0)
+
+    # --- Top Metrics ---
+    total_revenue = db.session.query(
+        func.coalesce(func.sum(Order.total_amount), 0)
+    ).scalar() or 0
+
     total_users = User.query.count()
     total_products = Product.query.count()
     total_orders = Order.query.count()
     active_coupons = Coupon.query.filter_by(is_active=True).count()
-    
-    # Low stock products (e.g., stock <=5)
+
+    # --- Growth Calculations ---
+    this_month_revenue = db.session.query(
+        func.coalesce(func.sum(Order.total_amount), 0)
+    ).filter(
+        Order.created_at >= this_month_start,
+        Order.status != 'Cancelled'
+    ).scalar() or 0
+
+    last_month_revenue = db.session.query(
+        func.coalesce(func.sum(Order.total_amount), 0)
+    ).filter(
+        Order.created_at >= last_month_start,
+        Order.created_at < this_month_start,
+        Order.status != 'Cancelled'
+    ).scalar() or 0
+
+    revenue_growth = round(
+        ((this_month_revenue - last_month_revenue) / last_month_revenue) * 100, 1
+    ) if last_month_revenue > 0 else 0.0
+
+    this_month_order_count = db.session.query(func.count(Order.id)).filter(
+        Order.created_at >= this_month_start
+    ).scalar() or 0
+
+    last_month_order_count = db.session.query(func.count(Order.id)).filter(
+        Order.created_at >= last_month_start,
+        Order.created_at < this_month_start
+    ).scalar() or 0
+
+    orders_growth = round(
+        ((this_month_order_count - last_month_order_count) / last_month_order_count) * 100, 1
+    ) if last_month_order_count > 0 else 0.0
+
+    # --- Revenue Comparison: Weekly Breakdown ---
+    this_month_daily = db.session.query(
+        extract('day', Order.created_at).label('day'),
+        func.coalesce(func.sum(Order.total_amount), 0).label('revenue')
+    ).filter(
+        Order.created_at >= this_month_start,
+        Order.status != 'Cancelled'
+    ).group_by(extract('day', Order.created_at)).all()
+
+    this_month_weeks = [0.0, 0.0, 0.0, 0.0]
+    for row in this_month_daily:
+        week_idx = min((int(row.day) - 1) // 7, 3)
+        this_month_weeks[week_idx] += float(row.revenue)
+
+    last_month_daily = db.session.query(
+        extract('day', Order.created_at).label('day'),
+        func.coalesce(func.sum(Order.total_amount), 0).label('revenue')
+    ).filter(
+        Order.created_at >= last_month_start,
+        Order.created_at < this_month_start,
+        Order.status != 'Cancelled'
+    ).group_by(extract('day', Order.created_at)).all()
+
+    last_month_weeks = [0.0, 0.0, 0.0, 0.0]
+    for row in last_month_daily:
+        week_idx = min((int(row.day) - 1) // 7, 3)
+        last_month_weeks[week_idx] += float(row.revenue)
+
+    this_month_label = month_name[now.month]
+    last_month_label = month_name[last_month_start.month]
+
+    # --- Sales by Region ---
+    # NOTE: Change 'shipping_city' to match your Order model's field name
+    # Common alternatives: 'city', 'shipping_county', 'county'
+    try:
+        region_query = db.session.query(
+            Order.shipping_city.label('region'),
+            func.count(Order.id).label('order_count'),
+            func.coalesce(func.sum(Order.total_amount), 0).label('revenue')
+        ).filter(
+            Order.shipping_city.isnot(None),
+            Order.shipping_city != '',
+            Order.status != 'Cancelled'
+        ).group_by(Order.shipping_city).order_by(
+            func.sum(Order.total_amount).desc()
+        ).limit(6).all()
+
+        total_region_revenue = sum(float(r.revenue) for r in region_query) or 1
+        bar_colors = ['bg-primary', 'bg-violet-500', 'bg-accent',
+                      'bg-amber-500', 'bg-emerald-500', 'bg-slate-400']
+        chart_colors = ['#5423E7', '#7C3AED', '#D4AF37',
+                        '#F59E0B', '#10B981', '#94A3B8']
+
+        region_percentages = []
+        for i, r in enumerate(region_query):
+            pct = round((float(r.revenue) / total_region_revenue) * 100, 1)
+            region_percentages.append({
+                'name': r.region.title(),
+                'percentage': pct,
+                'revenue': float(r.revenue),
+                'orders': r.order_count,
+                'bar_color': bar_colors[i % len(bar_colors)],
+                'chart_color': chart_colors[i % len(chart_colors)]
+            })
+    except Exception:
+        region_percentages = []
+
+    # --- Product Performance Heatmap (Category × Day of Week) ---
+    # NOTE: Change 'OrderItem' to match your model name if different
+    try:
+        heatmap_raw = db.session.query(
+            Product.category,
+            extract('dow', Order.created_at).label('dow'),
+            func.coalesce(func.sum(OrderItem.quantity), 0).label('sales')
+        ).join(
+            OrderItem, Product.id == OrderItem.product_id
+        ).join(
+            Order, OrderItem.order_id == Order.id
+        ).filter(
+            Order.status != 'Cancelled',
+            Product.category.isnot(None)
+        ).group_by(
+            Product.category,
+            extract('dow', Order.created_at)
+        ).all()
+
+        cat_totals = {}
+        for row in heatmap_raw:
+            cat_totals[row.category] = cat_totals.get(row.category, 0) + int(row.sales)
+        top_categories = sorted(cat_totals.keys(),
+                                key=lambda x: cat_totals[x], reverse=True)[:7]
+
+        # Reorder: Mon(1) Tue(2) ... Sat(6) Sun(0)
+        dow_order = [1, 2, 3, 4, 5, 6, 0]
+        dow_labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+        heatmap_matrix = []
+        max_sales = 1
+        for cat in top_categories:
+            day_map = {}
+            for h in heatmap_raw:
+                if h.category == cat:
+                    val = int(h.sales)
+                    day_map[int(h.dow)] = val
+                    if val > max_sales:
+                        max_sales = val
+            heatmap_matrix.append({
+                'category': cat,
+                'days': [day_map.get(d, 0) for d in dow_order],
+                'total': cat_totals[cat]
+            })
+    except Exception:
+        heatmap_matrix = []
+        dow_labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        max_sales = 1
+
+    # --- Low Stock Products ---
     low_stock_products = Product.query.filter(Product.stock <= 5).all()
-    
-    # Recent orders (limit 5)
+
+    # --- Recent Orders ---
     recent_orders = Order.query.order_by(Order.created_at.desc()).limit(5).all()
-    
-    # Recent messages (limit 5)
+
+    # --- Recent Messages ---
     recent_messages = Message.query.order_by(Message.created_at.desc()).limit(5).all()
-    
+
     return render_template(
-        'admin/dashboard.html',
+        "admin/dashboard.html",
         total_revenue=total_revenue,
         total_users=total_users,
         total_products=total_products,
@@ -45,9 +239,49 @@ def admin_dashboard():
         active_coupons=active_coupons,
         low_stock_products=low_stock_products,
         recent_orders=recent_orders,
-        recent_messages=recent_messages
+        recent_messages=recent_messages,
+        this_month_weeks=this_month_weeks,
+        last_month_weeks=last_month_weeks,
+        revenue_growth=revenue_growth,
+        orders_growth=orders_growth,
+        this_month_label=this_month_label,
+        last_month_label=last_month_label,
+        region_percentages=region_percentages,
+        heatmap_matrix=heatmap_matrix,
+        dow_labels=dow_labels,
+        max_sales=max_sales,
     )
-    
+
+
+
+@admin_bp.route("/login", methods=["GET", "POST"])
+def admin_login():
+    if current_user.is_authenticated and current_user.role == "admin":
+        return redirect(url_for("admin.admin_dashboard"))
+
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        admin = User.query.filter_by(
+            email=email,
+            role="admin"
+        ).first()
+
+        if admin and check_password_hash(admin.password_hash, password):
+            login_user(admin)
+            return redirect(url_for("admin.admin_dashboard"))
+
+        flash("Invalid admin credentials", "danger")
+
+    return render_template("admin/login.html")    
+
+@admin_bp.route("/logout")
+@login_required
+def admin_logout():
+    logout_user()
+    flash("Logged out successfully.", "success")
+    return redirect(url_for("admin.admin_login"))
 
 @admin_bp.route("/products")
 def all_products():
@@ -780,9 +1014,7 @@ def payment_refunds():
     return render_template("admin/payments/refunds.html")
 
 
-@admin_bp.route("/coupons")
-def coupons():
-    return render_template("admin/coupons/index.html")
+
 
 @admin_bp.route("/chamas")
 def all_chamas():
@@ -1043,10 +1275,6 @@ def settings():
 def admin_profile():
     return render_template("admin/profile.html")
 
-@admin_bp.route("/logout")
-def admin_logout():
-    # Logic for logout
-    return redirect(url_for("admin.admin_dashboard"))
 
 @admin_bp.route("/analytics")
 def analytics():
@@ -1133,3 +1361,556 @@ def delete_delivery_area(id):
 
     flash("Delivery area deleted", "success")
     return redirect(url_for("admin.delivery_areas"))
+
+
+# ═══════════════════════════════════════════════════════════════
+# ... YOUR EXISTING IMPORTS STAY ABOVE ...
+# ═══════════════════════════════════════════════════════════════
+
+# Make sure these are imported (add any that are missing):
+from datetime import datetime, timedelta
+from functools import wraps
+import json    # ← adjust if you import differently
+
+
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║  COUPON EVENT DEFINITIONS — PASTE INTO routes.py             ║
+# ╚═══════════════════════════════════════════════════════════════╝
+
+COUPON_EVENTS = {
+    'account': {
+        'label': 'Customer Account Events',
+        'icon': 'user-plus',
+        'color': 'blue',
+        'events': [
+            {
+                'key': 'new_registration',
+                'label': 'New Account Registration',
+                'description': 'Encourage first purchase when a user creates an account.',
+                'example_code': 'WELCOME10',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 10,
+                'default_validity_days': 30,
+                'default_total_uses': 1000,
+            },
+            {
+                'key': 'email_verification',
+                'label': 'Email Verification',
+                'description': 'Small discount or free shipping when user verifies their email.',
+                'example_code': 'VERIFYFREESHIP',
+                'default_discount_type': 'free_shipping',
+                'default_discount_value': 0,
+                'default_validity_days': 14,
+                'default_total_uses': 500,
+            },
+            {
+                'key': 'profile_completion',
+                'label': 'Profile Completion',
+                'description': 'Discount coupon when user fills in all profile details.',
+                'example_code': 'PROFILE15',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 15,
+                'default_validity_days': 21,
+                'default_total_uses': 500,
+            },
+        ]
+    },
+    'purchase': {
+        'label': 'Purchase Events',
+        'icon': 'shopping-bag',
+        'color': 'green',
+        'events': [
+            {
+                'key': 'first_order',
+                'label': 'First Order',
+                'description': 'Coupon for second purchase after user places their first order.',
+                'example_code': 'THANKYOU10',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 10,
+                'default_validity_days': 30,
+                'default_total_uses': 1000,
+            },
+            {
+                'key': 'order_completion',
+                'label': 'Order Completion',
+                'description': 'Loyalty coupon when an order is delivered successfully.',
+                'example_code': 'LOYAL5',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 5,
+                'default_validity_days': 45,
+                'default_total_uses': 2000,
+            },
+            {
+                'key': 'high_value_purchase',
+                'label': 'High-Value Purchase',
+                'description': 'Special discount for next order when order exceeds KSh 10,000.',
+                'example_code': 'BIGSPENDER15',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 15,
+                'default_validity_days': 60,
+                'default_total_uses': 500,
+                'trigger_min_amount': 10000,
+            },
+            {
+                'key': 'repeat_customer',
+                'label': 'Repeat Customer',
+                'description': 'VIP coupon when customer reaches 5th, 10th, or 20th order.',
+                'example_code': 'VIP20',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 20,
+                'default_validity_days': 90,
+                'default_total_uses': 200,
+                'trigger_order_milestone': [5, 10, 20],
+            },
+        ]
+    },
+    'cart': {
+        'label': 'Cart Events',
+        'icon': 'shopping-cart',
+        'color': 'orange',
+        'events': [
+            {
+                'key': 'abandoned_cart',
+                'label': 'Abandoned Cart',
+                'description': "Coupon sent by email or SMS when customer adds items but doesn't check out after a set period.",
+                'example_code': 'COMEBACK10',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 10,
+                'default_validity_days': 3,
+                'default_total_uses': 5000,
+            },
+            {
+                'key': 'large_cart_value',
+                'label': 'Large Cart Value',
+                'description': 'Discount encouraging checkout when cart exceeds a target amount.',
+                'example_code': 'BIGCART8',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 8,
+                'default_validity_days': 2,
+                'default_total_uses': 3000,
+                'trigger_min_cart_amount': 5000,
+            },
+        ]
+    },
+    'loyalty': {
+        'label': 'Loyalty Events',
+        'icon': 'award',
+        'color': 'purple',
+        'events': [
+            {
+                'key': 'points_milestone',
+                'label': 'Points Milestone',
+                'description': 'Coupon when customer earns a certain number of loyalty points.',
+                'example_code': 'POINTS500',
+                'default_discount_type': 'fixed',
+                'default_discount_value': 500,
+                'default_validity_days': 30,
+                'default_total_uses': 300,
+                'trigger_min_points': 500,
+            },
+            {
+                'key': 'vip_status',
+                'label': 'VIP Status',
+                'description': 'Exclusive coupons when customer reaches VIP tier.',
+                'example_code': 'VIPEXCLUSIVE25',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 25,
+                'default_validity_days': 60,
+                'default_total_uses': 100,
+            },
+        ]
+    },
+    'referral': {
+        'label': 'Referral Events',
+        'icon': 'users',
+        'color': 'teal',
+        'events': [
+            {
+                'key': 'successful_referral',
+                'label': 'Successful Referral',
+                'description': 'Coupon for referrer when a friend signs up or makes a purchase.',
+                'example_code': 'REFERRAL10',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 10,
+                'default_validity_days': 45,
+                'default_total_uses': 5000,
+            },
+            {
+                'key': 'friend_first_purchase',
+                'label': "Friend's First Purchase",
+                'description': 'Larger coupon for the referred customer on their first buy.',
+                'example_code': 'FRIEND15',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 15,
+                'default_validity_days': 30,
+                'default_total_uses': 5000,
+            },
+        ]
+    },
+    'birthday': {
+        'label': 'Birthday & Anniversary Events',
+        'icon': 'gift',
+        'color': 'pink',
+        'events': [
+            {
+                'key': 'customer_birthday',
+                'label': 'Customer Birthday',
+                'description': "Birthday discount sent on the customer's birthday date.",
+                'example_code': 'BIRTHDAY20',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 20,
+                'default_validity_days': 7,
+                'default_total_uses': 5000,
+            },
+            {
+                'key': 'account_anniversary',
+                'label': 'Account Anniversary',
+                'description': 'Special reward one year since registration.',
+                'example_code': 'ANNIV12',
+                'default_discount_type': 'percentage',
+                'default_discount_value': 12,
+                'default_validity_days': 14,
+                'default_total_uses': 3000,
+            },
+        ]
+    },
+}
+
+COLOR_MAP = {
+    'blue':   {'bg': 'bg-blue-50',      'border': 'border-blue-200',      'text': 'text-blue-600',      'dot': 'bg-blue-500',      'ring': 'ring-blue-500/30',  'badge': 'bg-blue-100 text-blue-700'},
+    'green':  {'bg': 'bg-emerald-50',   'border': 'border-emerald-200',   'text': 'text-emerald-600',  'dot': 'bg-emerald-500',  'ring': 'ring-emerald-500/30', 'badge': 'bg-emerald-100 text-emerald-700'},
+    'orange': {'bg': 'bg-orange-50',    'border': 'border-orange-200',    'text': 'text-orange-600',   'dot': 'bg-orange-500',   'ring': 'ring-orange-500/30',  'badge': 'bg-orange-100 text-orange-700'},
+    'purple': {'bg': 'bg-purple-50',    'border': 'border-purple-200',    'text': 'text-purple-600',   'dot': 'bg-purple-500',   'ring': 'ring-purple-500/30',  'badge': 'bg-purple-100 text-purple-700'},
+    'teal':   {'bg': 'bg-teal-50',      'border': 'border-teal-200',      'text': 'text-teal-600',     'dot': 'bg-teal-500',     'ring': 'ring-teal-500/30',    'badge': 'bg-teal-100 text-teal-700'},
+    'pink':   {'bg': 'bg-pink-50',      'border': 'border-pink-200',      'text': 'text-pink-600',     'dot': 'bg-pink-500',     'ring': 'ring-pink-500/30',    'badge': 'bg-pink-100 text-pink-700'},
+}
+
+
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║  COUPON ROUTES — PASTE INTO routes.py                        ║
+# ╚═══════════════════════════════════════════════════════════════╝
+
+# ─── If you already have an admin_required decorator, remove this one ───
+def admin_required(f):
+    @wraps(f)
+    @login_required
+    def decorated_function(*args, **kwargs):
+        if current_user.role != "admin":
+            flash("You do not have permission to access this page.", "error")
+            return redirect(url_for("main.home"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# ───────────────────────────────────────────────────────────────
+# Generate Page (event selector)
+# ───────────────────────────────────────────────────────────────
+@admin_bp.route('/coupons/generate')
+@admin_required
+def coupon_generate():
+    return render_template('admin/coupons/generate.html',
+                           coupon_events=COUPON_EVENTS,
+                           color_map=COLOR_MAP)
+
+
+# ───────────────────────────────────────────────────────────────
+# Event Details (AJAX — returns form HTML for selected event)
+# ───────────────────────────────────────────────────────────────
+@admin_bp.route('/coupons/event-details/<category>/<event_key>')
+@admin_required
+def coupon_event_details(category, event_key):
+    if category not in COUPON_EVENTS:
+        return jsonify({'error': 'Invalid category'}), 404
+
+    event = None
+    for e in COUPON_EVENTS[category]['events']:
+        if e['key'] == event_key:
+            event = e
+            break
+    if not event:
+        return jsonify({'error': 'Invalid event'}), 404
+
+    colors = COLOR_MAP.get(COUPON_EVENTS[category]['color'], COLOR_MAP['blue'])
+
+    html = render_template('admin/coupons/partials/event_form.html',
+                           event=event,
+                           category=category,
+                           category_label=COUPON_EVENTS[category]['label'],
+                           colors=colors,
+                           coupon_events=COUPON_EVENTS)
+
+    return jsonify({'html': html, 'event': event, 'colors': colors})
+
+
+# ───────────────────────────────────────────────────────────────
+# Generate Coupon (POST)
+# ───────────────────────────────────────────────────────────────
+@admin_bp.route('/coupons/generate', methods=['POST'])
+@admin_required
+def coupon_generate_post():
+    category = request.form.get('category', '')
+    event_key = request.form.get('event_key', '')
+
+    # Validate category + event
+    if category not in COUPON_EVENTS:
+        flash('Invalid coupon category.', 'error')
+        return redirect(url_for('admin.coupon_generate'))
+
+    event = None
+    for e in COUPON_EVENTS[category]['events']:
+        if e['key'] == event_key:
+            event = e
+            break
+    if not event:
+        flash('Invalid coupon event.', 'error')
+        return redirect(url_for('admin.coupon_generate'))
+
+    # Gather form values
+    code            = request.form.get('code', '').strip().upper()
+    code_prefix     = request.form.get('code_prefix', '').strip().upper()
+    auto_generate   = request.form.get('auto_generate', 'off') == 'on'
+    bulk_count      = int(request.form.get('bulk_count', 1))
+    discount_type   = request.form.get('discount_type', 'percentage')
+    discount_value  = float(request.form.get('discount_value', 0))
+    min_order_amount = float(request.form.get('min_order_amount', 0))
+    max_discount_amount = float(request.form.get('max_discount_amount', 0)) or None
+    total_uses      = int(request.form.get('total_uses', 100))
+    uses_per_customer = int(request.form.get('uses_per_customer', 1))
+    validity_days   = int(request.form.get('validity_days', 30))
+    description     = request.form.get('description', '')
+    is_active       = request.form.get('is_active', 'on') == 'on'
+
+    # Trigger settings
+    trigger_settings = {}
+    if 'trigger_min_amount' in request.form:
+        trigger_settings['trigger_min_amount'] = float(request.form.get('trigger_min_amount', 0))
+    if 'trigger_min_cart_amount' in request.form:
+        trigger_settings['trigger_min_cart_amount'] = float(request.form.get('trigger_min_cart_amount', 0))
+    if 'trigger_min_points' in request.form:
+        trigger_settings['trigger_min_points'] = int(request.form.get('trigger_min_points', 0))
+    if 'trigger_order_milestone' in request.form:
+        trigger_settings['trigger_order_milestone'] = request.form.getlist('trigger_order_milestone')
+
+    # ── Validation ──
+    if discount_type in ('percentage', 'fixed') and discount_value <= 0:
+        flash('Discount value must be greater than 0.', 'error')
+        return redirect(url_for('admin.coupon_generate'))
+
+    if discount_type == 'percentage' and discount_value > 100:
+        flash('Percentage discount cannot exceed 100%.', 'error')
+        return redirect(url_for('admin.coupon_generate'))
+
+    if bulk_count < 1 or bulk_count > 100:
+        flash('Bulk count must be between 1 and 100.', 'error')
+        return redirect(url_for('admin.coupon_generate'))
+
+    # ── Create coupon(s) ──
+    generated = []
+    valid_from  = datetime.utcnow()
+    valid_until = valid_from + timedelta(days=validity_days)
+
+    # Build description JSON if there are triggers
+    desc_json = None
+    if trigger_settings:
+        desc_json = json.dumps({'text': description, 'triggers': trigger_settings})
+
+    for i in range(bulk_count):
+        if auto_generate or bulk_count > 1:
+            length = 6 if bulk_count > 1 else 8
+            coupon_code = Coupon.generate_code(prefix=code_prefix, length=length)
+        else:
+            coupon_code = code
+
+        # Uniqueness check
+        existing = Coupon.query.filter_by(code=coupon_code).first()
+        if existing:
+            if bulk_count == 1 and not auto_generate:
+                flash(f'Code "{coupon_code}" already exists. Choose a different one.', 'error')
+                return redirect(url_for('admin.coupon_generate'))
+            coupon_code = Coupon.generate_code(prefix=code_prefix, length=10)
+
+        coupon = Coupon(
+            code=coupon_code,
+            event_category=category,
+            event_type=event_key,
+            event_label=event['label'],
+            discount_type=discount_type,
+            discount_value=discount_value,
+            min_order_amount=min_order_amount,
+            max_discount_amount=max_discount_amount,
+            total_uses=total_uses,
+            used_count=0,
+            uses_per_customer=uses_per_customer,
+            valid_from=valid_from,
+            valid_until=valid_until,
+            is_active=is_active,
+            description=desc_json if desc_json else description,
+            created_by=current_user.id,
+        )
+        db.session.add(coupon)
+        generated.append(coupon_code)
+
+    db.session.commit()
+
+    if bulk_count == 1:
+        flash(
+            Markup(f'Coupon <strong>{generated[0]}</strong> created successfully!'),
+            "success"
+        )
+    else:
+        flash(
+            Markup(f'<strong>{len(generated)}</strong> coupons generated successfully!'),
+            "success"
+        )
+
+    return redirect(url_for('admin.coupon_list'))
+
+
+# ───────────────────────────────────────────────────────────────
+# Coupons List
+# ───────────────────────────────────────────────────────────────
+@admin_bp.route('/coupons')
+@admin_required
+def coupon_list():
+    page      = request.args.get('page', 1, type=int)
+    per_page  = request.args.get('per_page', 20, type=int)
+    search    = request.args.get('search', '').strip()
+    category  = request.args.get('category', '').strip()
+    status    = request.args.get('status', '').strip()
+    discount_type_filter = request.args.get('discount_type', '').strip()
+
+    query = Coupon.query
+
+    if search:
+        query = query.filter(
+            db.or_(
+                Coupon.code.ilike(f'%{search}%'),
+                Coupon.event_label.ilike(f'%{search}%'),
+                Coupon.description.ilike(f'%{search}%'),
+            )
+        )
+    if category:
+        query = query.filter_by(event_category=category)
+    if status == 'active':
+        query = query.filter_by(is_active=True)
+    elif status == 'inactive':
+        query = query.filter_by(is_active=False)
+    elif status == 'expired':
+        query = query.filter(Coupon.valid_until < datetime.utcnow())
+    elif status == 'exhausted':
+        query = query.filter(db.and_(
+            Coupon.total_uses > 0,
+            Coupon.used_count >= Coupon.total_uses
+        ))
+    if discount_type_filter:
+        query = query.filter_by(discount_type=discount_type_filter)
+
+    query = query.order_by(Coupon.created_at.desc())
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('admin/coupons/list.html',
+                           coupons=pagination.items,
+                           pagination=pagination,
+                           coupon_events=COUPON_EVENTS,
+                           color_map=COLOR_MAP,
+                           search=search,
+                           category=category,
+                           status=status,
+                           discount_type=discount_type_filter)
+
+
+# ───────────────────────────────────────────────────────────────
+# Toggle Active (AJAX POST)
+# ───────────────────────────────────────────────────────────────
+@admin_bp.route('/coupons/<int:coupon_id>/toggle', methods=['POST'])
+@admin_required
+def coupon_toggle(coupon_id):
+    coupon = Coupon.query.get_or_404(coupon_id)
+    coupon.is_active = not coupon.is_active
+    db.session.commit()
+    status_text = 'activated' if coupon.is_active else 'deactivated'
+    return jsonify({'success': True, 'is_active': coupon.is_active,
+                    'message': f'Coupon {status_text} successfully.'})
+
+
+# ───────────────────────────────────────────────────────────────
+# Delete Coupon (AJAX POST)
+# ───────────────────────────────────────────────────────────────
+@admin_bp.route('/coupons/<int:coupon_id>/delete', methods=['POST'])
+@admin_required
+def coupon_delete(coupon_id):
+    coupon = Coupon.query.get_or_404(coupon_id)
+    code = coupon.code
+
+    if coupon.used_count > 0:
+        coupon.is_active = False
+        db.session.commit()
+        return jsonify({
+            'success': True, 'soft_deleted': True,
+            'message': f'"{code}" has {coupon.used_count} use(s). Deactivated instead of deleted.'
+        })
+
+    db.session.delete(coupon)
+    db.session.commit()
+    return jsonify({
+        'success': True, 'soft_deleted': False,
+        'message': f'Coupon "{code}" deleted successfully.'
+    })
+
+
+# ───────────────────────────────────────────────────────────────
+# Coupon Detail (AJAX)
+# ───────────────────────────────────────────────────────────────
+@admin_bp.route('/coupons/<int:coupon_id>/details')
+@admin_required
+def coupon_details(coupon_id):
+    coupon = Coupon.query.get_or_404(coupon_id)
+    usages = coupon.usages.order_by(CouponUsage.used_at.desc()).limit(20).all()
+    colors = COLOR_MAP.get(
+        COUPON_EVENTS.get(coupon.event_category, {}).get('color', 'blue'),
+        COLOR_MAP['blue']
+    )
+    html = render_template('admin/coupons/partials/coupon_detail.html',
+                           coupon=coupon, usages=usages, colors=colors)
+    return jsonify({'html': html})
+
+
+# ───────────────────────────────────────────────────────────────
+# Stats (AJAX)
+# ───────────────────────────────────────────────────────────────
+@admin_bp.route('/coupons/stats')
+@admin_required
+def coupon_stats():
+    total_coupons  = Coupon.query.count()
+    active_coupons = Coupon.query.filter_by(is_active=True).count()
+    total_redeemed = db.session.query(db.func.sum(Coupon.used_count)).scalar() or 0
+    expired_coupons = Coupon.query.filter(
+        Coupon.valid_until < datetime.utcnow(),
+        Coupon.is_active == True
+    ).count()
+
+    category_stats = db.session.query(
+        Coupon.event_category,
+        db.func.count(Coupon.id),
+        db.func.sum(Coupon.used_count)
+    ).group_by(Coupon.event_category).all()
+
+    return jsonify({
+        'total':    total_coupons,
+        'active':   active_coupons,
+        'redeemed': int(total_redeemed),
+        'expired':  expired_coupons,
+        'by_category': [
+            {'category': cat, 'count': cnt, 'used': int(used or 0)}
+            for cat, cnt, used in category_stats
+        ]
+    })
+
+
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║  END COUPON ROUTES                                            ║
+# ╚═══════════════════════════════════════════════════════════════╝
+
+# ═══════════════════════════════════════════════════════════════
+# ... YOUR EXISTING ROUTES CONTINUE BELOW ...
+# ═══════════════════════════════════════════════════════════════

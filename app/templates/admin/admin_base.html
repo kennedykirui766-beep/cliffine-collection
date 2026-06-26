@@ -154,7 +154,7 @@
             right: 0;
             height: 40px;
             display: flex;
-            align-items: center;
+            items-center: center;
             justify-content: center;
             cursor: pointer;
             z-index: 10;
@@ -169,21 +169,18 @@
         .scroll-indicator:hover svg { color: var(--gold); transform: scale(1.2); }
 
         /* --- Responsive Table Fixes --- */
-        /* Allow table cells to wrap text on small screens to prevent overlap */
         .admin-table-wrapper td, 
         .admin-table-wrapper th {
             white-space: normal !important;
             vertical-align: middle;
         }
 
-        /* Keep Action buttons (last column) on one line */
         .admin-table-wrapper td:last-child, 
         .admin-table-wrapper th:last-child {
             white-space: nowrap !important;
-            min-width: 120px; /* Ensure enough space for Edit/Delete buttons */
+            min-width: 120px;
         }
         
-        /* Force tables to be at least a readable width before wrapping kicks in */
         table {
             min-width: 600px; 
         }
@@ -308,12 +305,17 @@
                         </div>
                     </div>
 
-                    <!-- Coupons -->
-                    <div class="nav-item relative mb-1">
-                        <a href="{{ url_for('admin.coupons') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors {{ 'active' if request.endpoint == 'admin.coupons' }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <!-- Coupons (UPDATED: now a submenu with All Coupons + Generate New) -->
+                    <div class="nav-item relative {% if request.endpoint and ('coupon_list' in request.endpoint or 'coupon_generate' in request.endpoint or 'coupon_stats' in request.endpoint or 'coupon_event' in request.endpoint or 'coupon_toggle' in request.endpoint or 'coupon_delete' in request.endpoint or 'coupon_details' in request.endpoint) %}expanded{% endif %}">
+                        <div class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer" onclick="toggleSubmenu(this)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
                             <span class="font-medium text-sm">Coupons</span>
-                        </a>
+                            <svg class="arrow ml-auto w-4 h-4 transform transition-transform opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        <div class="submenu bg-black/15 rounded-md mt-1 ml-4 overflow-hidden">
+                            <a href="{{ url_for('admin.coupon_list') }}" class="block py-2 px-4 text-sm text-white/60 hover:text-white hover:bg-white/5 border-l border-transparent hover:border-amber-500/50 transition-all {{ 'active text-amber-400 border-amber-500' if request.endpoint == 'admin.coupon_list' }}">All Coupons</a>
+                            <a href="{{ url_for('admin.coupon_generate') }}" class="block py-2 px-4 text-sm text-white/60 hover:text-white hover:bg-white/5 border-l border-transparent hover:border-amber-500/50 transition-all {{ 'active text-amber-400 border-amber-500' if request.endpoint == 'admin.coupon_generate' }}">Generate New</a>
+                        </div>
                     </div>
 
                     <div class="px-4 mt-6 mb-2 text-[10px] uppercase tracking-wider text-white/30 font-bold">Community</div>
@@ -410,7 +412,6 @@
             <header class="bg-white/80 backdrop-blur-md z-10 sticky top-0 border-b border-slate-200/80">
                 <div class="flex items-center justify-between h-16 px-6">
                     <div class="flex items-center gap-4">
-                        <!-- Removed onclick from HTML, handled by JS listener -->
                         <button id="openSidebarBtn" class="lg:hidden text-slate-600 hover:text-primary p-2 rounded-lg hover:bg-slate-100 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                         </button>
@@ -486,7 +487,6 @@
             </header>
 
             <!-- Main Content -->
-            <!-- Added overflow-x-auto to handle wide tables on mobile -->
             <main class="flex-1 overflow-y-auto overflow-x-auto p-6 bg-slate-50/50">
                 
                 <!-- Flash Messages -->
@@ -507,7 +507,6 @@
                     {% endif %}
                 {% endwith %}
 
-                <!-- Added admin-table-wrapper class for global styling hook -->
                 <div class="admin-table-wrapper">
                     {% block content %}
                     <!-- Child content goes here -->
@@ -542,14 +541,10 @@
         const closeBtn = document.getElementById('closeSidebarBtn');
 
         function toggleSidebar() {
-            // Toggle the class that hides/shows the sidebar
             sidebar.classList.toggle('-translate-x-full');
-            
-            // Toggle the overlay visibility
             overlay.classList.toggle('hidden');
         }
         
-        // Add click listeners
         if(openBtn) openBtn.addEventListener('click', toggleSidebar);
         if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
         if(overlay) overlay.addEventListener('click', toggleSidebar);
@@ -559,18 +554,15 @@
             const navItem = element.parentElement;
             const isExpanded = navItem.classList.contains('expanded');
 
-            // Close all other submenus first (Accordion behavior)
             const allNavItems = document.querySelectorAll('.nav-item');
             allNavItems.forEach(item => {
                 item.classList.remove('expanded');
             });
 
-            // If the clicked item wasn't already open, open it (toggle)
             if (!isExpanded) {
                 navItem.classList.add('expanded');
             }
 
-            // Check scroll indicators after toggle
             setTimeout(checkScrollIndicators, 350); 
         }
 
@@ -583,7 +575,6 @@
             dropdown.classList.toggle('hidden');
         }
 
-        // Close dropdowns when clicking outside
         window.addEventListener('click', function(e) {
             if (!e.target.closest('.relative')) {
                 document.querySelectorAll('.absolute.z-50').forEach(el => el.classList.add('hidden'));
@@ -618,31 +609,21 @@
             scrollWrapper.scrollBy({ top: amount, behavior: 'smooth' });
         }
         
-        // Scroll indicator click handlers
         if(scrollUpBtn) scrollUpBtn.addEventListener('click', () => scrollSidebar(-200));
         if(scrollDownBtn) scrollDownBtn.addEventListener('click', () => scrollSidebar(200));
 
-        // Listen for scroll events
         if (scrollWrapper) {
             scrollWrapper.addEventListener('scroll', checkScrollIndicators);
         }
         
-        // Initial check on load
         window.addEventListener('load', checkScrollIndicators);
-        
-        // Recheck on resize
         window.addEventListener('resize', checkScrollIndicators);
 
-        // Close sidebar on window resize if larger than mobile
         window.addEventListener('resize', () => {
             if (window.innerWidth > 1024 && !sidebar.classList.contains('-translate-x-full')) {
-                // If window becomes large, ensure sidebar is hidden (since it's fixed on mobile)
-                // But on desktop, we want it visible via CSS classes, not JS inline styles.
-                // This logic ensures the mobile overlay state is reset.
                 if(!overlay.classList.contains('hidden')) {
                     overlay.classList.add('hidden');
                 }
-                // Ensure sidebar follows CSS rules for desktop
                 sidebar.classList.remove('-translate-x-full');
                 sidebar.classList.remove('translate-x-full');
             }
