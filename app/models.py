@@ -229,6 +229,7 @@ class Order(db.Model):
     country = db.Column(db.String(100))
     delivery_method = db.Column(db.String(50))
     delivery_location = db.Column(db.String(150))
+    mpesa_receipt = db.Column(db.String(50), nullable=True)
 
     # Extra
     notes = db.Column(db.Text)
@@ -257,7 +258,6 @@ class OrderItem(db.Model):
 
     total_price = db.Column(db.Float)
     shipped_at = db.Column(db.DateTime, nullable=True)
-    mpesa_receipt = db.Column(db.String(50), nullable=True)
 
 
 # ===============================
