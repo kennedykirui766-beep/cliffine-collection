@@ -1,19 +1,36 @@
 import os
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key")
 
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}"
+    db_uri = os.getenv("DATABASE_URL")
+
+    if db_uri and db_uri.startswith("postgres://"):
+        db_uri = db_uri.replace("postgres://", "postgresql://", 1)
+
+    SQLALCHEMY_DATABASE_URI = db_uri
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+        "pool_size": 5,
+        "max_overflow": 10,
+        "pool_timeout": 30,
         "connect_args": {
-            "check_same_thread": False
+            "sslmode": "require"
         }
     }
 
+    # M-Pesa
+    MPESA_CONSUMER_KEY = os.getenv("MPESA_CONSUMER_KEY")
+    MPESA_CONSUMER_SECRET = os.getenv("MPESA_CONSUMER_SECRET")
+    MPESA_SHORTCODE = os.getenv("MPESA_SHORTCODE")
+    MPESA_PASSKEY = os.getenv("MPESA_PASSKEY")
+    MPESA_CALLBACK_URL = os.getenv("MPESA_CALLBACK_URL")
+
+    # MAIL
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.sendgrid.net")
     MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
     MAIL_USE_TLS = True
