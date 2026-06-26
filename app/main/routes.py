@@ -1150,6 +1150,93 @@ def initiate_stk_push():
             "message": "An unexpected error occurred. Please try again."
         }), 500
 
+@main_bp.route("/mpesa/callback", methods=["POST"])
+def mpesa_callback():
+    """Handle M-Pesa STK Push callback - saves to DATABASE.
+
+    IMPORTANT: This route is called by Safaricom's servers, NOT by the
+    customer's browser. Therefore you CANNOT use session[] here — the
+    callback has no access to the customer's session cookie.
+    
+    The only reliable way to pass data from callback → customer is
+    through the database.
+    """
+    try:
+        data = request.get_json(force=True)
+        
+        current_app.logger.info(f"M-Pesa callback received: {data}")
+        
+        stk_callback = data.get("Body", {}).get("stkCallback", {})
+        checkout_request_id = stk_callback.get("CheckoutRequestID")
+        result_code = str(stk_callback.get("ResultCode"))
+        result_desc = stk_callback.get("ResultDesc")
+        
+        current_app.logger.info(
+            f"STK Callback - RequestID: {checkout_request_id}, "
+            f"Code: {result_code}, Desc: {result_desc}"
+        )
+        
+        if not checkout_request_id:
+            current_app.logger.warning("M-Pesa callback missing CheckoutRequestID")
+            return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"}), 200
+        
+        # ----------------------------------------------------------
+        # Find the payment record created by initiate_stk_push()
+        # ----------------------------------------------------------
+        payment = Payment.query.filter_by(checkout_request_id=checkout_request_id).first()
+        
+        if not payment:
+            current_app.logger.warning(
+                f"No payment record found for CheckoutRequestID: {checkout_request_id}"
+            )
+            return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"}), 200
+        
+        # Don't overwrite if callback already processed this one
+        if payment.status in ("paid", "failed", "cancelled"):
+            current_app.logger.info(
+                f"Payment {checkout_request_id} already processed, status: {payment.status}"
+            )
+            return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"}), 200
+        
+        # ----------------------------------------------------------
+        # Update the database record
+        # ----------------------------------------------------------
+        payment.result_code = result_code
+        payment.result_desc = result_desc
+        
+        if result_code == "0":
+            # Payment successful — extract receipt from metadata
+            metadata = stk_callback.get("CallbackMetadata", {}).get("Item", [])
+            for item in metadata:
+                if item.get("Name") == "MpesaReceiptNumber":
+                    payment.mpesa_receipt = item.get("Value")
+            
+            payment.status = "paid"
+            payment.paid_at = datetime.utcnow()
+            
+            current_app.logger.info(
+                f"Payment confirmed in DB - Receipt: {payment.mpesa_receipt}, "
+                f"Amount: {payment.amount}"
+            )
+        else:
+            # Payment failed or cancelled
+            if "cancelled" in (result_desc or "").lower() or result_code in ("1032", "1037"):
+                payment.status = "cancelled"
+            else:
+                payment.status = "failed"
+            
+            current_app.logger.info(
+                f"Payment {payment.status} in DB - Code: {result_code}, Desc: {result_desc}"
+            )
+        
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error in mpesa_callback: {str(e)}", exc_info=True)
+    
+    # Always return 200 to M-Pesa — never return errors to Safaricom
+    return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"}), 200
 
 @main_bp.route("/checkout/check-stk-status", methods=["GET"])
 def check_stk_status():
@@ -1276,18 +1363,63 @@ def check_stk_status():
                 "receipt": mpesa_receipt or payment.mpesa_receipt or ""
             })
         
-        elif result_code is not None and result_code != "0":
-            # M-Pesa says failed — update the DATABASE
-            payment.status = "failed"
-            payment.result_code = str(result_code)
-            payment.result_desc = result.get("ResultDesc", "Payment failed or cancelled")
+        # ----------------------------------------------------------
+        # M-Pesa returned "still processing"
+        # ----------------------------------------------------------
+        elif str(result_code) == "4999":
+            payment.result_code = "4999"
+            payment.result_desc = result.get(
+                "ResultDesc",
+                "The transaction is still under processing"
+            )
+
+            # Keep payment pending.
+            # The callback will update it to paid/cancelled/failed.
             db.session.commit()
-            
+
+            return jsonify({
+                "success": True,
+                "status": "pending",
+                "message": payment.result_desc
+            })
+
+        # ----------------------------------------------------------
+        # Customer cancelled
+        # ----------------------------------------------------------
+        elif str(result_code) in ("1032", "1037"):
+            payment.status = "cancelled"
+            payment.result_code = str(result_code)
+            payment.result_desc = result.get(
+                "ResultDesc",
+                "Transaction cancelled"
+            )
+
+            db.session.commit()
+
             return jsonify({
                 "success": True,
                 "status": "failed",
-                "message": result.get("ResultDesc", "Payment failed or cancelled")
+                "message": payment.result_desc
             })
+
+            # ----------------------------------------------------------
+            # Any other failure
+            # ----------------------------------------------------------
+        elif result_code is not None:
+                payment.status = "failed"
+                payment.result_code = str(result_code)
+                payment.result_desc = result.get(
+                    "ResultDesc",
+                    "Payment failed"
+                )
+
+                db.session.commit()
+
+                return jsonify({
+                    "success": True,
+                    "status": "failed",
+                    "message": payment.result_desc
+                })
         
         else:
             # M-Pesa also says pending — keep polling
@@ -1301,94 +1433,6 @@ def check_stk_status():
         current_app.logger.error(f"Error in check_stk_status: {str(e)}", exc_info=True)
         return jsonify({"success": False, "message": "An error occurred"}), 500
 
-
-@main_bp.route("/mpesa/callback", methods=["POST"])
-def mpesa_callback():
-    """Handle M-Pesa STK Push callback - saves to DATABASE.
-
-    IMPORTANT: This route is called by Safaricom's servers, NOT by the
-    customer's browser. Therefore you CANNOT use session[] here — the
-    callback has no access to the customer's session cookie.
-    
-    The only reliable way to pass data from callback → customer is
-    through the database.
-    """
-    try:
-        data = request.get_json(force=True)
-        
-        current_app.logger.info(f"M-Pesa callback received: {data}")
-        
-        stk_callback = data.get("Body", {}).get("stkCallback", {})
-        checkout_request_id = stk_callback.get("CheckoutRequestID")
-        result_code = str(stk_callback.get("ResultCode"))
-        result_desc = stk_callback.get("ResultDesc")
-        
-        current_app.logger.info(
-            f"STK Callback - RequestID: {checkout_request_id}, "
-            f"Code: {result_code}, Desc: {result_desc}"
-        )
-        
-        if not checkout_request_id:
-            current_app.logger.warning("M-Pesa callback missing CheckoutRequestID")
-            return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"}), 200
-        
-        # ----------------------------------------------------------
-        # Find the payment record created by initiate_stk_push()
-        # ----------------------------------------------------------
-        payment = Payment.query.filter_by(checkout_request_id=checkout_request_id).first()
-        
-        if not payment:
-            current_app.logger.warning(
-                f"No payment record found for CheckoutRequestID: {checkout_request_id}"
-            )
-            return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"}), 200
-        
-        # Don't overwrite if callback already processed this one
-        if payment.status in ("paid", "failed", "cancelled"):
-            current_app.logger.info(
-                f"Payment {checkout_request_id} already processed, status: {payment.status}"
-            )
-            return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"}), 200
-        
-        # ----------------------------------------------------------
-        # Update the database record
-        # ----------------------------------------------------------
-        payment.result_code = result_code
-        payment.result_desc = result_desc
-        
-        if result_code == "0":
-            # Payment successful — extract receipt from metadata
-            metadata = stk_callback.get("CallbackMetadata", {}).get("Item", [])
-            for item in metadata:
-                if item.get("Name") == "MpesaReceiptNumber":
-                    payment.mpesa_receipt = item.get("Value")
-            
-            payment.status = "paid"
-            payment.paid_at = datetime.utcnow()
-            
-            current_app.logger.info(
-                f"Payment confirmed in DB - Receipt: {payment.mpesa_receipt}, "
-                f"Amount: {payment.amount}"
-            )
-        else:
-            # Payment failed or cancelled
-            if "cancelled" in (result_desc or "").lower() or result_code in ("1032", "1037"):
-                payment.status = "cancelled"
-            else:
-                payment.status = "failed"
-            
-            current_app.logger.info(
-                f"Payment {payment.status} in DB - Code: {result_code}, Desc: {result_desc}"
-            )
-        
-        db.session.commit()
-        
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error in mpesa_callback: {str(e)}", exc_info=True)
-    
-    # Always return 200 to M-Pesa — never return errors to Safaricom
-    return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"}), 200
 
 
 @main_bp.route("/checkout/process", methods=["POST"])
