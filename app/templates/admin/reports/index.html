@@ -285,7 +285,7 @@
                         {{ order.created_at.strftime('%d %b %Y, %H:%M') if order.created_at else '—' }}
                     </td>
                     <td class="py-3 px-5 text-sm text-slate-700">
-                        {{ getattr(order, 'customer_name', '') or (order.user.full_name if order.user else '—') }}
+                        {{ order.full_name or (order.user.full_name if order.user else '—') }}
                     </td>
                     <td class="py-3 px-5">
                         {% set method = getattr(order, 'payment_method', '') or '' %}
