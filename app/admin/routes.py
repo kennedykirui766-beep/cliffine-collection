@@ -4,7 +4,7 @@ from flask import Blueprint, render_template
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import func
 from app import db
-from app.models import User, Product, Order, Coupon, CouponUsage, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
+from app.models import OrderItem, User, Product, Order, Coupon, CouponUsage, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
 from flask import render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import os
@@ -1914,3 +1914,111 @@ def coupon_stats():
 # ═══════════════════════════════════════════════════════════════
 # ... YOUR EXISTING ROUTES CONTINUE BELOW ...
 # ═══════════════════════════════════════════════════════════════
+
+
+from flask import request, jsonify, render_template
+from app.models import Notification, db
+from functools import wraps
+
+
+# --- API Endpoints ---
+
+@admin_bp.route("/notifications/api")
+@admin_required
+def get_notifications_api():
+    """Return latest 15 notifications + unread count for the dropdown."""
+    category = request.args.get("category", "all")
+
+    query = Notification.query.order_by(Notification.created_at.desc())
+
+    if category != "all":
+        query = query.filter_by(category=category)
+
+    notifications = query.limit(15).all()
+    unread_count = Notification.query.filter_by(is_read=False).count()
+
+    return jsonify({
+        "notifications": [n.to_dict() for n in notifications],
+        "unread_count": unread_count,
+    })
+
+
+@admin_bp.route("/notifications/api/<int:notif_id>/read", methods=["POST"])
+@admin_required
+def mark_notification_read(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    if not notif.is_read:
+        notif.is_read = True
+        db.session.commit()
+    unread_count = Notification.query.filter_by(is_read=False).count()
+    return jsonify({"success": True, "unread_count": unread_count})
+
+
+@admin_bp.route("/notifications/api/read-all", methods=["POST"])
+@admin_required
+def mark_all_notifications_read():
+    Notification.query.filter_by(is_read=False).update({"is_read": True})
+    db.session.commit()
+    return jsonify({"success": True, "unread_count": 0})
+
+
+# --- Full Notifications Page ---
+
+@admin_bp.route("/notifications")
+@admin_required
+def notifications_page():
+    page = request.args.get("page", 1, type=int)
+    category = request.args.get("category", "all")
+
+    query = Notification.query.order_by(Notification.created_at.desc())
+
+    if category != "all":
+        query = query.filter_by(category=category)
+
+    pagination = query.paginate(page=page, per_page=20, error_out=False)
+    notifications = pagination.items
+    unread_count = Notification.query.filter_by(is_read=False).count()
+
+    categories = [
+        {"key": "all", "label": "All", "icon": "bell"},
+        {"key": "order", "label": "Orders", "icon": "shopping-bag"},
+        {"key": "customer", "label": "Customers", "icon": "users"},
+        {"key": "inventory", "label": "Inventory", "icon": "package"},
+        {"key": "payment", "label": "Payments", "icon": "credit-card"},
+        {"key": "coupon", "label": "Coupons", "icon": "tag"},
+        {"key": "review", "label": "Reviews", "icon": "star"},
+        {"key": "message", "label": "Messages", "icon": "mail"},
+        {"key": "system", "label": "System", "icon": "settings"},
+        {"key": "milestone", "label": "Milestones", "icon": "trending-up"},
+    ]
+
+    # Count per category
+    cat_counts = {}
+    for cat in categories:
+        if cat["key"] == "all":
+            cat_counts["all"] = Notification.query.count()
+        else:
+            cat_counts[cat["key"]] = Notification.query.filter_by(category=cat["key"]).count()
+
+    return render_template(
+        "admin/notifications.html",
+        notifications=notifications,
+        pagination=pagination,
+        unread_count=unread_count,
+        categories=categories,
+        cat_counts=cat_counts,
+        current_category=category,
+    )
+
+
+@admin_bp.route("/notifications/<int:notif_id>/read", methods=["POST"])
+@admin_required
+def read_notification_page(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    notif.is_read = True
+    db.session.commit()
+    if notif.link:
+        from flask import redirect
+        return redirect(notif.link)
+    from flask import redirect, url_for
+    return redirect(url_for("admin.notifications_page"))

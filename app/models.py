@@ -730,3 +730,40 @@ class CouponUsage(db.Model):
 # ═══════════════════════════════════════════════════════════════
 # ... YOUR EXISTING MODELS CONTINUE BELOW ...
 # ═══════════════════════════════════════════════════════════════
+
+
+class Notification(db.Model):
+    __tablename__ = "notifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(30), index=True, nullable=False)
+    # Categories: order, customer, inventory, payment, coupon, review, message, system, milestone
+
+    type = db.Column(db.String(50), nullable=False)
+    # Types: new, payment_received, payment_failed, shipped, delivered,
+    #        return_requested, refund_requested, registered, email_verified,
+    #        review_submitted, message_sent, out_of_stock, low_stock,
+    #        restocked, refund_completed, coupon_created, coupon_limit_reached,
+    #        coupon_expiring, coupon_redeemed, review_reported, low_rating,
+    #        backup_failed, email_error, db_error, update_available, sales_milestone
+
+    title = db.Column(db.String(255), nullable=False)
+    message = db.Column(db.Text, default="")
+    link = db.Column(db.String(500), default="")
+    is_read = db.Column(db.Boolean, default=False, index=True)
+    metadata_json = db.Column(db.Text, default=None)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "category": self.category,
+            "type": self.type,
+            "title": self.title,
+            "message": self.message or "",
+            "link": self.link or "",
+            "is_read": self.is_read,
+            "created_at": self.created_at.isoformat() if self.created_at else "",
+        }
