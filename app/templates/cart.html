@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<!-- 2. Breadcrumb Navigation -->
+<!-- Breadcrumb Navigation -->
 <div class="bg-sand dark:bg-gray-800 py-4 border-b border-gray-100 dark:border-gray-700">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav class="flex items-center space-x-2 text-sm text-muted dark:text-gray-400">
@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<!-- 1. Page Title / Header -->
+<!-- Page Title -->
 <section class="py-8 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between">
@@ -33,38 +33,34 @@
 <!-- Main Content -->
 <section class="py-8 lg:py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {% if products %}
         <div class="lg:grid lg:grid-cols-12 lg:gap-12">
-            
+
             <!-- Left Column: Cart Items -->
             <div class="lg:col-span-8">
-                
-                <!-- 3. Cart Items List -->
+
                 <div class="space-y-4" id="cart-items-container">
-                    
                     {% for item in products %}
-                    <!-- Item Loop -->
-                    <!-- Added data attributes for JS: product-id, unit-price, original-qty -->
-                    <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 relative cart-item transition-opacity duration-300" 
-                         data-product-id="{{ item.product.id }}" 
-                         data-unit-price="{{ item.product.price }}"
+                    <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 relative cart-item transition-all duration-300"
+                         data-product-id="{{ item.product.id }}"
+                         data-unit-price="{{ item.unit_price }}"
                          data-original-qty="{{ item.quantity }}">
 
-                        <!-- Mobile Remove Button -->
-                        <button type="button" 
-                                onclick="openDeleteModal('{{ item.product.id }}', '{{ item.product.name }}')" 
+                        <!-- Mobile Remove -->
+                        <button type="button"
+                                onclick="openDeleteModal('{{ item.product.id }}', '{{ item.product.name }}')"
                                 class="absolute top-2 right-2 sm:hidden p-2 text-muted hover:text-red-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
-                        
+
                         <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
                             <!-- Image -->
                             <div class="w-full sm:w-24 h-48 sm:h-24 bg-sand dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                <img src="{{ item.product.images[0].image_url if item.product.images else  'https://placehold.co/400x400/581C87/FFFFFF?text=Product' }}" 
+                                <img src="{{ item.product.images[0].image_url if item.product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=Product' }}"
                                     alt="{{ item.product.name }}" class="w-full h-full object-cover">
                             </div>
-                            
+
                             <!-- Details -->
                             <div class="flex-1 flex flex-col justify-between">
                                 <div>
@@ -75,9 +71,9 @@
                                             </a>
                                             <p class="text-sm text-muted dark:text-gray-400">{{ item.product.category.name if item.product.category else 'Uncategorized' }}</p>
                                         </div>
-                                        <!-- Desktop Remove Button -->
-                                        <button type="button" 
-                                                onclick="openDeleteModal('{{ item.product.id }}', '{{ item.product.name }}')" 
+                                        <!-- Desktop Remove -->
+                                        <button type="button"
+                                                onclick="openDeleteModal('{{ item.product.id }}', '{{ item.product.name }}')"
                                                 class="hidden sm:block p-2 text-muted hover:text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         </button>
@@ -92,60 +88,136 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                
+
                                 <div class="flex items-end justify-between mt-4 sm:mt-0">
-                                    <!-- Quantity Selector -->
+                                    <!-- Quantity -->
                                     <div class="flex items-center border border-gray-200 dark:border-gray-600 rounded-lg">
                                         <button onclick="updateQuantity(this, -1)" class="px-3 py-1 text-charcoal dark:text-white hover:bg-sand dark:hover:bg-gray-700 rounded-l-lg transition-colors">−</button>
                                         <input type="number" value="{{ item.quantity }}" class="w-12 text-center border-0 bg-transparent focus:ring-0 text-charcoal dark:text-white font-medium qty-input">
                                         <button onclick="updateQuantity(this, 1)" class="px-3 py-1 text-charcoal dark:text-white hover:bg-sand dark:hover:bg-gray-700 rounded-r-lg transition-colors">+</button>
                                     </div>
-                                    
-                                    <!-- Price (Line Item Total) -->
+
+                                    <!-- Price -->
                                     <div class="text-right">
                                         <p class="text-lg font-bold text-primary dark:text-accent line-item-total">KES {{ "{:,.2f}".format(item.total or 0) }}</p>
-                                        <p class="text-xs text-muted dark:text-gray-400">Unit: KES {{ "{:,.2f}".format(item.product.price or 0) }}</p>
+                                        <p class="text-xs text-muted dark:text-gray-400">Unit: KES {{ "{:,.2f}".format(item.unit_price or 0) }}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
-
                 </div>
 
-                <!-- 4. Update Cart & Continue Shopping -->
+                <!-- Update Cart & Continue Shopping -->
                 <div class="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
                     <a href="/products" class="order-2 sm:order-1 flex items-center gap-2 text-muted dark:text-gray-300 hover:text-primary dark:hover:text-white transition-colors font-medium">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                         Continue Shopping
                     </a>
-                    <!-- ID added for styling and JS -->
                     <button id="update-cart-btn" onclick="saveCartChanges()" class="order-1 sm:order-2 px-6 py-2.5 border border-gray-200 dark:border-gray-600 text-charcoal dark:text-white rounded-lg hover:bg-sand dark:hover:bg-gray-700 transition-colors font-medium">
                         Update Cart
                     </button>
                 </div>
             </div>
 
-            <!-- Right Column: Cart Summary Sidebar -->
+            <!-- Right Column: Cart Summary -->
             <div class="lg:col-span-4 mt-8 lg:mt-0">
                 <div class="sticky top-24 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
                     <h2 class="font-display text-xl font-bold text-charcoal dark:text-white mb-6">Cart Summary</h2>
 
-                    <!-- 5. Coupon Section -->
+                    <!-- ==================== COUPON SECTION ==================== -->
                     <div class="mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
-                        <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Have a Coupon?</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="coupon-input" placeholder="Coupon code" class="flex-1 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-sm">
-                            <button id="apply-coupon-btn" onclick="applyCoupon()" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors text-sm">
-                                Apply
-                            </button>
-                        </div>
-                        <!-- Coupon Error/Success Message -->
-                        <p id="coupon-message" class="text-xs mt-2 hidden"></p>
-                    </div>
 
-                    <!-- 10. Special Instructions -->
+                        <!-- Available Coupons List -->
+                        {% if available_coupons %}
+                        <div class="mb-4">
+                            <h3 class="text-sm font-semibold text-charcoal dark:text-white mb-3 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                Available Coupons
+                            </h3>
+                            <div class="space-y-2" id="coupon-list">
+                                {% for coupon in available_coupons %}
+                                <div class="coupon-card group flex items-center justify-between p-3 rounded-lg border transition-all duration-200
+                                    {% if coupon.eligible %}
+                                    border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-750 hover:border-primary/40 hover:bg-primary/[0.03] dark:hover:border-primary/40 cursor-pointer
+                                    {% else %}
+                                    border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-750/50 opacity-60
+                                    {% endif %}"
+                                    data-code="{{ coupon.code }}"
+                                    data-eligible="{{ 'true' if coupon.eligible else 'false' }}"
+                                    data-discount-type="{{ coupon.discount_type }}"
+                                    data-discount-value="{{ coupon.discount_value }}"
+                                    {% if coupon.eligible %}onclick="selectCoupon('{{ coupon.code }}', this)"{% endif %}>
+
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <!-- Tag Icon -->
+                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0
+                                            {% if coupon.eligible %}
+                                            bg-primary/10 text-primary
+                                            {% else %}
+                                            bg-gray-200 dark:bg-gray-600 text-gray-400
+                                            {% endif %}">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-bold text-charcoal dark:text-white tracking-wide">{{ coupon.code }}</p>
+                                            <p class="text-xs text-muted dark:text-gray-400">
+                                                {{ coupon.description }}
+                                                {% if not coupon.eligible and coupon.reason %}
+                                                <span class="text-amber-600 dark:text-amber-400 font-medium"> · {{ coupon.reason }}</span>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Apply Button -->
+                                    <span class="coupon-apply-btn shrink-0 ml-2 px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200
+                                        {% if coupon.eligible %}
+                                        bg-sand dark:bg-gray-700 text-charcoal dark:text-white group-hover:bg-primary group-hover:text-white
+                                        {% else %}
+                                        bg-gray-100 dark:bg-gray-600/50 text-gray-400 dark:text-gray-500 cursor-not-allowed
+                                        {% endif %}">
+                                        {% if coupon.eligible %}Apply{% else %}Locked{% endif %}
+                                    </span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Manual Input -->
+                        <div>
+                            <label class="block text-xs font-medium text-muted dark:text-gray-400 mb-2 uppercase tracking-wider">Or enter a code</label>
+                            <div class="flex gap-2" id="coupon-input-wrapper">
+                                <input type="text"
+                                       id="coupon-input"
+                                       placeholder="Coupon code"
+                                       autocomplete="off"
+                                       spellcheck="false"
+                                       class="flex-1 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-sm font-medium uppercase tracking-wider text-charcoal dark:text-white placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-400">
+                                <button id="apply-coupon-btn" onclick="applyCouponFromInput()" class="px-5 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-all text-sm whitespace-nowrap">
+                                    Apply
+                                </button>
+                            </div>
+                            <!-- Applied state: inline remove link -->
+                            <div id="coupon-remove-row" class="hidden flex items-center justify-between mt-2.5 p-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    <span class="text-xs font-semibold text-green-700 dark:text-green-300" id="coupon-applied-label">Coupon applied</span>
+                                </div>
+                                <button onclick="removeCoupon()" class="text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline flex items-center gap-1 transition-colors">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    Remove
+                                </button>
+                            </div>
+                            <!-- Error/Info message -->
+                            <p id="coupon-message" class="text-xs mt-2 hidden"></p>
+                        </div>
+                    </div>
+                    <!-- ==================== END COUPON SECTION ==================== -->
+
+                    <!-- Special Instructions -->
                     <div class="mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
                         <label class="block text-sm font-medium text-charcoal dark:text-white mb-2">Special Instructions</label>
                         <textarea rows="2" placeholder="Notes about your order..." class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-sand dark:bg-gray-700 focus:ring-2 focus:ring-accent focus:border-transparent transition text-sm"></textarea>
@@ -161,10 +233,15 @@
                             <span>Delivery</span>
                             <span class="text-xs">(Calculated at checkout)</span>
                         </div>
-                        <!-- Discount Row (Hidden by default) -->
-                        <div id="discount-row" class="hidden flex justify-between text-green-600">
-                            <span>Discount</span>
-                            <span id="summary-discount">- KES 0.00</span>
+                        <!-- Discount Row -->
+                        <div id="discount-row" class="hidden">
+                            <div class="flex justify-between text-green-600 dark:text-green-400">
+                                <span class="flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                    <span id="discount-label">Discount</span>
+                                </span>
+                                <span id="summary-discount" class="font-medium">- KES 0.00</span>
+                            </div>
                         </div>
                         <div class="flex justify-between text-xl font-bold text-charcoal dark:text-white border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
                             <span>Total</span>
@@ -172,8 +249,8 @@
                         </div>
                     </div>
 
-                    <!-- 8. Proceed to Checkout -->
-                    <a href="/checkout" class="w-full mt-6 py-4 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-accent-dark transition-all flex items-center justify-center gap-2">
+                    <!-- Proceed to Checkout -->
+                    <a href="/checkout" id="checkout-link" class="w-full mt-6 py-4 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-accent-dark transition-all flex items-center justify-center gap-2">
                         Proceed to Checkout
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                     </a>
@@ -189,7 +266,7 @@
 
         {% else %}
 
-        <!-- 9. Empty Cart Example -->
+        <!-- Empty Cart -->
         <div class="text-center py-16">
             <svg class="w-24 h-24 mx-auto text-gray-300 dark:text-gray-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
             <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white mb-2">Your cart is empty</h2>
@@ -207,28 +284,18 @@
 <!-- Delete Confirmation Modal -->
 <div id="deleteModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <!-- Background overlay -->
         <div class="fixed inset-0 transition-opacity bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75" onclick="closeDeleteModal()"></div>
-
-        <!-- Modal Panel -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
         <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
             <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
                     <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10">
-                        <!-- Warning Icon -->
-                        <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
+                        <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                     </div>
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-charcoal dark:text-white" id="modal-title">
-                            Remove Item
-                        </h3>
+                        <h3 class="text-lg leading-6 font-medium text-charcoal dark:text-white" id="modal-title">Remove Item</h3>
                         <div class="mt-2">
-                            <p class="text-sm text-muted dark:text-gray-400">
-                                Are you sure you want to remove <strong id="deleteItemName" class="font-medium text-charcoal dark:text-white"></strong> from your cart?
-                            </p>
+                            <p class="text-sm text-muted dark:text-gray-400">Are you sure you want to remove <strong id="deleteItemName" class="font-medium text-charcoal dark:text-white"></strong> from your cart?</p>
                         </div>
                     </div>
                 </div>
@@ -236,230 +303,499 @@
             <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <form id="deleteForm" action="" method="POST">
                     <input type="hidden" name="product_id" id="deleteProductId" value="">
-                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
-                        Delete
-                    </button>
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">Delete</button>
                 </form>
-                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-charcoal dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
-                    Cancel
-                </button>
+                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-charcoal dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">Cancel</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 8. Mobile Sticky Checkout Footer -->
+<!-- Mobile Sticky Checkout Footer -->
 <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 p-4 lg:hidden shadow-2xl z-40">
     <div class="flex items-center justify-between gap-4">
         <div>
             <p class="text-sm text-muted">Total</p>
             <p class="text-xl font-bold text-primary dark:text-accent" id="mobile-total">KES {{ "{:,.2f}".format(total_price or 0) }}</p>
         </div>
-        <a href="/checkout" class="flex-1 max-w-xs py-3 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-accent-dark transition-all text-center">
-            Checkout
-        </a>
+        <a href="/checkout" class="flex-1 max-w-xs py-3 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-accent-dark transition-all text-center">Checkout</a>
     </div>
 </div>
 
-<!-- Spacer for mobile fixed footer -->
 <div class="h-24 lg:hidden"></div>
 
 <script>
-    // --- Helper: Format Currency ---
-    function formatPrice(amount) {
-        return 'KES ' + parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
+// ============================================================
+//  GLOBALS
+// ============================================================
+let activeCoupon = null;   // { code, discount_type, discount_value, discount_amount }
+let couponRequestPending = false;
 
-    // --- 1. Quantity & Price Logic ---
-    
-    function updateQuantity(button, change) {
-        const row = button.closest('.cart-item');
-        const input = row.querySelector('.qty-input');
-        const unitPrice = parseFloat(row.dataset.unitPrice);
-        let value = parseInt(input.value, 10);
-        
-        // Update Value
-        value += change;
-        if (value < 0) value = 0; // Allow zero
-        
-        input.value = value;
+function formatPrice(amount) {
+    return 'KES ' + parseFloat(amount || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
+}
 
-        // Update Line Item Price
-        const lineTotal = unitPrice * value;
-        const linePriceEl = row.querySelector('.line-item-total');
-        linePriceEl.textContent = formatPrice(lineTotal);
+// ============================================================
+//  QUANTITY & PRICE LOGIC
+// ============================================================
+function updateQuantity(button, change) {
+    const row = button.closest('.cart-item');
+    const input = row.querySelector('.qty-input');
+    const unitPrice = parseFloat(row.dataset.unitPrice);
+    let value = parseInt(input.value, 10) + change;
 
-        // Visual Indicator for Deletion (Opacity)
-        if (value === 0) {
-            row.style.opacity = '0.5';
+    if (value < 0) value = 0;
+    input.value = value;
+
+    const lineTotal = unitPrice * value;
+    row.querySelector('.line-item-total').textContent = formatPrice(lineTotal);
+
+    row.style.opacity = value === 0 ? '0.5' : '1';
+    recalculateCartTotals();
+    markCartAsDirty();
+}
+
+function recalculateCartTotals() {
+    const rows = document.querySelectorAll('.cart-item');
+    let subtotal = 0;
+    let itemCount = 0;
+
+    rows.forEach(function (row) {
+        const qty = parseInt(row.querySelector('.qty-input').value, 10);
+        const price = parseFloat(row.dataset.unitPrice);
+        subtotal += (qty * price);
+        itemCount += qty;
+    });
+
+    document.getElementById('summary-subtotal').textContent = formatPrice(subtotal);
+
+    let total = subtotal;
+    let discount = 0;
+
+    if (activeCoupon) {
+        if (activeCoupon.discount_type === 'percentage') {
+            discount = subtotal * (activeCoupon.discount_value / 100);
         } else {
-            row.style.opacity = '1';
+            discount = activeCoupon.discount_value;
+        }
+        if (discount > subtotal) discount = subtotal;
+        discount = Math.round(discount * 100) / 100;
+
+        document.getElementById('discount-row').classList.remove('hidden');
+        document.getElementById('summary-discount').textContent = '- ' + formatPrice(discount);
+
+        if (activeCoupon.discount_type === 'percentage') {
+            document.getElementById('discount-label').textContent =
+                activeCoupon.code + ' (' + activeCoupon.discount_value + '% off)';
+        } else {
+            document.getElementById('discount-label').textContent = activeCoupon.code;
         }
 
-        // Trigger Global Recalculation
-        recalculateCartTotals();
-        markCartAsDirty();
+        total = subtotal - discount;
+    } else {
+        document.getElementById('discount-row').classList.add('hidden');
     }
 
-    function recalculateCartTotals() {
-        const rows = document.querySelectorAll('.cart-item');
-        let grandTotal = 0;
-        let itemCount = 0;
+    total = Math.round(total * 100) / 100;
+    document.getElementById('summary-total').textContent = formatPrice(total);
+    document.getElementById('mobile-total').textContent = formatPrice(total);
 
-        rows.forEach(row => {
-            const qty = parseInt(row.querySelector('.qty-input').value, 10);
-            const price = parseFloat(row.dataset.unitPrice);
-            grandTotal += (qty * price);
-            itemCount += qty;
+    const badge = document.getElementById('cart-count-badge');
+    if (badge) {
+        badge.textContent = itemCount + ' Item' + (itemCount !== 1 ? 's' : '');
+    }
+}
+
+// ============================================================
+//  UPDATE CART BUTTON
+// ============================================================
+function markCartAsDirty() {
+    const btn = document.getElementById('update-cart-btn');
+    btn.classList.remove('border', 'border-gray-200', 'dark:border-gray-600', 'text-charcoal', 'dark:text-white', 'hover:bg-sand', 'dark:hover:bg-gray-700');
+    btn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700', 'border-transparent');
+    btn.textContent = 'Save Changes';
+}
+
+function markCartAsClean() {
+    const btn = document.getElementById('update-cart-btn');
+    btn.classList.add('border', 'border-gray-200', 'dark:border-gray-600', 'text-charcoal', 'dark:text-white', 'hover:bg-sand', 'dark:hover:bg-gray-700');
+    btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700', 'border-transparent');
+    btn.textContent = 'Update Cart';
+}
+
+async function saveCartChanges() {
+    const rows = document.querySelectorAll('.cart-item');
+    const updates = [];
+
+    rows.forEach(function (row) {
+        const productId = row.dataset.productId;
+        const originalQty = parseInt(row.dataset.originalQty, 10);
+        const currentQty = parseInt(row.querySelector('.qty-input').value, 10);
+        if (productId && currentQty !== originalQty) {
+            updates.push({ product_id: productId, quantity: currentQty });
+        }
+    });
+
+    if (updates.length === 0) {
+        showToast('No changes to save.', 'info');
+        return;
+    }
+
+    try {
+        const response = await fetch('/cart/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ updates: updates })
         });
+        const result = await response.json();
 
-        // Update Summary Displays
-        document.getElementById('summary-subtotal').textContent = formatPrice(grandTotal);
-        
-        // Note: If you have discount logic, you'd subtract it here for the final total
-        // For now, we assume total is just the subtotal until coupon is applied via backend
-        document.getElementById('summary-total').textContent = formatPrice(grandTotal);
-        document.getElementById('mobile-total').textContent = formatPrice(grandTotal);
-        
-        // Update count badge
-        const badge = document.getElementById('cart-count-badge');
-        if(badge) {
-            badge.textContent = itemCount + ' Item' + (itemCount !== 1 ? 's' : '');
-        }
-    }
+        if (response.ok && result.success) {
+            rows.forEach(function (row) {
+                row.dataset.originalQty = row.querySelector('.qty-input').value;
+            });
+            markCartAsClean();
 
-    // --- 2. Update Cart Button Logic ---
-
-    function markCartAsDirty() {
-        const btn = document.getElementById('update-cart-btn');
-        btn.classList.remove('border', 'border-gray-200', 'dark:border-gray-600', 'text-charcoal', 'dark:text-white', 'hover:bg-sand', 'dark:hover:bg-gray-700');
-        btn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700', 'border-transparent');
-        btn.textContent = 'Save Changes';
-    }
-
-    function markCartAsClean() {
-        const btn = document.getElementById('update-cart-btn');
-        btn.classList.add('border', 'border-gray-200', 'dark:border-gray-600', 'text-charcoal', 'dark:text-white', 'hover:bg-sand', 'dark:hover:bg-gray-700');
-        btn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700', 'border-transparent');
-        btn.textContent = 'Update Cart';
-    }
-
-    async function saveCartChanges() {
-        const rows = document.querySelectorAll('.cart-item');
-        const updates = [];
-
-        rows.forEach(row => {
-            const productId = row.dataset.productId;
-            const originalQty = parseInt(row.dataset.originalQty, 10);
-            const currentQty = parseInt(row.querySelector('.qty-input').value, 10);
-
-            // Only send items that changed
-            if (productId && (currentQty !== originalQty)) {
-                updates.push({ product_id: productId, quantity: currentQty });
-            }
-        });
-
-        if (updates.length === 0) {
-            alert("No changes to save.");
-            return;
-        }
-
-        // Send to backend
-        try {
-            const response = await fetch('/cart/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ updates: updates })
+            document.querySelectorAll('.cart-item').forEach(function (row) {
+                if (parseInt(row.querySelector('.qty-input').value) === 0) {
+                    row.style.maxHeight = row.offsetHeight + 'px';
+                    row.style.overflow = 'hidden';
+                    requestAnimationFrame(function () {
+                        row.style.transition = 'max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease';
+                        row.style.maxHeight = '0';
+                        row.style.opacity = '0';
+                        row.style.marginTop = '0';
+                        row.style.marginBottom = '0';
+                        row.style.paddingTop = '0';
+                        row.style.paddingBottom = '0';
+                    });
+                    setTimeout(function () { row.remove(); }, 320);
+                }
             });
 
-            const result = await response.json();
+            setTimeout(function () {
+                if (document.querySelectorAll('.cart-item').length === 0) location.reload();
+            }, 350);
 
-            if (response.ok && result.success) {
-                // Update original quantities in DOM to new values
-                rows.forEach(row => {
-                    const input = row.querySelector('.qty-input');
-                    row.dataset.originalQty = input.value;
-                });
-                markCartAsClean();
-                
-                // Optional: Remove rows with 0 quantity from DOM instantly
-                document.querySelectorAll('.cart-item').forEach(row => {
-                    if (parseInt(row.querySelector('.qty-input').value) === 0) {
-                        row.remove();
-                    }
-                });
+            showToast('Cart updated successfully!', 'success');
+        } else {
+            showToast(result.message || 'Error updating cart.', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Failed to connect to server.', 'error');
+    }
+}
 
-                // Re-check if cart is empty
-                if (document.querySelectorAll('.cart-item').length === 0) {
-                    location.reload();
-                }
+// ============================================================
+//  COUPON LOGIC
+// ============================================================
 
-            } else {
-                alert('Error updating cart: ' + (result.message || 'Unknown error'));
+// Called when user clicks "Apply" on a coupon card
+function selectCoupon(code, cardEl) {
+    if (couponRequestPending) return;
+
+    // If this coupon is already applied, do nothing
+    if (activeCoupon && activeCoupon.code === code) return;
+
+    // Fill the input box for visual feedback
+    const input = document.getElementById('coupon-input');
+    input.value = code;
+
+    // Call the apply API
+    applyCoupon(code, cardEl);
+}
+
+// Called when user clicks "Apply" next to the manual input
+function applyCouponFromInput() {
+    if (couponRequestPending) return;
+    const code = document.getElementById('coupon-input').value.trim().toUpperCase();
+    if (!code) {
+        showCouponMessage('Please enter a coupon code.', 'error');
+        return;
+    }
+    applyCoupon(code, null);
+}
+
+// Core apply function
+async function applyCoupon(code, cardEl) {
+    if (couponRequestPending) return;
+    couponRequestPending = true;
+
+    const applyBtn = document.getElementById('apply-coupon-btn');
+    const originalBtnText = applyBtn.textContent;
+    applyBtn.textContent = '...';
+    applyBtn.disabled = true;
+
+    hideCouponMessage();
+
+    try {
+        const response = await fetch('/cart/coupon/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code })
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            // Store in memory for client-side recalculation
+            activeCoupon = {
+                code: result.code,
+                discount_type: result.discount_type,
+                discount_value: result.discount_value,
+                discount_amount: result.discount_amount,
+            };
+
+            // Update input to show applied state
+            document.getElementById('coupon-input').value = result.code;
+            document.getElementById('coupon-input').readOnly = true;
+            applyBtn.innerHTML = '<svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Applied';
+            applyBtn.classList.remove('bg-primary', 'hover:bg-primary-dark');
+            applyBtn.classList.add('bg-green-600', 'cursor-default');
+
+            // Show the green "applied" row with remove link
+            const removeRow = document.getElementById('coupon-remove-row');
+            removeRow.classList.remove('hidden');
+            document.getElementById('coupon-applied-label').textContent = result.message;
+
+            // Update coupon card states
+            updateCouponCardStates(result.code);
+
+            // Recalculate totals
+            recalculateCartTotals();
+
+            showCouponMessage(result.message, 'success');
+
+        } else {
+            // Reset input if it was set by card click
+            if (!cardEl) {
+                // Keep what user typed so they can fix it
             }
-        } catch (err) {
-            console.error(err);
-            alert('Failed to connect to server.');
+            showCouponMessage(result.message || 'Invalid coupon code.', 'error');
+
+            // Reset any card states that might have been set optimistically
+            resetCouponCardStates();
+        }
+
+    } catch (err) {
+        console.error(err);
+        showCouponMessage('Network error. Please try again.', 'error');
+        resetCouponCardStates();
+    } finally {
+        couponRequestPending = false;
+        if (!activeCoupon) {
+            applyBtn.textContent = originalBtnText;
+            applyBtn.disabled = false;
         }
     }
+}
 
-    // --- 3. Coupon Logic ---
+// Remove the applied coupon
+async function removeCoupon() {
+    if (couponRequestPending) return;
+    couponRequestPending = true;
 
-    async function applyCoupon() {
-        const code = document.getElementById('coupon-input').value.trim();
-        const msgEl = document.getElementById('coupon-message');
-        
-        if (!code) return;
+    try {
+        const response = await fetch('/cart/coupon/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
 
-        msgEl.textContent = 'Applying...';
-        msgEl.classList.remove('hidden', 'text-red-500', 'text-green-600');
-        msgEl.classList.add('text-gray-500');
+        if (response.ok && result.success) {
+            // Clear state
+            activeCoupon = null;
 
-        try {
-            const response = await fetch('/cart/coupon/apply', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: code })
-            });
+            // Reset input
+            const input = document.getElementById('coupon-input');
+            input.value = '';
+            input.readOnly = false;
 
-            const result = await response.json();
+            // Reset apply button
+            const applyBtn = document.getElementById('apply-coupon-btn');
+            applyBtn.innerHTML = 'Apply';
+            applyBtn.classList.remove('bg-green-600', 'cursor-default');
+            applyBtn.classList.add('bg-primary', 'hover:bg-primary-dark');
+            applyBtn.disabled = false;
 
-            if (response.ok && result.success) {
-                msgEl.textContent = result.message || "Coupon applied!";
-                msgEl.classList.remove('text-gray-500', 'text-red-500');
-                msgEl.classList.add('text-green-600');
+            // Hide applied row
+            document.getElementById('coupon-remove-row').classList.add('hidden');
 
-                // Update totals if backend returns them
-                if(result.new_total !== undefined) {
-                    document.getElementById('summary-total').textContent = formatPrice(result.new_total);
-                    document.getElementById('mobile-total').textContent = formatPrice(result.new_total);
-                }
-                if(result.discount_amount) {
-                    document.getElementById('discount-row').classList.remove('hidden');
-                    document.getElementById('summary-discount').textContent = '- ' + formatPrice(result.discount_amount);
-                }
-            } else {
-                msgEl.textContent = result.message || "Invalid coupon.";
-                msgEl.classList.remove('text-gray-500', 'text-green-600');
-                msgEl.classList.add('text-red-500');
-            }
-        } catch (err) {
-            msgEl.textContent = "Error applying coupon.";
-            msgEl.classList.add('text-red-500');
+            // Reset card states
+            resetCouponCardStates();
+
+            // Recalculate
+            recalculateCartTotals();
+
+            showCouponMessage(result.message, 'success');
+        } else {
+            showCouponMessage(result.message || 'Error removing coupon.', 'error');
         }
-    }
 
-    // --- Modal Logic ---
-    function openDeleteModal(id, name) {
-        const modal = document.getElementById('deleteModal');
-        document.getElementById('deleteProductId').value = id;
-        document.getElementById('deleteItemName').textContent = name;
-        document.getElementById('deleteForm').action = '/cart/remove';
-        modal.classList.remove('hidden');
+    } catch (err) {
+        console.error(err);
+        showCouponMessage('Network error. Please try again.', 'error');
+    } finally {
+        couponRequestPending = false;
     }
+}
 
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.add('hidden');
+// ============================================================
+//  COUPON UI HELPERS
+// ============================================================
+
+function updateCouponCardStates(appliedCode) {
+    const cards = document.querySelectorAll('.coupon-card');
+    cards.forEach(function (card) {
+        const code = card.dataset.code;
+        const eligible = card.dataset.eligible === 'true';
+        const btn = card.querySelector('.coupon-apply-btn');
+
+        // Remove all state classes first
+        card.classList.remove(
+            'border-green-500', 'bg-green-50', 'dark:bg-green-900/20',
+            'opacity-50', 'pointer-events-none',
+            'border-gray-200', 'dark:border-gray-600', 'bg-white', 'dark:bg-gray-750',
+            'hover:border-primary/40', 'hover:bg-primary/[0.03]'
+        );
+        btn.classList.remove(
+            'bg-green-600', 'text-white', 'cursor-default',
+            'bg-sand', 'dark:bg-gray-700', 'text-charcoal', 'dark:text-white',
+            'group-hover:bg-primary', 'group-hover:text-white'
+        );
+
+        if (code === appliedCode) {
+            // This is the applied coupon — green highlight
+            card.classList.add('border-green-500', 'bg-green-50', 'dark:bg-green-900/20');
+            card.onclick = null;
+            btn.textContent = '✓ Applied';
+            btn.classList.add('bg-green-600', 'text-white', 'cursor-default');
+
+        } else if (eligible) {
+            // Other eligible coupons — dim them
+            card.classList.add('border-gray-200', 'dark:border-gray-600', 'bg-white', 'dark:bg-gray-750', 'opacity-50', 'pointer-events-none');
+            btn.classList.add('bg-sand', 'dark:bg-gray-700', 'text-charcoal', 'dark:text-white');
+
+        } else {
+            // Ineligible coupons — keep locked look
+            card.classList.add('border-dashed', 'border-gray-300', 'dark:border-gray-600', 'bg-gray-50', 'dark:bg-gray-750/50', 'opacity-60');
+        }
+    });
+}
+
+function resetCouponCardStates() {
+    const cards = document.querySelectorAll('.coupon-card');
+    cards.forEach(function (card) {
+        const eligible = card.dataset.eligible === 'true';
+        const btn = card.querySelector('.coupon-apply-btn');
+        const code = card.dataset.code;
+
+        // Clear all state classes
+        card.className = card.className.replace(/\b(border-green-500|bg-green-50|dark:bg-green-900\/20|opacity-50|pointer-events-none|opacity-60)\b/g, '').trim();
+
+        btn.classList.remove('bg-green-600', 'text-white', 'cursor-default');
+
+        if (eligible) {
+            card.classList.add('border-gray-200', 'dark:border-gray-600', 'bg-white', 'dark:bg-gray-750', 'hover:border-primary/40', 'hover:bg-primary/[0.03]', 'cursor-pointer');
+            btn.textContent = 'Apply';
+            btn.classList.add('bg-sand', 'dark:bg-gray-700', 'text-charcoal', 'dark:text-white', 'group-hover:bg-primary', 'group-hover:text-white');
+            card.onclick = function () { selectCoupon(code, card); };
+        } else {
+            card.classList.add('border-dashed', 'border-gray-300', 'dark:border-gray-600', 'bg-gray-50', 'dark:bg-gray-750/50', 'opacity-60');
+            btn.textContent = 'Locked';
+            btn.classList.add('bg-gray-100', 'dark:bg-gray-600/50', 'text-gray-400', 'dark:text-gray-500', 'cursor-not-allowed');
+            card.onclick = null;
+        }
+    });
+}
+
+function showCouponMessage(text, type) {
+    const el = document.getElementById('coupon-message');
+    el.textContent = text;
+    el.classList.remove('hidden', 'text-red-500', 'text-green-600', 'text-gray-500', 'text-amber-600');
+
+    if (type === 'error') el.classList.add('text-red-500');
+    else if (type === 'success') el.classList.add('text-green-600');
+    else if (type === 'warning') el.classList.add('text-amber-600');
+    else el.classList.add('text-gray-500');
+
+    // Auto-hide success messages after 5 seconds
+    if (type === 'success') {
+        clearTimeout(el._hideTimer);
+        el._hideTimer = setTimeout(function () { hideCouponMessage(); }, 5000);
     }
+}
+
+function hideCouponMessage() {
+    const el = document.getElementById('coupon-message');
+    el.classList.add('hidden');
+    clearTimeout(el._hideTimer);
+}
+
+// ============================================================
+//  TOAST NOTIFICATION (replaces alert())
+// ============================================================
+function showToast(message, type) {
+    // Remove existing toast if any
+    const existing = document.getElementById('app-toast');
+    if (existing) existing.remove();
+
+    const colors = {
+        success: 'bg-green-600',
+        error: 'bg-red-600',
+        info: 'bg-gray-800 dark:bg-gray-600',
+        warning: 'bg-amber-500',
+    };
+    const icons = {
+        success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+        error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+        info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>',
+    };
+
+    const toast = document.createElement('div');
+    toast.id = 'app-toast';
+    toast.className = 'fixed top-4 right-4 z-[100] flex items-center gap-2.5 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-2xl transition-all duration-300 translate-x-full opacity-0 ' + (colors[type] || colors.info);
+    toast.innerHTML = '<svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + (icons[type] || icons.info) + '</svg><span>' + message + '</span>';
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(function () {
+        toast.classList.remove('translate-x-full', 'opacity-0');
+    });
+
+    setTimeout(function () {
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(function () { toast.remove(); }, 300);
+    }, 3000);
+}
+
+// ============================================================
+//  DELETE MODAL
+// ============================================================
+function openDeleteModal(id, name) {
+    document.getElementById('deleteProductId').value = id;
+    document.getElementById('deleteItemName').textContent = name;
+    document.getElementById('deleteForm').action = '/cart/remove';
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+
+// Allow Enter key in coupon input
+document.addEventListener('DOMContentLoaded', function () {
+    const couponInput = document.getElementById('coupon-input');
+    if (couponInput) {
+        couponInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeCoupon) return; // Don't re-apply
+                applyCouponFromInput();
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

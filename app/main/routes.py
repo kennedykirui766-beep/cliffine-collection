@@ -600,7 +600,8 @@ def faq_search():
 def cart():
     from flask import session, render_template
     from flask_login import current_user
-    from app.models import Cart, Product
+    from app.models import Cart, Product, Coupon
+    from datetime import datetime
 
     products_in_cart = []
     total_price = 0
@@ -618,11 +619,8 @@ def cart():
             product = Product.query.get(item.product_id)
 
             if product:
-                # ✅ Use discount price if available
                 unit_price = product.discount_price if product.discount_price else product.price
-
                 item_total = unit_price * item.quantity
-
                 total_price += item_total
                 cart_count += item.quantity
 
@@ -630,14 +628,53 @@ def cart():
                     "product": product,
                     "quantity": item.quantity,
                     "total": item_total,
-                    "unit_price": unit_price 
+                    "unit_price": unit_price
                 })
+
+    # --- Fetch available coupons ---
+    now = datetime.utcnow()
+    available_coupons = []
+    try:
+        coupons = Coupon.query.filter_by(is_active=True).all()
+        for c in coupons:
+            # Skip expired coupons if the field exists
+            if hasattr(c, 'expiry_date') and c.expiry_date and c.expiry_date < now:
+                continue
+
+            discount_type = getattr(c, 'discount_type', 'percentage')
+            discount_value = getattr(c, 'discount_value', 0)
+            min_order = getattr(c, 'min_order_amount', 0) or 0
+
+            if discount_type == 'fixed':
+                description = f"KES {discount_value:,.0f} OFF"
+            else:
+                description = f"{discount_value}% OFF"
+
+            # Check basic eligibility against current subtotal
+            eligible = True
+            reason = ""
+            if min_order and total_price < min_order:
+                eligible = False
+                reason = f"Min. order KES {min_order:,.0f}"
+
+            available_coupons.append({
+                "code": c.code.upper(),
+                "description": description,
+                "eligible": eligible,
+                "reason": reason,
+                "discount_type": discount_type,
+                "discount_value": discount_value,
+                "min_order": min_order,
+            })
+    except Exception:
+        available_coupons = []
 
     return render_template(
         "cart.html",
         products=products_in_cart,
         total_price=total_price,
-        cart_count=cart_count
+        cart_count=cart_count,
+        available_coupons=available_coupons,
     )
 
 @main_bp.route("/add-to-cart", methods=["POST"])
@@ -761,25 +798,108 @@ def remove_from_cart():
 
 @main_bp.route("/cart/coupon/apply", methods=["POST"])
 def apply_coupon():
-    from flask import request, jsonify
+    from flask import session, request, jsonify
+    from flask_login import current_user
+    from app.models import Cart, CartItem, Product, Coupon
+    from datetime import datetime
 
     data = request.get_json()
-    code = data.get("code")
+    code = (data.get("code") or "").strip().upper()
 
-    # Example logic (replace with DB later)
-    if code == "SAVE10":
-        return jsonify({
-            "success": True,
-            "message": "Coupon applied!",
-            "discount_amount": 100,
-            "new_total": 900  # you should calculate this dynamically
-        })
+    if not code:
+        return jsonify(success=False, message="Please enter a coupon code."), 400
 
-    return jsonify({
-        "success": False,
-        "message": "Invalid coupon"
-    }), 400
+    coupon = Coupon.query.filter(
+        Coupon.code == code,
+        Coupon.is_active == True,
+    ).first()
 
+    if not coupon:
+        return jsonify(success=False, message="Invalid coupon code."), 404
+
+    now = datetime.utcnow()
+    if hasattr(coupon, 'expiry_date') and coupon.expiry_date and coupon.expiry_date < now:
+        return jsonify(success=False, message="This coupon has expired."), 400
+
+    if hasattr(coupon, 'max_uses') and coupon.max_uses is not None:
+        used = getattr(coupon, 'used_count', 0) or 0
+        if used >= coupon.max_uses:
+            return jsonify(success=False, message="This coupon has reached its usage limit."), 400
+
+    # Get cart subtotal
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+    else:
+        session_id = session.get("cart_session")
+        cart = Cart.query.filter_by(session_id=session_id).first() if session_id else None
+
+    if not cart or not cart.items:
+        return jsonify(success=False, message="Your cart is empty."), 400
+
+    subtotal = 0
+    for item in cart.items:
+        product = Product.query.get(item.product_id)
+        if product:
+            unit_price = product.discount_price if product.discount_price else product.price
+            subtotal += unit_price * item.quantity
+
+    min_order = getattr(coupon, 'min_order_amount', 0) or 0
+    if min_order and subtotal < min_order:
+        return jsonify(
+            success=False,
+            message=f"Minimum order of KES {min_order:,.0f} required for this coupon.",
+        ), 400
+
+    # Calculate discount
+    discount_type = getattr(coupon, 'discount_type', 'percentage')
+    discount_value = getattr(coupon, 'discount_value', 0) or 0
+
+    if discount_type == 'fixed':
+        discount_amount = min(discount_value, subtotal)
+    else:
+        discount_amount = round(subtotal * (discount_value / 100), 2)
+
+    new_total = round(subtotal - discount_amount, 2)
+
+    # Store applied coupon in session
+    session["applied_coupon"] = {
+        "code": coupon.code.upper(),
+        "discount_type": discount_type,
+        "discount_value": discount_value,
+        "discount_amount": discount_amount,
+        "new_total": new_total,
+    }
+
+    if discount_type == 'percentage':
+        msg = f"Coupon {coupon.code.upper()} applied! {discount_value}% off"
+    else:
+        msg = f"Coupon {coupon.code.upper()} applied! KES {discount_value:,.0f} off"
+
+    return jsonify(
+        success=True,
+        message=msg,
+        code=coupon.code.upper(),
+        discount_type=discount_type,
+        discount_value=discount_value,
+        discount_amount=discount_amount,
+        new_total=new_total,
+    )
+
+
+@main_bp.route("/cart/coupon/remove", methods=["POST"])
+def remove_coupon():
+    from flask import session, jsonify
+
+    applied = session.pop("applied_coupon", None)
+
+    if not applied:
+        return jsonify(success=False, message="No coupon applied."), 400
+
+    return jsonify(
+        success=True,
+        message=f"Coupon {applied['code']} removed.",
+        removed_code=applied["code"],
+    )
 
 # Account
 
