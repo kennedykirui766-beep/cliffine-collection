@@ -844,6 +844,18 @@ class Media(db.Model):
         return f"<Media {self.filename}>"
     
 
+class MessageReply(db.Model):
+    __tablename__ = "message_replies"
+
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey("messages.id"), nullable=False)
+    sender_type = db.Column(db.String(10), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    message = db.relationship("Message", backref="replies_list")
+
+
 class Message(db.Model):
     __tablename__ = "messages"
 
@@ -866,18 +878,6 @@ class Message(db.Model):
         "MessageReply",
         backref="message",
         lazy="dynamic",
-        order_by="MessageReply.created_at.asc",
+        order_by=MessageReply.created_at.asc(),
         cascade="all, delete-orphan",
-    )
-
-
-class MessageReply(db.Model):
-    __tablename__ = "message_replies"
-
-    id = db.Column(db.Integer, primary_key=True)
-    message_id = db.Column(db.Integer, db.ForeignKey("messages.id"), nullable=False)
-    sender_type = db.Column(db.String(10), nullable=False)
-    body = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    message = db.relationship("Message", backref="replies_list")    
+    )    
