@@ -3622,16 +3622,6 @@ def coupon_stats():
         ]
     })
 
-
-# ╔═══════════════════════════════════════════════════════════════╗
-# ║  END COUPON ROUTES                                            ║
-# ╚═══════════════════════════════════════════════════════════════╝
-
-# ═══════════════════════════════════════════════════════════════
-# ... YOUR EXISTING ROUTES CONTINUE BELOW ...
-# ═══════════════════════════════════════════════════════════════
-
-
 from flask import request, jsonify, render_template
 from app.models import Notification, db
 from functools import wraps
