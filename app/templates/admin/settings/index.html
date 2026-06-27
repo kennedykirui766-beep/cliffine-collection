@@ -7,28 +7,332 @@
 {% block head %}
 <style>
     /* Settings Tab Styling */
-    .settings-tab { transition: all 0.2s ease; border-left: 3px solid transparent; }
-    .settings-tab.active { background-color: #F5F3FF; border-left-color: #5423E7; color: #5423E7; font-weight: 600; }
-    .settings-tab:hover { background-color: #F3F4F6; }
+    .settings-tab { 
+        transition: all 0.2s ease; 
+        border-left: 3px solid transparent; 
+    }
+    .settings-tab.active { 
+        background-color: #F5F3FF; 
+        border-left-color: #5423E7; 
+        color: #5423E7; 
+        font-weight: 600; 
+    }
+    .settings-tab:hover:not(.active) { 
+        background-color: #F3F4F6; 
+    }
     
-    .settings-content { display: none; animation: fadeIn 0.3s ease-in-out; }
-    .settings-content.active { display: block; }
+    .settings-content { 
+        display: none; 
+        animation: fadeIn 0.3s ease-in-out; 
+    }
+    .settings-content.active { 
+        display: block; 
+    }
     
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { 
+        from { opacity: 0; transform: translateY(5px); } 
+        to { opacity: 1; transform: translateY(0); } 
+    }
 
-    /* Toggle Switch (Page specific refinement) */
-    .toggle-checkbox:checked { right: 0; border-color: #5423E7; }
-    .toggle-checkbox:checked + .toggle-label { background-color: #5423E7; }
+    /* Toggle Switch - Complete Styling */
+    .toggle-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+    
+    .toggle-wrapper input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
+    
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #CBD5E1;
+        transition: 0.3s ease;
+        border-radius: 24px;
+    }
+    
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.3s ease;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    
+    .toggle-wrapper input:checked + .toggle-slider {
+        background-color: #5423E7;
+    }
+    
+    .toggle-wrapper input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+    }
+    
+    .toggle-wrapper input:focus + .toggle-slider {
+        box-shadow: 0 0 0 3px rgba(84, 35, 231, 0.15);
+    }
+    
+    /* Green variant for M-Pesa */
+    .toggle-green input:checked + .toggle-slider {
+        background-color: #22C55E;
+    }
+    .toggle-green input:focus + .toggle-slider {
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+    }
+    
+    /* Red variant for Maintenance */
+    .toggle-red input:checked + .toggle-slider {
+        background-color: #EF4444;
+    }
+    .toggle-red input:focus + .toggle-slider {
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+
+    /* Toast Notification */
+    .toast-container {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .toast {
+        padding: 14px 20px;
+        border-radius: 12px;
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        transform: translateX(120%);
+        transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 380px;
+    }
+    
+    .toast.show {
+        transform: translateX(0);
+    }
+    
+    .toast-success { background: linear-gradient(135deg, #22C55E, #16A34A); }
+    .toast-error { background: linear-gradient(135deg, #EF4444, #DC2626); }
+    .toast-info { background: linear-gradient(135deg, #5423E7, #4A1DD4); }
+    .toast-warning { background: linear-gradient(135deg, #F59E0B, #D97706); }
+
+    /* File Upload Preview */
+    .upload-zone {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .upload-zone.has-file {
+        border-color: #5423E7;
+        background-color: #F5F3FF;
+    }
+    
+    .upload-preview {
+        max-width: 100px;
+        max-height: 100px;
+        border-radius: 8px;
+        margin-top: 8px;
+    }
+    
+    .upload-remove {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        background: #EF4444;
+        color: white;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 12px;
+        border: 2px solid white;
+    }
+    
+    .upload-zone.has-file .upload-remove {
+        display: flex;
+    }
+
+    /* Shipping zone row animation */
+    .shipping-row {
+        animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .shipping-row.removing {
+        animation: slideOut 0.3s ease forwards;
+    }
+    
+    @keyframes slideOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(10px); }
+    }
+
+    /* Loading state for save button */
+    .btn-loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.8;
+    }
+    
+    .btn-loading::after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 50%;
+        right: 12px;
+        margin-top: -8px;
+        border: 2px solid transparent;
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Password strength indicator */
+    .password-strength {
+        height: 3px;
+        border-radius: 3px;
+        margin-top: 6px;
+        background: #E2E8F0;
+        overflow: hidden;
+    }
+    
+    .password-strength-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s ease, background 0.3s ease;
+        width: 0%;
+    }
+
+    /* Modal overlay */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9998;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+    
+    .modal-overlay.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 440px;
+        width: 90%;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+        animation: modalIn 0.3s ease;
+    }
+    
+    @keyframes modalIn {
+        from { opacity: 0; transform: scale(0.95) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Action Buttons (Moved from Header to Content Area) -->
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Reset Confirmation Modal -->
+<div class="modal-overlay" id="resetModal">
+    <div class="modal-content">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">Reset to Default?</h3>
+        </div>
+        <p class="text-sm text-slate-600 mb-6">This will reset all settings to their default values. This action cannot be undone.</p>
+        <div class="flex justify-end gap-3">
+            <button onclick="closeResetModal()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                Cancel
+            </button>
+            <button onclick="confirmReset()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
+                Yes, Reset All
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Shipping Zone Modal -->
+<div class="modal-overlay" id="shippingModal">
+    <div class="modal-content">
+        <h3 class="text-lg font-bold text-slate-800 mb-4">Add Shipping Zone</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Region</label>
+                <input type="text" id="newZoneRegion" placeholder="e.g., Mombasa" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Delivery Method</label>
+                <input type="text" id="newZoneMethod" placeholder="e.g., Standard, Express" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Cost (KES)</label>
+                <input type="number" id="newZoneCost" placeholder="e.g., 500" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeShippingModal()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                Cancel
+            </button>
+            <button onclick="addShippingZone()" class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors">
+                Add Zone
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
 <div class="flex justify-end gap-3 mb-6">
-    <button class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm bg-white">
+    <button onclick="openResetModal()" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm bg-white">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
         Reset to Default
     </button>
-    <button class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
+    <button onclick="saveSettings()" id="saveBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
         Save Changes
     </button>
@@ -85,49 +389,56 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Store Name</label>
-                        <input type="text" value="Cliffine Collection" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <input type="text" id="store_name" value="{{ settings.general.store_name }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Contact Email</label>
-                        <input type="email" value="support@cliffine.co.ke" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <input type="email" id="contact_email" value="{{ settings.general.contact_email }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-                        <input type="text" value="+254 700 000 000" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <input type="text" id="phone_number" value="{{ settings.general.phone_number }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Default Currency</label>
-                        <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
-                            <option selected>KES (Kenyan Shilling)</option>
-                            <option>USD (US Dollar)</option>
+                        <select id="default_currency" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none bg-white transition-colors">
+                            <option value="KES" {% if settings.general.default_currency == 'KES' %}selected{% endif %}>KES (Kenyan Shilling)</option>
+                            <option value="USD" {% if settings.general.default_currency == 'USD' %}selected{% endif %}>USD (US Dollar)</option>
                         </select>
                     </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Store Address</label>
-                    <textarea rows="3" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none" placeholder="Enter full business address"></textarea>
+                    <textarea id="store_address" rows="3" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors" placeholder="Enter full business address">{{ settings.general.store_address }}</textarea>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Store Logo</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-md hover:border-primary transition-colors">
-                            <div class="space-y-1 text-center">
+                        <div class="upload-zone mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-lg hover:border-primary transition-colors cursor-pointer" onclick="document.getElementById('logo_upload').click()">
+                            <button type="button" class="upload-remove" onclick="event.stopPropagation(); removeUpload('logo')">×</button>
+                            <div id="logo_placeholder" class="space-y-1 text-center">
                                 <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4a.5.5 0 11-1 0 .5.5 0 011 0zM28 32a.5.5 0 11-1 0 .5.5 0 011 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
                                 <div class="flex text-sm text-slate-600">
-                                    <label class="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary-dark"><span>Upload a file</span><input type="file" class="sr-only"></label>
+                                    <span class="font-medium text-primary hover:text-primary-dark">Upload a file</span>
                                 </div>
+                                <p class="text-xs text-slate-400">PNG, JPG up to 2MB</p>
                             </div>
+                            <img id="logo_preview" class="upload-preview hidden" alt="Logo preview">
+                            <input type="file" id="logo_upload" class="hidden" accept="image/*" onchange="handleFileUpload(this, 'logo')">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Favicon</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-md hover:border-primary transition-colors">
-                            <div class="space-y-1 text-center">
+                        <div class="upload-zone mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-lg hover:border-primary transition-colors cursor-pointer" onclick="document.getElementById('favicon_upload').click()">
+                            <button type="button" class="upload-remove" onclick="event.stopPropagation(); removeUpload('favicon')">×</button>
+                            <div id="favicon_placeholder" class="space-y-1 text-center">
                                 <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 <p class="text-xs text-slate-500">32x32px PNG/ICO</p>
                             </div>
+                            <img id="favicon_preview" class="upload-preview hidden" alt="Favicon preview">
+                            <input type="file" id="favicon_upload" class="hidden" accept="image/*" onchange="handleFileUpload(this, 'favicon')">
                         </div>
                     </div>
                 </div>
@@ -142,25 +453,25 @@
             </div>
             <div class="p-6 space-y-6">
                 <!-- M-Pesa -->
-                <div class="p-4 border border-slate-100 rounded-lg bg-slate-50/50">
+                <div class="p-5 border border-slate-100 rounded-xl bg-slate-50/50" id="mpesa_section">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600 font-bold text-xs">M-PESA</div>
                             <span class="font-semibold text-slate-800">M-Pesa Integration</span>
                         </div>
-                        <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" name="toggle" id="mpesa_toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer checked:right-0 checked:border-green-500 outline-none"/>
-                            <label for="mpesa_toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
-                        </div>
+                        <label class="toggle-wrapper toggle-green">
+                            <input type="checkbox" id="mpesa_toggle" {% if settings.payments.mpesa_enabled %}checked{% endif %} onchange="toggleMpesaFields()">
+                            <span class="toggle-slider"></span>
+                        </label>
                     </div>
-                    <div class="grid md:grid-cols-2 gap-4 mt-4">
+                    <div id="mpesa_fields" class="grid md:grid-cols-2 gap-4 mt-4 {% if not settings.payments.mpesa_enabled %}opacity-50 pointer-events-none{% endif %}">
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Paybill Number</label>
-                            <input type="text" placeholder="714888" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                            <input type="text" id="paybill_number" value="{{ settings.payments.paybill_number }}" placeholder="714888" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-colors">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Account Number</label>
-                            <input type="text" placeholder="196856" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                            <input type="text" id="account_number" value="{{ settings.payments.account_number }}" placeholder="196856" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-colors">
                         </div>
                     </div>
                 </div>
@@ -169,13 +480,13 @@
                 <div class="grid md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Tax Rate (VAT %)</label>
-                        <input type="number" value="16" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <input type="number" id="tax_rate" value="{{ settings.payments.tax_rate }}" min="0" max="100" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Default Payment Method</label>
-                        <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
-                            <option selected>M-Pesa</option>
-                            <option>Bank Transfer</option>
+                        <select id="default_payment_method" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none bg-white transition-colors">
+                            <option value="M-Pesa" {% if settings.payments.default_payment_method == 'M-Pesa' %}selected{% endif %}>M-Pesa</option>
+                            <option value="Bank Transfer" {% if settings.payments.default_payment_method == 'Bank Transfer' %}selected{% endif %}>Bank Transfer</option>
                         </select>
                     </div>
                 </div>
@@ -199,35 +510,43 @@
                                 <th class="p-3 text-left font-semibold text-slate-600">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr>
-                                <td class="p-3">Nairobi</td>
-                                <td class="p-3">Pickup / Courier</td>
-                                <td class="p-3"><input type="number" value="200" class="w-20 px-2 py-1 border rounded"></td>
-                                <td class="p-3 text-red-500 hover:underline cursor-pointer">Remove</td>
+                        <tbody class="divide-y divide-slate-100" id="shippingZonesBody">
+                            {% for zone in settings.shipping.zones %}
+                            <tr class="shipping-row" data-index="{{ loop.index0 }}">
+                                <td class="p-3">
+                                    <input type="text" value="{{ zone.region }}" class="zone-region w-full px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors">
+                                </td>
+                                <td class="p-3">
+                                    <input type="text" value="{{ zone.method }}" class="zone-method w-full px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors">
+                                </td>
+                                <td class="p-3">
+                                    <input type="number" value="{{ zone.cost }}" class="zone-cost w-24 px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors">
+                                </td>
+                                <td class="p-3">
+                                    <button type="button" onclick="removeShippingZone(this)" class="text-red-500 hover:text-red-700 hover:underline cursor-pointer text-sm font-medium transition-colors">Remove</button>
+                                </td>
                             </tr>
-                            <tr>
-                                <td class="p-3">Major Towns</td>
-                                <td class="p-3">Standard</td>
-                                <td class="p-3"><input type="number" value="350" class="w-20 px-2 py-1 border rounded"></td>
-                                <td class="p-3 text-red-500 hover:underline cursor-pointer">Remove</td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
+                    <div id="emptyShippingState" class="hidden text-center py-8 text-slate-400">
+                        <svg class="mx-auto h-10 w-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        <p class="text-sm">No shipping zones configured</p>
+                    </div>
                 </div>
-                <button class="text-primary font-semibold text-sm hover:underline flex items-center gap-1">
+                <button type="button" onclick="openShippingModal()" class="text-primary font-semibold text-sm hover:underline flex items-center gap-1 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     Add Shipping Zone
                 </button>
-                <div class="grid md:grid-cols-2 gap-6 pt-4 border-t">
+                <div class="grid md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Free Shipping Threshold</label>
-                        <input type="number" placeholder="e.g. 5000" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <input type="number" id="free_shipping_threshold" value="{{ settings.shipping.free_shipping_threshold }}" placeholder="e.g. 5000" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
                         <p class="text-xs text-slate-400 mt-1">Leave blank to disable.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Estimated Delivery (Days)</label>
-                        <input type="text" value="1-3 Business Days" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <input type="text" id="estimated_delivery" value="{{ settings.shipping.estimated_delivery }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
                     </div>
                 </div>
             </div>
@@ -243,39 +562,57 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">SMTP Host</label>
-                        <input type="text" placeholder="smtp.example.com" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg">
+                        <input type="text" id="smtp_host" value="{{ settings.emails.smtp_host }}" placeholder="smtp.example.com" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">SMTP Port</label>
-                        <input type="text" placeholder="587" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg">
+                        <input type="text" id="smtp_port" value="{{ settings.emails.smtp_port }}" placeholder="587" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                        <input type="text" placeholder="your@email.com" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg">
+                        <input type="text" id="smtp_username" value="{{ settings.emails.smtp_username }}" placeholder="your@email.com" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                        <input type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg">
+                        <div class="relative">
+                            <input type="password" id="smtp_password" value="{{ settings.emails.smtp_password }}" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors pr-10">
+                            <button type="button" onclick="togglePasswordVisibility('smtp_password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                                <svg class="w-4 h-4 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                <svg class="w-4 h-4 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="border-t pt-6">
+                <div class="border-t pt-6 border-slate-100">
                     <h4 class="font-semibold text-slate-800 mb-4">Notification Triggers</h4>
                     <div class="space-y-3">
-                        <label class="flex items-center gap-3">
-                            <input type="checkbox" checked class="rounded text-primary focus:ring-primary">
+                        <label class="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                             <span class="text-sm text-slate-600">New Order Confirmation</span>
+                            <label class="toggle-wrapper">
+                                <input type="checkbox" id="notify_new_order" {% if settings.emails.notify_new_order %}checked{% endif %}>
+                                <span class="toggle-slider"></span>
+                            </label>
                         </label>
-                        <label class="flex items-center gap-3">
-                            <input type="checkbox" checked class="rounded text-primary focus:ring-primary">
+                        <label class="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                             <span class="text-sm text-slate-600">Payment Receipts</span>
+                            <label class="toggle-wrapper">
+                                <input type="checkbox" id="notify_payment_receipts" {% if settings.emails.notify_payment_receipts %}checked{% endif %}>
+                                <span class="toggle-slider"></span>
+                            </label>
                         </label>
-                        <label class="flex items-center gap-3">
-                            <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                        <label class="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                             <span class="text-sm text-slate-600">Chama Updates</span>
+                            <label class="toggle-wrapper">
+                                <input type="checkbox" id="notify_chama_updates" {% if settings.emails.notify_chama_updates %}checked{% endif %}>
+                                <span class="toggle-slider"></span>
+                            </label>
                         </label>
-                        <label class="flex items-center gap-3">
-                            <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                        <label class="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                             <span class="text-sm text-slate-600">Promotional Newsletters</span>
+                            <label class="toggle-wrapper">
+                                <input type="checkbox" id="notify_newsletters" {% if settings.emails.notify_newsletters %}checked{% endif %}>
+                                <span class="toggle-slider"></span>
+                            </label>
                         </label>
                     </div>
                 </div>
@@ -294,25 +631,25 @@
                         <h4 class="font-semibold text-slate-800">Enable Coupons</h4>
                         <p class="text-xs text-slate-500">Allow customers to use coupon codes at checkout.</p>
                     </div>
-                    <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" checked name="toggle" id="coupon_toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer checked:right-0 checked:border-green-500 outline-none"/>
-                        <label for="coupon_toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
-                    </div>
+                    <label class="toggle-wrapper">
+                        <input type="checkbox" id="coupons_enabled" {% if settings.coupons.enabled %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
                 <div class="grid md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Default Discount Type</label>
-                        <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white">
-                            <option>Percentage</option>
-                            <option>Fixed Amount</option>
+                        <select id="default_discount_type" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
+                            <option value="Percentage" {% if settings.coupons.default_discount_type == 'Percentage' %}selected{% endif %}>Percentage</option>
+                            <option value="Fixed Amount" {% if settings.coupons.default_discount_type == 'Fixed Amount' %}selected{% endif %}>Fixed Amount</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Expiry Reminder</label>
-                        <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white">
-                            <option>3 Days Before</option>
-                            <option>1 Week Before</option>
-                            <option>Never</option>
+                        <select id="expiry_reminder" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
+                            <option value="3 Days Before" {% if settings.coupons.expiry_reminder == '3 Days Before' %}selected{% endif %}>3 Days Before</option>
+                            <option value="1 Week Before" {% if settings.coupons.expiry_reminder == '1 Week Before' %}selected{% endif %}>1 Week Before</option>
+                            <option value="Never" {% if settings.coupons.expiry_reminder == 'Never' %}selected{% endif %}>Never</option>
                         </select>
                     </div>
                 </div>
@@ -331,20 +668,26 @@
                         <h4 class="font-semibold text-slate-800">Two-Factor Authentication</h4>
                         <p class="text-xs text-slate-500">Add an extra layer of security to your admin account.</p>
                     </div>
-                    <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="toggle" id="2fa_toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer checked:right-0 checked:border-green-500 outline-none"/>
-                        <label for="2fa_toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
-                    </div>
+                    <label class="toggle-wrapper">
+                        <input type="checkbox" id="two_factor_enabled" {% if settings.security.two_factor_enabled %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
                 <div class="grid md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Change Password</label>
-                        <input type="password" placeholder="New Password" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg mb-2">
-                        <input type="password" placeholder="Confirm Password" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg">
+                        <input type="password" id="new_password" placeholder="New Password" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg mb-2 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors" oninput="checkPasswordStrength(this.value)">
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1" id="passwordStrengthText"></p>
+                        <input type="password" id="confirm_password" placeholder="Confirm Password" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg mt-2 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors" oninput="checkPasswordMatch()">
+                        <p class="text-xs mt-1 hidden" id="passwordMatchText"></p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Session Timeout (Minutes)</label>
-                        <input type="number" value="60" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg">
+                        <input type="number" id="session_timeout" value="{{ settings.security.session_timeout }}" min="5" max="480" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
+                        <p class="text-xs text-slate-400 mt-1">Range: 5 - 480 minutes</p>
                     </div>
                 </div>
             </div>
@@ -362,18 +705,28 @@
                         <h4 class="font-semibold text-red-800">Maintenance Mode</h4>
                         <p class="text-xs text-red-600">Take the site offline for updates. Only admins can view the site.</p>
                     </div>
-                    <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="toggle" id="maintenance_toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-red-300 appearance-none cursor-pointer checked:right-0 checked:border-red-500 outline-none"/>
-                        <label for="maintenance_toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-red-300 cursor-pointer"></label>
-                    </div>
+                    <label class="toggle-wrapper toggle-red">
+                        <input type="checkbox" id="maintenance_mode" {% if settings.advanced.maintenance_mode %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Google Analytics ID</label>
-                    <input type="text" placeholder="G-XXXXXXXXXX" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg">
+                    <input type="text" id="google_analytics_id" value="{{ settings.advanced.google_analytics_id }}" placeholder="G-XXXXXXXXXX" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Custom CSS</label>
-                    <textarea rows="5" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg font-mono text-xs bg-slate-800 text-green-400" placeholder="/* Enter custom CSS here */"></textarea>
+                    <textarea id="custom_css" rows="6" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg font-mono text-xs bg-slate-900 text-green-400 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors" placeholder="/* Enter custom CSS here */">{{ settings.advanced.custom_css }}</textarea>
+                    <p class="text-xs text-slate-400 mt-1">Added to the site's &lt;head&gt; section.</p>
+                </div>
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                        <div>
+                            <h4 class="font-semibold text-amber-800 text-sm">Caution</h4>
+                            <p class="text-xs text-amber-700 mt-1">Incorrect CSS may break your site's layout. Test changes in a staging environment first if possible.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -384,20 +737,19 @@
 
 {% block scripts %}
 <script>
-    // Settings Tab Switching Logic
+    // ============================================
+    // SETTINGS TAB SWITCHING
+    // ============================================
     function openTab(tabName, element) {
         // Hide all content
-        var i;
-        var x = document.getElementsByClassName("settings-content");
-        for (i = 0; i < x.length; i++) {
-            x[i].classList.remove("active");
-        }
+        document.querySelectorAll(".settings-content").forEach(el => {
+            el.classList.remove("active");
+        });
 
         // Remove active state from all tabs
-        var y = document.getElementsByClassName("settings-tab");
-        for (i = 0; i < y.length; i++) {
-            y[i].classList.remove("active");
-        }
+        document.querySelectorAll(".settings-tab").forEach(el => {
+            el.classList.remove("active");
+        });
 
         // Show specific content
         document.getElementById(tabName).classList.add("active");
@@ -407,5 +759,510 @@
             element.classList.add("active");
         }
     }
+
+    // ============================================
+    // TOAST NOTIFICATIONS
+    // ============================================
+    function showToast(message, type = 'success', duration = 4000) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        const icons = {
+            success: '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
+            error: '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>',
+            info: '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+            warning: '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>'
+        };
+        
+        toast.innerHTML = `${icons[type] || icons.info}<span>${message}</span>`;
+        container.appendChild(toast);
+        
+        // Trigger animation
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+        
+        // Auto remove
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        }, duration);
+    }
+
+    // ============================================
+    // M-PESA TOGGLE
+    // ============================================
+    function toggleMpesaFields() {
+        const isChecked = document.getElementById('mpesa_toggle').checked;
+        const fields = document.getElementById('mpesa_fields');
+        
+        if (isChecked) {
+            fields.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+            fields.classList.add('opacity-50', 'pointer-events-none');
+        }
+    }
+
+    // ============================================
+    // FILE UPLOAD HANDLING
+    // ============================================
+    function handleFileUpload(input, type) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        // Validate file size (2MB max)
+        if (file.size > 2 * 1024 * 1024) {
+            showToast('File size must be less than 2MB', 'error');
+            input.value = '';
+            return;
+        }
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showToast('Please upload an image file', 'error');
+            input.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById(`${type}_preview`);
+            const placeholder = document.getElementById(`${type}_placeholder`);
+            const zone = input.closest('.upload-zone');
+            
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            zone.classList.add('has-file');
+            
+            showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`, 'success');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeUpload(type) {
+        const preview = document.getElementById(`${type}_preview`);
+        const placeholder = document.getElementById(`${type}_placeholder`);
+        const input = document.getElementById(`${type}_upload`);
+        const zone = input.closest('.upload-zone');
+        
+        preview.src = '';
+        preview.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        zone.classList.remove('has-file');
+        input.value = '';
+        
+        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} removed`, 'info');
+    }
+
+    // ============================================
+    // SHIPPING ZONES MANAGEMENT
+    // ============================================
+    function openShippingModal() {
+        document.getElementById('newZoneRegion').value = '';
+        document.getElementById('newZoneMethod').value = '';
+        document.getElementById('newZoneCost').value = '';
+        document.getElementById('shippingModal').classList.add('active');
+        setTimeout(() => document.getElementById('newZoneRegion').focus(), 100);
+    }
+
+    function closeShippingModal() {
+        document.getElementById('shippingModal').classList.remove('active');
+    }
+
+    function addShippingZone() {
+        const region = document.getElementById('newZoneRegion').value.trim();
+        const method = document.getElementById('newZoneMethod').value.trim();
+        const cost = document.getElementById('newZoneCost').value.trim();
+        
+        if (!region) {
+            showToast('Please enter a region', 'warning');
+            document.getElementById('newZoneRegion').focus();
+            return;
+        }
+        if (!method) {
+            showToast('Please enter a delivery method', 'warning');
+            document.getElementById('newZoneMethod').focus();
+            return;
+        }
+        if (!cost || isNaN(cost)) {
+            showToast('Please enter a valid cost', 'warning');
+            document.getElementById('newZoneCost').focus();
+            return;
+        }
+        
+        const tbody = document.getElementById('shippingZonesBody');
+        const row = document.createElement('tr');
+        row.className = 'shipping-row';
+        row.innerHTML = `
+            <td class="p-3">
+                <input type="text" value="${escapeHtml(region)}" class="zone-region w-full px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors">
+            </td>
+            <td class="p-3">
+                <input type="text" value="${escapeHtml(method)}" class="zone-method w-full px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors">
+            </td>
+            <td class="p-3">
+                <input type="number" value="${cost}" class="zone-cost w-24 px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors">
+            </td>
+            <td class="p-3">
+                <button type="button" onclick="removeShippingZone(this)" class="text-red-500 hover:text-red-700 hover:underline cursor-pointer text-sm font-medium transition-colors">Remove</button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+        updateShippingEmptyState();
+        closeShippingModal();
+        showToast(`Shipping zone "${region}" added`, 'success');
+    }
+
+    function removeShippingZone(button) {
+        const row = button.closest('tr');
+        row.classList.add('removing');
+        
+        setTimeout(() => {
+            row.remove();
+            updateShippingEmptyState();
+            showToast('Shipping zone removed', 'info');
+        }, 300);
+    }
+
+    function updateShippingEmptyState() {
+        const tbody = document.getElementById('shippingZonesBody');
+        const emptyState = document.getElementById('emptyShippingState');
+        
+        if (tbody.children.length === 0) {
+            emptyState.classList.remove('hidden');
+        } else {
+            emptyState.classList.add('hidden');
+        }
+    }
+
+    function getShippingZones() {
+        const zones = [];
+        document.querySelectorAll('#shippingZonesBody tr').forEach(row => {
+            zones.push({
+                region: row.querySelector('.zone-region').value,
+                method: row.querySelector('.zone-method').value,
+                cost: parseInt(row.querySelector('.zone-cost').value) || 0
+            });
+        });
+        return zones;
+    }
+
+    // ============================================
+    // PASSWORD STRENGTH CHECKER
+    // ============================================
+    function checkPasswordStrength(password) {
+        const bar = document.getElementById('passwordStrengthBar');
+        const text = document.getElementById('passwordStrengthText');
+        
+        if (!password) {
+            bar.style.width = '0%';
+            bar.style.backgroundColor = '';
+            text.textContent = '';
+            return;
+        }
+        
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (password.length >= 12) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+        
+        const levels = [
+            { width: '20%', color: '#EF4444', text: 'Very weak' },
+            { width: '40%', color: '#F59E0B', text: 'Weak' },
+            { width: '60%', color: '#F59E0B', text: 'Fair' },
+            { width: '80%', color: '#22C55E', text: 'Strong' },
+            { width: '100%', color: '#16A34A', text: 'Very strong' }
+        ];
+        
+        const level = levels[Math.min(strength, 4)];
+        bar.style.width = level.width;
+        bar.style.backgroundColor = level.color;
+        text.textContent = level.text;
+        text.style.color = level.color;
+        
+        checkPasswordMatch();
+    }
+
+    function checkPasswordMatch() {
+        const password = document.getElementById('new_password').value;
+        const confirm = document.getElementById('confirm_password').value;
+        const text = document.getElementById('passwordMatchText');
+        
+        if (!confirm) {
+            text.classList.add('hidden');
+            return;
+        }
+        
+        text.classList.remove('hidden');
+        if (password === confirm) {
+            text.textContent = 'Passwords match';
+            text.className = 'text-xs mt-1 text-green-600';
+        } else {
+            text.textContent = 'Passwords do not match';
+            text.className = 'text-xs mt-1 text-red-500';
+        }
+    }
+
+    // ============================================
+    // TOGGLE PASSWORD VISIBILITY
+    // ============================================
+    function togglePasswordVisibility(inputId, button) {
+        const input = document.getElementById(inputId);
+        const eyeOpen = button.querySelector('.eye-open');
+        const eyeClosed = button.querySelector('.eye-closed');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            eyeOpen.classList.add('hidden');
+            eyeClosed.classList.remove('hidden');
+        } else {
+            input.type = 'password';
+            eyeOpen.classList.remove('hidden');
+            eyeClosed.classList.add('hidden');
+        }
+    }
+
+    // ============================================
+    // RESET MODAL
+    // ============================================
+    function openResetModal() {
+        document.getElementById('resetModal').classList.add('active');
+    }
+
+    function closeResetModal() {
+        document.getElementById('resetModal').classList.remove('active');
+    }
+
+    function confirmReset() {
+        closeResetModal();
+        
+        // Reset all form fields to defaults
+        const defaults = {
+            store_name: 'Cliffine Collection',
+            contact_email: 'support@cliffine.co.ke',
+            phone_number: '+254 700 000 000',
+            default_currency: 'KES',
+            store_address: '',
+            mpesa_toggle: false,
+            paybill_number: '',
+            account_number: '',
+            tax_rate: 16,
+            default_payment_method: 'M-Pesa',
+            free_shipping_threshold: '',
+            estimated_delivery: '1-3 Business Days',
+            smtp_host: '',
+            smtp_port: '',
+            smtp_username: '',
+            smtp_password: '',
+            notify_new_order: true,
+            notify_payment_receipts: true,
+            notify_chama_updates: false,
+            notify_newsletters: false,
+            coupons_enabled: true,
+            default_discount_type: 'Percentage',
+            expiry_reminder: '3 Days Before',
+            two_factor_enabled: false,
+            session_timeout: 60,
+            maintenance_mode: false,
+            google_analytics_id: '',
+            custom_css: ''
+        };
+        
+        // Set text/select inputs
+        Object.keys(defaults).forEach(key => {
+            const el = document.getElementById(key);
+            if (el) {
+                if (el.type === 'checkbox') {
+                    el.checked = defaults[key];
+                } else {
+                    el.value = defaults[key];
+                }
+            }
+        });
+        
+        // Reset shipping zones
+        const tbody = document.getElementById('shippingZonesBody');
+        tbody.innerHTML = `
+            <tr class="shipping-row">
+                <td class="p-3"><input type="text" value="Nairobi" class="zone-region w-full px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors"></td>
+                <td class="p-3"><input type="text" value="Pickup / Courier" class="zone-method w-full px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors"></td>
+                <td class="p-3"><input type="number" value="200" class="zone-cost w-24 px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors"></td>
+                <td class="p-3"><button type="button" onclick="removeShippingZone(this)" class="text-red-500 hover:text-red-700 hover:underline cursor-pointer text-sm font-medium transition-colors">Remove</button></td>
+            </tr>
+            <tr class="shipping-row">
+                <td class="p-3"><input type="text" value="Major Towns" class="zone-region w-full px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors"></td>
+                <td class="p-3"><input type="text" value="Standard" class="zone-method w-full px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors"></td>
+                <td class="p-3"><input type="number" value="350" class="zone-cost w-24 px-2 py-1 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none transition-colors"></td>
+                <td class="p-3"><button type="button" onclick="removeShippingZone(this)" class="text-red-500 hover:text-red-700 hover:underline cursor-pointer text-sm font-medium transition-colors">Remove</button></td>
+            </tr>
+        `;
+        updateShippingEmptyState();
+        
+        // Reset file uploads
+        removeUpload('logo');
+        removeUpload('favicon');
+        
+        // Reset password fields
+        document.getElementById('new_password').value = '';
+        document.getElementById('confirm_password').value = '';
+        document.getElementById('passwordStrengthBar').style.width = '0%';
+        document.getElementById('passwordStrengthText').textContent = '';
+        document.getElementById('passwordMatchText').classList.add('hidden');
+        
+        // Trigger M-Pesa toggle
+        toggleMpesaFields();
+        
+        showToast('Settings reset to defaults', 'info');
+    }
+
+    // ============================================
+    // SAVE SETTINGS
+    // ============================================
+    async function saveSettings() {
+        const saveBtn = document.getElementById('saveBtn');
+        
+        // Validate passwords if entered
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (newPassword && newPassword !== confirmPassword) {
+            showToast('Passwords do not match', 'error');
+            openTab('security', document.querySelectorAll('.settings-tab')[5]);
+            return;
+        }
+        
+        if (newPassword && newPassword.length < 8) {
+            showToast('Password must be at least 8 characters', 'error');
+            openTab('security', document.querySelectorAll('.settings-tab')[5]);
+            return;
+        }
+        
+        // Collect all settings
+        const settingsData = {
+            // General
+            store_name: document.getElementById('store_name').value,
+            contact_email: document.getElementById('contact_email').value,
+            phone_number: document.getElementById('phone_number').value,
+            default_currency: document.getElementById('default_currency').value,
+            store_address: document.getElementById('store_address').value,
+            
+            // Payments
+            mpesa_enabled: document.getElementById('mpesa_toggle').checked,
+            paybill_number: document.getElementById('paybill_number').value,
+            account_number: document.getElementById('account_number').value,
+            tax_rate: document.getElementById('tax_rate').value,
+            default_payment_method: document.getElementById('default_payment_method').value,
+            
+            // Shipping
+            shipping_zones: JSON.stringify(getShippingZones()),
+            free_shipping_threshold: document.getElementById('free_shipping_threshold').value,
+            estimated_delivery: document.getElementById('estimated_delivery').value,
+            
+            // Emails
+            smtp_host: document.getElementById('smtp_host').value,
+            smtp_port: document.getElementById('smtp_port').value,
+            smtp_username: document.getElementById('smtp_username').value,
+            smtp_password: document.getElementById('smtp_password').value,
+            notify_new_order: document.getElementById('notify_new_order').checked,
+            notify_payment_receipts: document.getElementById('notify_payment_receipts').checked,
+            notify_chama_updates: document.getElementById('notify_chama_updates').checked,
+            notify_newsletters: document.getElementById('notify_newsletters').checked,
+            
+            // Coupons
+            coupons_enabled: document.getElementById('coupons_enabled').checked,
+            default_discount_type: document.getElementById('default_discount_type').value,
+            expiry_reminder: document.getElementById('expiry_reminder').value,
+            
+            // Security
+            two_factor_enabled: document.getElementById('two_factor_enabled').checked,
+            session_timeout: document.getElementById('session_timeout').value,
+            new_password: newPassword,
+            
+            // Advanced
+            maintenance_mode: document.getElementById('maintenance_mode').checked,
+            google_analytics_id: document.getElementById('google_analytics_id').value,
+            custom_css: document.getElementById('custom_css').value,
+        };
+        
+        // Show loading state
+        saveBtn.classList.add('btn-loading');
+        saveBtn.disabled = true;
+        
+        try {
+            const response = await fetch('/admin/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
+                body: JSON.stringify(settingsData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Settings saved successfully!', 'success');
+                
+                // Clear password fields after successful save
+                document.getElementById('new_password').value = '';
+                document.getElementById('confirm_password').value = '';
+                document.getElementById('passwordStrengthBar').style.width = '0%';
+                document.getElementById('passwordStrengthText').textContent = '';
+                document.getElementById('passwordMatchText').classList.add('hidden');
+            } else {
+                showToast(data.message || 'Failed to save settings', 'error');
+            }
+        } catch (error) {
+            console.error('Save error:', error);
+            showToast('Network error. Please try again.', 'error');
+        } finally {
+            saveBtn.classList.remove('btn-loading');
+            saveBtn.disabled = false;
+        }
+    }
+
+    // ============================================
+    // UTILITY FUNCTIONS
+    // ============================================
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+    });
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                modal.classList.remove('active');
+            });
+        }
+    });
+
+    // Handle Enter key in shipping modal
+    document.querySelectorAll('#shippingModal input').forEach(input => {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                addShippingZone();
+            }
+        });
+    });
+
+    // Initialize
+    updateShippingEmptyState();
 </script>
 {% endblock %}

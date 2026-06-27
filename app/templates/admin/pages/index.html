@@ -1,0 +1,817 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Pages Management{% endblock %}
+
+{% block page_title %}Pages Management{% endblock %}
+
+{% block head %}
+<style>
+    .modal-backdrop {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(16px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-enter { animation: slideUp 0.25s ease-out; }
+
+    /* Simple editor styling */
+    .page-editor {
+        min-height: 320px;
+        font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.7;
+        color: #334155;
+    }
+    .page-editor:focus {
+        outline: none;
+    }
+    .page-editor h1 { font-size: 1.75rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+    .page-editor h2 { font-size: 1.5rem; font-weight: 700; margin: 0.875rem 0 0.4375rem; }
+    .page-editor h3 { font-size: 1.25rem; font-weight: 600; margin: 0.75rem 0 0.375rem; }
+    .page-editor p { margin: 0.5rem 0; }
+    .page-editor ul, .page-editor ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+    .page-editor li { margin: 0.25rem 0; }
+    .page-editor a { color: #5423E7; text-decoration: underline; }
+
+    .page-filter-btn.active {
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        color: #5423E7;
+        font-weight: 600;
+    }
+    .page-filter-btn:not(.active):hover {
+        background: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .drag-handle {
+        cursor: grab;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    tr:hover .drag-handle {
+        opacity: 1;
+    }
+    tr.dragging {
+        opacity: 0.4;
+        background: #F5F3FF !important;
+    }
+    tr.drag-over-top {
+        border-top: 2px solid #5423E7 !important;
+    }
+
+    .slug-check {
+        transition: color 0.2s;
+    }
+    .slug-available { color: #16a34a; }
+    .slug-taken { color: #dc2626; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+    <div>
+        <h2 class="text-lg font-bold text-slate-800">Site Pages</h2>
+        <p class="text-sm text-slate-500">Manage your website's static and content pages.</p>
+    </div>
+    <button onclick="openPageModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Create New Page
+    </button>
+</div>
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 uppercase font-medium">Total Pages</p>
+                <h3 class="text-2xl font-bold text-slate-800">{{ pagination.total }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-green-200">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+                <p class="text-xs text-green-600 uppercase font-medium">Published</p>
+                <h3 class="text-2xl font-bold text-green-600">{{ total_published }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-amber-200">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 0L5 12l6.464-6.464a2.5 2.5 0 113.536 0L14.964 7.536m-2.036 5.036a2.5 2.5 0 01-3.536 0L5 12l6.464-6.464a2.5 2.5 0 013.536 0z"/></svg>
+            </div>
+            <div>
+                <p class="text-xs text-amber-600 uppercase font-medium">Drafts</p>
+                <h3 class="text-2xl font-bold text-amber-600">{{ total_drafts }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-6">
+    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <form method="GET" action="{{ url_for('admin.pages') }}" class="relative flex-1 sm:max-w-xs">
+            <input type="text"
+                   name="search"
+                   value="{{ search }}"
+                   placeholder="Search pages..."
+                   class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </form>
+        <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
+            <a href="{{ url_for('admin.pages', status='all') }}"
+               class="page-filter-btn px-4 py-2 text-sm font-medium rounded-md text-slate-500 {{ 'active' if status_filter == 'all' }}">
+                All
+            </a>
+            <a href="{{ url_for('admin.pages', status='published') }}"
+               class="page-filter-btn px-4 py-2 text-sm font-medium rounded-md text-slate-500 {{ 'active' if status_filter == 'published' }}">
+                Published
+            </a>
+            <a href="{{ url_for('admin.pages', status='draft') }}"
+               class="page-filter-btn px-4 py-2 text-sm font-medium rounded-md text-slate-500 {{ 'active' if status_filter == 'draft' }}">
+                Drafts
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Pages Table -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mb-6">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left" id="pages-table">
+            <thead class="bg-slate-50 border-b border-slate-100">
+                <tr>
+                    <th class="py-3 px-4 w-10"></th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Page</th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">URL Slug</th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Updated</th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100" id="pages-body">
+                {% for p in pages %}
+                <tr class="hover:bg-slate-50/50 transition-colors page-row"
+                    data-page-id="{{ p.id }}"
+                    draggable="true"
+                    ondragstart="onDragStart(event, {{ p.id }})"
+                    ondragover="onDragOver(event)"
+                    ondragleave="onDragLeave(event)"
+                    ondrop="onDrop(event, {{ p.id }})"
+                    ondragend="onDragEnd(event)">
+                    <td class="py-3 px-4">
+                        <div class="drag-handle text-slate-300 hover:text-slate-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-2">
+                            {% if p.is_homepage %}
+                            <span class="shrink-0 px-1.5 py-0.5 bg-accent/10 text-accent-dark text-[10px] font-bold rounded" title="Homepage">HOME</span>
+                            {% endif %}
+                            <a href="#" onclick="openPageModal({{ p.id }}); return false;" class="text-sm font-medium text-slate-800 hover:text-primary transition-colors">
+                                {{ p.title }}
+                            </a>
+                        </div>
+                        {% if p.meta_description %}
+                        <p class="text-[11px] text-slate-400 mt-0.5 truncate max-w-[280px]">{{ p.meta_description }}</p>
+                        {% endif %}
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-1.5">
+                            <code class="text-xs text-slate-500 bg-slate-50 px-2 py-0.5 rounded font-mono">/{{ p.slug }}</code>
+                            <button onclick="copySlug('{{ p.slug }}')" class="text-slate-300 hover:text-primary transition-colors" title="Copy URL">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <button onclick="toggleStatus({{ p.id }}, this)" title="Click to toggle"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer
+                                {% if p.status == 'published' %}bg-green-100 text-green-700 hover:bg-green-50{% else %}bg-amber-100 text-amber-700 hover:bg-amber-50{% endif %}">
+                            <span class="w-1.5 h-1.5 rounded-full {% if p.status == 'published' %}bg-green-500{% else %}bg-amber-500{% endif %}"></span>
+                            {{ p.status | title }}
+                        </button>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <p class="text-xs text-slate-500">{{ p.updated_at.strftime('%d %b %Y') if p.updated_at else '—' }}</p>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center justify-center gap-1">
+                            <a href="/page/{{ p.slug }}" target="_blank"
+                               class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                               title="Preview page">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                            </a>
+                            <button onclick="openPageModal({{ p.id }})"
+                                   class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                                   title="Edit page">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </button>
+                            <button onclick="openDeleteModal({{ p.id }}, '{{ p.title|e }}')"
+                                   class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                   title="Delete page">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16l1 12H4L5 9z"/></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="py-16 text-center">
+                        <svg class="w-12 h-12 text-slate-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <p class="text-sm text-slate-500 font-medium">No pages found</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {% if search %}No results for "{{ search }}"{% else %}Create your first page to get started.{% endif %}
+                        </p>
+                        {% if search %}
+                        <a href="{{ url_for('admin.pages') }}" class="inline-flex items-center gap-1.5 mt-3 text-sm text-primary hover:underline">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Clear search
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+        <p class="text-xs text-slate-500">
+            Showing {{ (pagination.page - 1) * pagination.per_page + 1 }}–{{ [pagination.page * pagination.per_page, pagination.total] | min }} of {{ pagination.total }}
+        </p>
+        <div class="flex gap-1">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('admin.pages', page=pagination.prev_num, search=search, status=status_filter) }}"
+               class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:border-primary hover:text-primary transition-colors">← Prev</a>
+            {% endif %}
+            {% for p in pagination.iter_pages() %}
+                {% if p %}
+                    {% if p == pagination.page %}
+                    <span class="px-3 py-1.5 text-xs font-medium text-white bg-primary rounded-lg">{{ p }}</span>
+                    {% else %}
+                    <a href="{{ url_for('admin.pages', page=p, search=search, status=status_filter) }}"
+                       class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:border-primary hover:text-primary transition-colors">{{ p }}</a>
+                    {% endif %}
+                {% else %}
+                <span class="px-2 text-slate-400 text-xs">…</span>
+                {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+            <a href="{{ url_for('admin.pages', page=pagination.next_num, search=search, status=status_filter) }}"
+               class="px-3 py-1.5 text-xs font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors">Next →</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let editingPageId = null;
+let slugCheckTimer = null;
+
+// ============================================================
+//  PAGE MODAL (Create / Edit)
+// ============================================================
+function openPageModal(pageId) {
+    editingPageId = pageId || null;
+    const modal = document.getElementById('page-modal');
+    const title = document.getElementById('modal-title');
+    const submitBtn = document.getElementById('modal-submit-btn');
+
+    if (pageId) {
+        title.textContent = 'Edit Page';
+        submitBtn.textContent = 'Save Changes';
+        loadPageData(pageId);
+    } else {
+        title.textContent = 'Create New Page';
+        submitBtn.textContent = 'Create Page';
+        document.getElementById('pg-title').value = '';
+        document.getElementById('pg-slug').value = '';
+        document.getElementById('pg-slug').readOnly = false;
+        document.getElementById('pg-content').value = '';
+        document.getElementById('pg-meta-desc').value = '';
+        document.getElementById('pg-meta-keys').value = '';
+        document.getElementById('pg-status').value = 'draft';
+        document.getElementById('pg-sort-order').value = '0';
+        document.getElementById('pg-homepage').checked = false;
+        updateSlugCheck('', null);
+    }
+
+    modal.classList.remove('hidden');
+    setTimeout(function () { document.getElementById('pg-title').focus(); }, 100);
+}
+
+function closePageModal() {
+    document.getElementById('page-modal').classList.add('hidden');
+    editingPageId = null;
+}
+
+async function loadPageData(pageId) {
+    try {
+        const res = await fetch(`/admin/pages/${pageId}`);
+        const data = await res.json();
+        if (data.success) {
+            const p = data.page;
+            document.getElementById('pg-title').value = p.title;
+            document.getElementById('pg-slug').value = p.slug;
+            document.getElementById('pg-slug').readOnly = false;
+            document.getElementById('pg-content').value = p.content;
+            document.getElementById('pg-meta-desc').value = p.meta_description;
+            document.getElementById('pg-meta-keys').value = p.meta_keywords;
+            document.getElementById('pg-status').value = p.status;
+            document.getElementById('pg-sort-order').value = p.sort_order;
+            document.getElementById('pg-homepage').checked = p.is_homepage;
+            updateSlugCheck(p.slug, pageId);
+        }
+    } catch (e) {
+        showToast('Failed to load page data.', 'error');
+    }
+}
+
+// Auto-generate slug from title
+document.addEventListener('DOMContentLoaded', function () {
+    const titleInput = document.getElementById('pg-title');
+    const slugInput = document.getElementById('pg-slug');
+
+    if (titleInput && slugInput) {
+        titleInput.addEventListener('input', function () {
+            if (slugInput.readOnly) return;
+            slugInput.value = slugify(this.value);
+            debouncedSlugCheck(slugInput.value, editingPageId);
+        });
+
+        slugInput.addEventListener('input', function () {
+            this.value = slugify(this.value);
+            debouncedSlugCheck(this.value, editingPageId);
+        });
+    }
+});
+
+function slugify(text) {
+    return text.toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/[\s_]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+}
+
+function debouncedSlugCheck(slug, excludeId) {
+    clearTimeout(slugCheckTimer);
+    slugCheckTimer = setTimeout(function () {
+        updateSlugCheck(slug, excludeId);
+    }, 400);
+}
+
+async function updateSlugCheck(slug, excludeId) {
+    const el = document.getElementById('slug-status');
+    if (!slug || !el) {
+        el.innerHTML = '';
+        el.className = 'text-[11px] mt-1';
+        return;
+    }
+
+    el.innerHTML = 'Checking...';
+    el.className = 'text-[11px] mt-1 text-slate-400';
+
+    try {
+        let url = `/admin/pages/check-slug?slug=${encodeURIComponent(slug)}`;
+        if (excludeId) url += `&exclude=${excludeId}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.available) {
+            el.innerHTML = '<svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>URL is available';
+            el.className = 'text-[11px] mt-1 slug-available';
+        } else {
+            el.innerHTML = '<svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>URL is already taken';
+            el.className = 'text-[11px] mt-1 slug-taken';
+        }
+    } catch (e) {
+        el.innerHTML = '';
+    }
+}
+
+async function submitPage() {
+    const btn = document.getElementById('modal-submit-btn');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Saving...';
+
+    const payload = {
+        title: document.getElementById('pg-title').value.trim(),
+        slug: document.getElementById('pg-slug').value.trim(),
+        content: document.getElementById('pg-content').value,
+        meta_description: document.getElementById('pg-meta-desc').value.trim(),
+        meta_keywords: document.getElementById('pg-meta-keys').value.trim(),
+        status: document.getElementById('pg-status').value,
+        sort_order: document.getElementById('pg-sort-order').value,
+        is_homepage: document.getElementById('pg-homepage').checked,
+    };
+
+    try {
+        const url = editingPageId
+            ? `/admin/pages/${editingPageId}/update`
+            : '/admin/pages/create';
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast(data.message, 'success');
+            closePageModal();
+            setTimeout(function () { location.reload(); }, 600);
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (e) {
+        showToast('Failed to save page.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
+}
+
+// ============================================================
+//  DELETE MODAL
+// ============================================================
+function openDeleteModal(pageId, pageTitle) {
+    document.getElementById('del-page-id').value = pageId;
+    document.getElementById('del-page-name').textContent = pageTitle;
+    document.getElementById('del-confirm-input').value = '';
+    document.getElementById('del-confirm-btn').disabled = true;
+    document.getElementById('delete-modal').classList.remove('hidden');
+    setTimeout(function () { document.getElementById('del-confirm-input').focus(); }, 100);
+}
+
+function closeDeleteModal() {
+    document.getElementById('delete-modal').classList.add('hidden');
+}
+
+function checkDeleteConfirm(val) {
+    const name = document.getElementById('del-page-name').textContent;
+    document.getElementById('del-confirm-btn').disabled = (val !== name);
+}
+
+async function confirmDelete() {
+    const pageId = document.getElementById('del-page-id').value;
+    const btn = document.getElementById('del-confirm-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Deleting...';
+
+    try {
+        const res = await fetch(`/admin/pages/${pageId}/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ confirm: document.getElementById('del-page-name').textContent }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast(data.message, 'success');
+            closeDeleteModal();
+            setTimeout(function () { location.reload(); }, 600);
+        } else {
+            showToast(data.message, 'error');
+            btn.disabled = false;
+            btn.textContent = 'Delete Permanently';
+        }
+    } catch (e) {
+        showToast('Failed to delete page.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Delete Permanently';
+    }
+}
+
+// ============================================================
+//  TOGGLE STATUS
+// ============================================================
+async function toggleStatus(pageId, btn) {
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = '<div class="w-3 h-3 border-2 border-slate-300 border-t-transparent rounded-full animate-spin"></div>';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`/admin/pages/${pageId}/toggle-status`, { method: 'POST' });
+        const data = await res.json();
+
+        if (data.success) {
+            const isPublished = data.status === 'published';
+            btn.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ' +
+                (isPublished ? 'bg-green-100 text-green-700 hover:bg-green-50' : 'bg-amber-100 text-amber-700 hover:bg-amber-50');
+            btn.innerHTML = '<span class="w-1.5 h-1.5 rounded-full ' + (isPublished ? 'bg-green-500' : 'bg-amber-500') + '"></span> ' +
+                (isPublished ? 'Published' : 'Draft');
+            showToast(data.message, 'success');
+        }
+    } catch (e) {
+        btn.innerHTML = origHTML;
+        showToast('Failed to toggle status.', 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+// ============================================================
+//  DRAG & DROP REORDER
+// ============================================================
+let draggedRow = null;
+
+function onDragStart(e, pageId) {
+    draggedRow = e.currentTarget;
+    draggedRow.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', pageId);
+}
+
+function onDragOver(e) {
+    e.preventDefault();
+    const row = e.currentTarget;
+    if (row !== draggedRow) {
+        const rect = row.getBoundingClientRect();
+        const mid = rect.top + rect.height / 2;
+        row.classList.toggle('drag-over-top', e.clientY < mid);
+    }
+}
+
+function onDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over-top');
+}
+
+function onDrop(e, targetId) {
+    e.preventDefault();
+    document.querySelectorAll('.drag-over-top').forEach(el => el.classList.remove('drag-over-top'));
+
+    if (draggedRow && targetId) {
+        const targetRow = document.querySelector(`tr[data-page-id="${targetId}"]`);
+        if (targetRow && targetRow !== draggedRow) {
+            const table = document.getElementById('pages-body');
+            const allRows = Array.from(table.querySelectorAll('.page-row'));
+            const fromIdx = allRows.indexOf(draggedRow);
+            const toIdx = allRows.indexOf(targetRow);
+
+            if (fromIdx < toIdx) {
+                table.insertBefore(draggedRow, targetRow.nextSibling);
+            } else {
+                table.insertBefore(draggedRow, targetRow);
+            }
+            savePageOrder();
+        }
+    }
+}
+
+function onDragEnd(e) {
+    document.querySelectorAll('.dragging, .drag-over-top').forEach(el => {
+        el.classList.remove('dragging', 'drag-over-top');
+    });
+    draggedRow = null;
+}
+
+function savePageOrder() {
+    const rows = document.querySelectorAll('.page-row');
+    const items = [];
+    rows.forEach(function (row, idx) {
+        items.push({ id: row.dataset.pageId, sort_order: idx });
+    });
+
+    fetch('/admin/pages/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: items }),
+    }).catch(function () {});
+}
+
+// ============================================================
+//  COPY SLUG
+// ============================================================
+function copySlug(slug) {
+    const fullUrl = window.location.origin + '/page/' + slug;
+    navigator.clipboard.writeText(fullUrl).then(function () {
+        showToast('URL copied: ' + fullUrl, 'success');
+    }).catch(function () {
+        showToast('Failed to copy URL.', 'error');
+    });
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+function showToast(message, type) {
+    let ct = document.getElementById('toast-container');
+    if (!ct) {
+        ct = document.createElement('div');
+        ct.id = 'toast-container';
+        ct.className = 'fixed top-4 right-4 z-[100] space-y-2 pointer-events-none';
+        document.body.appendChild(ct);
+    }
+
+    const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-slate-800' };
+    const icons = {
+        success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+        error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+        info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+    };
+
+    const toast = document.createElement('div');
+    toast.className = 'pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-xl text-white text-sm font-medium shadow-2xl ' + (colors[type] || colors.info);
+    toast.style.animation = 'slideUp 0.3s ease-out';
+    toast.innerHTML = '<svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + (icons[type] || icons.info) + '</svg><span>' + message + '</span>';
+    ct.appendChild(toast);
+
+    setTimeout(function () {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-8px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(function () { toast.remove(); }, 300);
+    }, 4000);
+}
+
+// ============================================================
+//  KEYBOARD & MODAL CLOSE
+// ============================================================
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        closePageModal();
+        closeDeleteModal();
+    }
+});
+
+document.addEventListener('click', function (e) {
+    if (e.target.id === 'page-modal') closePageModal();
+    if (e.target.id === 'delete-modal') closeDeleteModal();
+});
+
+// Sidebar active state
+document.addEventListener('DOMContentLoaded', function () {
+    const activeLink = document.querySelector('.nav-link.active');
+    if (activeLink) activeLink.classList.remove('active');
+    document.querySelectorAll('aside nav a').forEach(function (link) {
+        const span = link.querySelector('span');
+        if (span && span.textContent.trim() === 'Pages') {
+            link.classList.add('active');
+        }
+    });
+});
+</script>
+
+<!-- Create / Edit Page Modal -->
+<div id="page-modal" class="hidden fixed inset-0 z-[90] flex items-start justify-center p-4 overflow-y-auto">
+    <div class="modal-backdrop fixed inset-0" onclick="closePageModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden modal-enter my-8">
+        <!-- Header -->
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 id="modal-title" class="text-lg font-bold text-slate-800">Create New Page</h3>
+            <button onclick="closePageModal()" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto" style="scrollbar-width: thin;">
+            <!-- Title -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Page Title <span class="text-red-500">*</span></label>
+                <input type="text" id="pg-title" placeholder="e.g. About Us" maxlength="255"
+                       class="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-sm">
+            </div>
+
+            <!-- Slug -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">URL Slug</label>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-slate-400 bg-slate-50 border border-r-0 rounded-l-lg px-3 py-3">/page/</span>
+                    <input type="text" id="pg-slug" placeholder="auto-generated-from-title" maxlength="255"
+                           class="flex-1 px-4 py-3 border border-slate-200 rounded-r-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-sm font-mono">
+                </div>
+                <div id="slug-status" class="text-[11px] mt-1"></div>
+            </div>
+
+            <!-- Content Editor -->
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <label class="block text-sm font-medium text-slate-700">Content</label>
+                    <span class="text-[11px] text-slate-400">HTML supported</span>
+                </div>
+                <textarea id="pg-content" rows="14"
+                          placeholder="<h2>Page Heading</h2>&#10;<p>Write your page content here...</p>"
+                          class="page-editor w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-sm resize-y"></textarea>
+            </div>
+
+            <!-- SEO Section -->
+            <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                <h4 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    SEO Settings
+                </h4>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Meta Description</label>
+                        <textarea id="pg-meta-desc" rows="2" maxlength="500" placeholder="A brief description for search engines (max 500 chars)"
+                                  class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-xs resize-none"></textarea>
+                        <p class="text-[11px] text-slate-400 mt-0.5 text-right"><span id="meta-desc-count">0</span>/500</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Meta Keywords</label>
+                        <input type="text" id="pg-meta-keys" placeholder="keyword1, keyword2, keyword3" maxlength="500"
+                               class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-xs">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Status</label>
+                    <select id="pg-status" class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm bg-white">
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Sort Order</label>
+                    <input type="number" id="pg-sort-order" value="0" min="0"
+                           class="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm">
+                    <p class="text-[10px] text-slate-400 mt-0.5">Lower = shown first</p>
+                </div>
+                <div class="flex items-end pb-1">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="pg-homepage" class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary">
+                        <span class="text-xs font-medium text-slate-600">Set as Homepage</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+            <button onclick="closePageModal()" class="px-4 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+            <button onclick="submitPage()" id="modal-submit-btn" class="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors shadow-sm">Create Page</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDeleteModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden modal-enter">
+        <div class="bg-red-600 px-6 py-5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Delete Page</h3>
+                    <p class="text-red-100 text-sm">This action cannot be undone.</p>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-5">
+            <div class="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
+                <p class="text-sm text-red-700">
+                    You are about to permanently delete <strong id="del-page-name">Page</strong>.
+                    Any links to <code class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-xs font-bold">/page/<span id="del-slug-preview">slug</span></code> will break.
+                </p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                    Type <code class="bg-red-50 text-red-600 px-1.5 py-0.5 rounded text-xs font-bold" id="del-name-preview">name</code> to confirm
+                </label>
+                <input type="text" id="del-confirm-input" placeholder="Page title..." autocomplete="off"
+                       class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-300 focus:border-red-400 outline-none text-sm font-mono"
+                       oninput="checkDeleteConfirm(this.value)">
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+            <button onclick="closeDeleteModal()" class="px-4 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+            <button onclick="confirmDelete()" id="del-confirm-btn" disabled
+                    class="px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                Delete Permanently
+            </button>
+        </div>
+        <input type="hidden" id="del-page-id" value="">
+    </div>
+</div>
+
+{% endblock %}

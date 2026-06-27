@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Report - {{ period_label }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 40px; font-size: 13px; line-height: 1.5; }
+        .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
+        .header h1 { font-size: 22px; color: #0f172a; margin-bottom: 4px; }
+        .header p { color: #64748b; font-size: 12px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+        .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+        .card label { font-size: 10px; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
+        .card .value { font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 4px; }
+        .card .sub { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+        h2 { font-size: 15px; color: #0f172a; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th { background: #f8fafc; text-align: left; padding: 8px 12px; font-size: 10px; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+        tr:hover td { background: #f8fafc; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .text-green { color: #16a34a; }
+        .text-red { color: #dc2626; }
+        .text-muted { color: #94a3b8; }
+        .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; }
+        @media print { body { padding: 20px; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Cliffine Collection — Business Report</h1>
+    <p>{{ period_label }} · Generated on {{ generated_at }}</p>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <label>Total Revenue</label>
+        <div class="value">KES {{ "{:,.0f}".format(total_revenue) }}</div>
+        <div class="sub">{{ total_orders }} orders</div>
+    </div>
+    <div class="card">
+        <label>Tax Collected</label>
+        <div class="value">KES {{ "{:,.0f}".format(total_tax) }}</div>
+        <div class="sub">VAT (16%)</div>
+    </div>
+    <div class="card">
+        <label>Refunds</label>
+        <div class="value text-red">KES {{ "{:,.0f}".format(refunded) }}</div>
+        <div class="sub">Deductions</div>
+    </div>
+    <div class="card">
+        <label>Net Income</label>
+        <div class="value text-green">KES {{ "{:,.0f}".format(net_profit) }}</div>
+        <div class="sub">After tax & refunds</div>
+    </div>
+</div>
+
+<h2>Top Products</h2>
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Product</th>
+            <th class="text-center">Units Sold</th>
+            <th class="text-right">Revenue</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in top_products %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ p.name }}</td>
+            <td class="text-center">{{ "{:,}".format(p.units) }}</td>
+            <td class="text-right">KES {{ "{:,.0f}".format(p.rev) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Recent Transactions</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Method</th>
+            <th class="text-right">Amount</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for o in recent_orders %}
+        <tr>
+            <td>#{{ o.id }}</td>
+            <td>{{ o.created_at.strftime('%d %b %Y') if o.created_at else '—' }}</td>
+            <td>{{ getattr(o, 'customer_name', '') or (o.user.full_name if o.user else '—') }}</td>
+            <td>{{ (getattr(o, 'payment_method', '') or '—')|title }}</td>
+            <td class="text-right {% if o.status == 'Refunded' %}text-red{% endif %}">
+                {% if o.status == 'Refunded' %}- {% endif %}KES {{ "{:,.0f}".format(o.total_amount or 0) }}
+            </td>
+            <td>{{ o.status }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="footer">
+    <span>Cliffine Collection © {{ generated_at.split(',')[1].strip() if ',' in generated_at else '' }}</span>
+    <span>This report was generated automatically. Page 1 of 1.</span>
+</div>
+
+<script>
+    window.onload = function() { window.print(); };
+</script>
+</body>
+</html>

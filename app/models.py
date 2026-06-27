@@ -808,3 +808,55 @@ class Notification(db.Model):
             "is_read": self.is_read,
             "created_at": self.created_at.isoformat() if self.created_at else "",
         }
+    
+
+class Page(db.Model):
+    __tablename__ = "pages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    slug = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    content = db.Column(db.Text, default="")
+    meta_description = db.Column(db.String(500), default="")
+    meta_keywords = db.Column(db.String(500), default="")
+    status = db.Column(db.String(20), default="draft", index=True)  # draft, published
+    is_homepage = db.Column(db.Boolean, default=False)
+    sort_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Page {self.title}>"
+
+
+class Media(db.Model):
+    __tablename__ = "media"
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    stored_name = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    file_type = db.Column(db.String(20), default="other")
+    mime_type = db.Column(db.String(100))
+    file_size = db.Column(db.Integer, default=0)
+    width = db.Column(db.Integer, nullable=True)
+    height = db.Column(db.Integer, nullable=True)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    @property
+    def file_url(self):
+        return "/" + self.file_path.lstrip("/")
+
+    @property
+    def thumbnail_url(self):
+        if self.file_type == "image":
+            thumb_dir = os.path.dirname(self.file_path) + "/thumbnails/"
+            thumb_name = "thumb_" + self.stored_name
+            thumb_path = thumb_dir + thumb_name
+            if os.path.isfile(os.path.join(current_app.root_path, thumb_path)):
+                return "/" + thumb_path
+        return self.file_url
+
+    def __repr__(self):
+        return f"<Media {self.filename}>"        

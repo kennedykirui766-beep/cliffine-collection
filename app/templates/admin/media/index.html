@@ -1,0 +1,726 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Media Library{% endblock %}
+
+{% block page_title %}Media Library{% endblock %}
+
+{% block head %}
+<style>
+    .drop-zone {
+        border: 2px dashed #CBD5E1;
+        transition: all 0.2s ease;
+    }
+    .drop-zone.drag-over {
+        border-color: #5423E7;
+        background: rgba(84, 35, 231, 0.03);
+    }
+    .drop-zone.drag-over .drop-icon {
+        transform: scale(1.15);
+        color: #5423E7;
+        border-color: #5423E7;
+        background: rgba(84, 35, 231, 0.05);
+    }
+    .drop-zone.drag-over .drop-subtitle { color: #5423E7; }
+    .media-card { transition: all 0.2s ease; }
+    .media-card.removing {
+        opacity: 0;
+        transform: scale(0.9);
+        max-height: 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+    .modal-backdrop {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(16px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    .modal-enter { animation: slideUp 0.25s ease-out; }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .fade-in { animation: fadeIn 0.2s ease-out; }
+    @keyframes barGrow {
+        from { width: 0%; }
+        to { width: var(--w); }
+    }
+    .progress-fill { animation: barGrow 0.3s ease-out forwards; }
+    .media-filter-btn.active {
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        color: #5423E7;
+        font-weight: 600;
+    }
+    .media-filter-btn:not(.active):hover {
+        background: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .delete-confirm { animation: fadeIn 0.15s ease-out; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+    <div>
+        <h2 class="text-lg font-bold text-slate-800">Media Library</h2>
+        <p class="text-sm text-slate-500">Upload and manage your files. Total: <span class="font-semibold text-slate-700">{{ "{:,.0f}".format(total_size / (1024*1024) }} MB</span> across {{ type_counts.get('all', 0) }} files.</p>
+    </div>
+    <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
+        <a href="{{ url_for('admin.media', type='all') }}"
+           class="media-filter-btn px-4 py-2 text-sm font-medium rounded-md text-slate-500 {{ 'active' if file_type == 'all' }}">
+            All <span class="ml-1.5 bg-white px-1.5 py-0.5 rounded text-[11px] font-bold {{ type_counts.get('all', 0) }}</span>
+        </a>
+        <a href="{{ url_for('admin.media', type='image') }}"
+           class="media-filter-btn px-4 py-2 text-sm font-medium rounded-md text-slate-500 {{ 'active' if file_type == 'image' }}">
+            <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+            Images <span class="ml-1.5 bg-white px-1.5 py-0.5 rounded text-[11px] font-bold">{{ type_counts.get('image', 0) }}</span>
+        </a>
+        <a href="{{ url_for('admin.media', type='document') }}"
+           class="media-filter-btn px-4 py-2 text-sm font-medium rounded-md text-slate-500 {{ 'active' if file_type == 'document' }}">
+            <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Docs <span class="ml-1.5 bg-white px-1.5 py-0.5 rounded text-[11px] font-bold">{{ type_counts.get('document', 0) }}</span>
+        </a>
+        <a href="{{ url_for('admin.media', type='video') }}"
+           class="media-filter-btn px-4 py-2 text-sm font-medium rounded-md text-slate-500 {{ 'active' if file_type == 'video' }}">
+            <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="5 3 10 13 12 16 13 12 16 5 3z"/></svg>
+            Videos <span class="ml-1.5 bg-white px-1.5 py-0.5 rounded text-[11px] font-bold">{{ type_counts.get('video', 0) }}</span>
+        </a>
+        <a href="{{ url_for('admin.media', type='other') }}"
+           class="media-filter-btn px-4 py-2 text-sm font-medium rounded-md text-slate-500 {{ 'active' if file_type == 'other' }}">
+            <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Other <span class="ml-1.5 bg-white px-1.5 py-0.5 rounded text-[11px] font-bold">{{ type_counts.get('other', 0) }}</span>
+        </a>
+    </div>
+</div>
+
+<!-- Upload Area -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-6">
+    <div id="drop-zone"
+         class="drop-zone rounded-xl p-8 text-center cursor-pointer transition-all"
+         ondragover="onDragOver(event)"
+         ondragleave="onDragLeave(event)"
+         ondrop="onDrop(event)"
+         onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" multiple accept="image/*,video/*,.pdf,.doc,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.mp3,.wav,.txt" class="hidden">
+
+        <div class="drop-icon w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center transition-all">
+            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.707 0l-1.414 1.414a2 2 0 01-2.707 0l-1.414-1.414a2 2 0 012.707 0l4.586 4.586z"/></svg>
+        </div>
+        <p class="drop-subtitle text-sm text-slate-500 font-medium">Drop files here or click to browse</p>
+        <p class="text-xs text-slate-400 mt-1">Images, videos, documents — up to 50MB per file</p>
+    </div>
+
+    <!-- Upload Progress List -->
+    <div id="upload-progress-list" class="space-y-2 hidden mt-4"></div>
+</div>
+
+<!-- Media Grid -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-6">
+    <div class="flex justify-between items-center mb-5">
+        <div class="relative w-full max-w-xs">
+            <input type="text" id="media-search"
+                   value="{{ search }}"
+                   placeholder="Search files..."
+                   class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-shadow">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+    </div>
+
+    <div id="media-grid"
+         class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {% for m in media %}
+        <div class="media-card" data-media-id="{{ m.id }}">
+            <div class="aspect-square bg-slate-100 rounded-lg overflow-hidden relative cursor-pointer group" onclick="openPreview({{ m.id }})">
+                {% if m.file_type == 'image' %}
+                <img src="{{ m.thumbnail_url }}" alt="{{ m.filename }}"
+                     class="w-full h-full object-cover" loading="lazy"
+                     onerror="this.src='https://placehold.co/300x300/F3F4F6/A0A0A0?text=Image'">
+                {% elif m.file_type == 'video' %}
+                <div class="w-full h-full bg-red-50 flex flex items-center justify-center">
+                    <svg class="w-10 h-10 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="5 3 10 13 12 16 13 12 16 5 3z"/></svg>
+                </div>
+                {% elif m.file_type == 'document' %}
+                <div class="w-full h-full bg-blue-50 flex items-center justify-center p-3">
+                    <svg class="w-10 h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                {% else %}
+                <div class="w-full h-full bg-slate-50 flex items-center justify-center p-3">
+                    <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                {% endif %}
+
+                <!-- Hover Overlay -->
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
+                    <button onclick="event.stopPropagation(); copyMediaUrl('{{ m.file_url }}')"
+                            class="p-2 bg-white rounded-lg text-slate-700 hover:text-primary transition-colors" title="Copy URL">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2z"/></svg>
+                    </button>
+                    <a href="{{ m.file_url }}" target="_blank"
+                       class="p-2 bg-white rounded-lg text-slate-700 hover:text-primary transition-colors" title="Open in new tab">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2h8a2 2 0 012 2v6a2 2 0 01-2 2z"/></svg>
+                    </a>
+                    <button onclick="event.stopPropagation(); deleteMedia({{ m.id }}, this)"
+                            class="p-2 bg-white rounded-lg text-red-500 hover:bg-red-50 transition-colors delete-btn" title="Delete">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2.032 2.032 0 0118.07 7H5a2 2 0 01-1.995-1.858L5 9z"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-2.5 min-h-[40px]">
+                <p class="text-xs font-medium text-slate-700 truncate" title="{{ m.filename }}">{{ m.filename }}</p>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-[11px] text-slate-400">{{ m.file_size | filesizeformat }}</span>
+                    <span class="text-[11px] text-slate-300">·</span>
+                    <span class="text-[11px] text-slate-400 capitalize">{{ m.file_type }}</span>
+                    <span class="text-[11px] text-slate-300">·</span>
+                    <span class="text-[11px] text-slate-400">{{ m.created_at[:10] }}</span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full py-20 text-center">
+            <svg class="w-16 h-16 text-slate-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.707 0l-1.414 1.414a2 2 0 01-2.707 0l-1.414-1.414a2 2 0 012.707 0l4.586 4.586z"/></svg>
+            <p class="text-slate-500 font-medium">
+                {% if search %}No files match "{{ search }}"{% else %}No files uploaded yet{% endif %}
+            </p>
+            {% if not search %}
+            <p class="text-slate-400 text-sm mt-1">Drop files above or click the upload area to get started.</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="flex items-center justify-between px-6 py-4 bg-white rounded-xl shadow-sm border border-slate-100">
+        <p class="text-xs text-slate-500">
+            {{ (pagination.page - 1) * pagination.per_page + 1 }}–{{ [pagination.page * pagination.per_page, pagination.total] | min }} of {{ pagination.total }}
+        </p>
+        <div class="flex gap-1">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('admin.media', page=pagination.prev_num, search=search, type=file_type) }}"
+               class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:border-primary hover:text-primary transition-colors">← Prev</a>
+            {% endif %}
+            {% for p in pagination.iter_pages() %}
+                {% if p %}
+                    {% if p == pagination.page %}
+                    <span class="px-3 py-1.5 text-xs font-medium text-white bg-primary rounded-lg">{{ p }}</span>
+                    {% else %}
+                    <a href="{{ url_for('admin.media', page=p, search=search, type=file_type) }}"
+                       class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:border-primary hover:text-primary transition-colors">{{ p }}</a>
+                    {% endif %}
+                {% else %}
+                    <span class="px-2 text-slate-400 text-xs">…</span>
+                {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+            <a href="{{ url_for('admin.media', page=pagination.next_num, search=search, type=file_type) }}"
+               class="px-3 py-1.5 text-xs font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors">Next →</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+let deleteTargetId = null;
+let deleteConfirm = false;
+
+// ============================================================
+//  FILE TYPE ICONS (SVG strings for dynamic card creation)
+// ============================================================
+const TYPE_ICONS = {
+    image: '<svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>',
+    video: '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="5 3 10 13 12 16 13 12 16 5 3z"/></svg>',
+    document: '<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+    audio: '<svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6a2 2 0 012-2h10a2 2 0 012-2V4a2 2 0 012-2H9a2 2 0 00-2-2V4a2 2 0 012-2h10a2 2 0 012 2v2m-6 9a2 2 0 002 2h10a2 2 0 002-2v-2a2 2 0 00-2-2H9a2 2 0 00-2 2v2z"/></svg>',
+    other: '<svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+};
+
+const TYPE_COLORS = {
+    image: 'bg-purple-100 text-purple-600',
+    video: 'bg-red-50 text-red-500',
+    document: 'bg-blue-50 text-blue-500',
+    audio: 'bg-amber-50 text-amber-500',
+    other: 'bg-slate-100 text-slate-500',
+};
+
+const TYPE_LABELS = {
+    image: 'Image', video: 'Video', document: 'Document',
+    audio: 'Audio', other: 'File',
+};
+
+// ============================================================
+//  FORMAT HELPERS
+// ============================================================
+function filesizeformat(bytes) {
+    if (bytes === 0) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+}
+
+function createMediaCard(m) {
+    const isImage = m.file_type === 'image';
+    const thumbSrc = isImage ? m.thumbnail_url : null;
+    const sizeStr = filesizeformat(m.file_size);
+
+    const thumbHTML = isImage
+        ? '<img src="' + thumbUrl + '" alt="' + m.filename + '" class="w-full h-full object-cover" loading="lazy" onerror="this.src=\'https://placehold.co/300x300/F3F4F6/A0A0A0?text=Image\'">'
+        : '<div class="w-full h-full flex items-center justify-center ' + TYPE_COLORS[m.file_type] + '"><div class="w-10 h-10">' + TYPE_ICONS[m.file_type] + '</div></div></div>';
+
+    return '<div class="media-card" data-media-id="' + m.id + '">' +
+        '<div class="aspect-square bg-slate-100 rounded-lg overflow-hidden relative cursor-pointer group" onclick="openPreview(' + m.id + ')">' +
+            thumbHTML +
+            '<div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 p-2">' +
+                '<button onclick="event.stopPropagation(); copyMediaUrl(\'' + m.file_url + '\')" class="p-2 bg-white rounded-lg text-slate-700 hover:text-primary transition-colors" title="Copy URL">' +
+                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2z"/></svg>' +
+                '</button>' +
+                '<a href="' + m.file_url + '" target="_blank" class="p-2 bg-white rounded-lg text-slate-700 hover:text-primary transition-colors" title="Open">' +
+                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 13v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v-6a2 2 0 002-2h8a2 2 0 002 2v6a2 2 0 00-2 2z"/></svg>' +
+                '</a>' +
+                '<button onclick="event.stopPropagation(); deleteMedia(' + m.id + ', this)" class="p-2 bg-white rounded-lg text-red-500 hover:bg-red-50 transition-colors delete-btn" title="Delete">' +
+                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2.032 2.032 0 0118.07 7H5a2 2 0 01-1.995-1.858L5 9z"/></svg>' +
+                '</button>' +
+            '</div>' +
+        '</div>' +
+        '<div class="mt-2.5 min-h-[40px]">' +
+            '<p class="text-xs font-medium text-slate-700 truncate" title="' + m.filename + '">' + m.filename + '</p>' +
+            '<div class="flex items-center gap-2 mt-0.5">' +
+                '<span class="text-[11px] text-slate-400">' + sizeStr + '</span>' +
+                '<span class="text-[11px] text-slate-300">·</span>' +
+                '<span class="text-[11px text-slate-400 capitalize">' + (TYPE_LABELS[m.file_type] || 'File') + '</span>' +
+                '<span class="text-[11px] text-slate-300">·</span>' +
+                '<span class="text-[11px] text-slate-400">' + m.created_at[:10] + '</span>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+}
+
+function addMediaCard(m) {
+    const grid = document.getElementById('media-grid');
+    if (!grid) return;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = createMediaCard(m);
+    wrapper.classList.add('fade-in');
+    grid.insertBefore(wrapper, grid.firstChild);
+}
+
+function removeMediaCard(mediaId) {
+    const card = document.querySelector('.media-card[data-media-id="' + mediaId + '"]');
+    if (card) {
+        card.classList.add('removing');
+        setTimeout(function () { card.remove(); }, 300);
+    }
+}
+
+// ============================================================
+//  DRAG & DROP UPLOAD
+// ============================================================
+function onDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+}
+
+function onDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        for (const file of files) {
+            uploadFile(file);
+        }
+    }
+    document.getElementById('file-input').value = '';
+}
+
+// ============================================================
+//  FILE UPLOAD WITH PROGRESS
+// ============================================================
+async function uploadFile(file) {
+    const progressList = document.getElementById('upload-progress-list');
+    progressList.classList.remove('hidden');
+
+    // Create progress item
+    const item = document.createElement('div');
+    const uid = 'upload-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    item.id = uid;
+
+    const isImg = file.type && file.type.startsWith('image/');
+    const icon = isImg ? TYPE_ICONS.image : TYPE_ICONS.other;
+    const sizeStr = filesizeformat(file.size);
+    const maxSize = 50 * 1024 * 1024; // 50MB
+
+    item.className = 'flex items-center gap-3 bg-slate-50 rounded-lg p-3 border border-slate-200';
+    item.innerHTML =
+        '<div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ' + TYPE_COLORS.other + '">' + icon + '</div>' +
+        '<div class="flex-1 min-w-0">' +
+            '<div class="flex justify-between mb-1">' +
+                '<span class="text-xs font-medium text-slate-700 truncate pr-2">' + file.name + '</span>' +
+                '<span class="text-[11px] text-slate-400 shrink-0">' + sizeStr + '</span>' +
+            '</div>' +
+            '<div class="w-full bg-slate-200 rounded-full h-1.5">' +
+                '<div id="bar-' + uid + '" class="h-1.5 rounded-full bg-primary progress-fill" style="--w: 0%;"></div>' +
+            '</div>' +
+        '</div>';
+
+    progressList.insertBefore(item, progressList.firstChild);
+
+    const bar = document.getElementById('bar-' + uid);
+    const statusEl = item.querySelector('.text-xs.font-medium');
+
+    if (file.size > maxSize) {
+        bar.style.setProperty('--w', '100%');
+        bar.style.backgroundColor = '#EF4444';
+        statusEl.textContent = 'File too large (max 50MB)';
+        statusEl.className = 'text-xs font-medium text-red-500';
+        setTimeout(function () => {
+            item.classList.add('opacity-40');
+            setTimeout(function () { item.remove(); }, 300);
+        }, 2000);
+        return;
+    }
+
+    bar.style.setProperty('--w', '0%');
+    bar.style.backgroundColor = '#5423E7';
+    statusEl.textContent = 'Uploading...';
+    statusEl.className = 'text-xs font-medium text-primary';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100;
+            bar.style.setProperty('--w', pct + '%');
+            statusEl.textContent = pct + '% uploaded';
+        }
+    };
+
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                if (data.success) {
+                    bar.style.setProperty('--w', '100%');
+                    bar.style.backgroundColor = '#16A34A';
+                    statusEl.textContent = 'Done!';
+                    statusEl.className = 'text-xs font-medium text-green-600';
+
+                    addMediaCard(data.media);
+
+                    setTimeout(function () {
+                        item.style.opacity = '0';
+                        setTimeout(function () { item.remove(); }, 300);
+                    }, 600);
+                } else {
+                    bar.style.setProperty('--w', '100%');
+                    bar.style.backgroundColor = '#EF4444';
+                    statusEl.textContent = data.message || 'Upload failed.';
+                    statusEl.className = 'text-xs font-medium text-red-500';
+                    setTimeout(function () {
+                        item.classList.add('opacity-40');
+                        setTimeout(function () { item.remove(); }, 300);
+                    }, 2000);
+                }
+            } catch (err) {
+                bar.style.setProperty('--w', '100%');
+                bar.style.backgroundColor = '#EF4444';
+                statusEl.textContent = 'Parse error';
+                statusEl.className = 'text-xs font-medium text-red-500';
+            }
+        } else {
+            bar.style.setProperty('--w', '100%');
+            bar.style.backgroundColor = '#EF4444';
+            statusEl.textContent = 'Server error (' + xhr.status + ')';
+            statusEl.className = 'text-xs font-medium text-red-500';
+            setTimeout(function () {
+                item.classList.add('opacity-40');
+                setTimeout(function () { item.remove(); }, 300);
+            }, 2000);
+        }
+    };
+
+    xhr.onerror = function () {
+        bar.style.setProperty('--w', '100%');
+        bar.style.backgroundColor = '#EF4444';
+        statusEl.textContent = 'Network error';
+        statusEl.className = 'text-xs font-medium text-red-500';
+        setTimeout(function () {
+            item.classList.add('opacity-40');
+            setTimeout(function () { item.remove(); }, 300);
+        }, 2000);
+    };
+
+    xhr.open('POST', '/admin/media/upload');
+    xhr.send(formData);
+}
+
+// ============================================================
+//  COPY URL
+// ============================================================
+async function copyMediaUrl(url) {
+    const fullUrl = url.startsWith('http') ? url : window.location.origin + url;
+    try {
+        await navigator.clipboard.writeText(fullUrl);
+        showToast('URL copied to clipboard!', 'success');
+    } catch (e) {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = fullUrl;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('URL copied!', 'success');
+    }
+}
+
+// ============================================================
+//  DELETE
+// ============================================================
+function deleteMedia(mediaId, btn) {
+    if (!deleteConfirm) {
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3.192 1.732 3.464-1.732 0L3.34 16c-.77 1.333.192 3.192 1.732 3.464-1.732 0z"/></svg>';
+        deleteConfirm = true;
+        btn.classList.add('!text-slate-400', '!bg-slate-100');
+        return;
+    }
+
+    deleteConfirm = false;
+    btn.classList.remove('!text-slate-400', '!bg-slate-100');
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin"></div>';
+
+    fetch('/admin/media/' + mediaId, { method: 'DELETE' })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.success) {
+                removeMediaCard(mediaId);
+                showToast(data.message, 'success');
+            } else {
+                showToast(data.message || 'Delete failed.', 'error');
+                btn.innerHTML = '<svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2.032 2.032 0 0118.07 7H5a2 2 0 01-1.995-1.858L5 9z"/></svg>';
+                deleteConfirm = false;
+            }
+        })
+        .catch(function () {
+            showToast('Network error. Try again.', 'error');
+            btn.innerHTML = '<svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2.032 2.032 0 0118.07 7H5a2 2 0 01-1.995-1.858L5 9z"/></svg>';
+            deleteConfirm = false;
+        });
+}
+
+// Reset delete state when clicking elsewhere
+document.addEventListener('click', function (e) {
+    if (!e.target.closest('.delete-btn')) {
+        if (deleteConfirm) {
+            const btn = document.querySelector('.delete-btn');
+            if (btn) {
+                btn.innerHTML = '<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2.032 2.032 0 0118.07 7H5a2 2 0 01-1.995-1.858L5 9z"/></svg>';
+                deleteConfirm = false;
+            }
+        }
+    }
+});
+
+// ============================================================
+//  PREVIEW MODAL
+// ============================================================
+let previewCurrentPage = 1;
+let previewTotalPages = 1;
+
+function openPreview(mediaId) {
+    previewCurrentPage = 1;
+    previewTotalPages = 1;
+    loadPreview(mediaId);
+    document.getElementById('preview-modal').classList.remove('hidden');
+}
+
+function closePreview() {
+    document.getElementById('preview-modal').classList.add('hidden');
+}
+
+async function loadPreview(mediaId) {
+    try {
+        const res = await fetch('/admin/media/' + mediaId);
+        const data = await res.json();
+
+        if (data.success) {
+            const m = data.media;
+            const isImage = m.file_type === 'image';
+
+            document.getElementById('preview-img-wrapper').innerHTML = isImage
+                ? '<img src="' + m.file_url + '" alt="' + m.filename + '" class="max-h-[65vh] mx-auto rounded-lg object-contain" id="preview-main-img">'
+                : '<div class="flex flex-col items-center justify-center h-65vh text-slate-300">' +
+                  '<svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>';
+            document.getElementById('preview-filename').textContent = m.filename;
+            document.getElementById('preview-info-size').textContent = filesizeformat(m.file_size);
+            document.getElementById('preview-info-type').textContent = (TYPE_LABELS[m.file_type] || 'File').toUpperCase();
+            document.getElementById('preview-info-dimensions').textContent = (m.width && m.height) ? m.width + ' × ' + m.height + ' px' : '';
+            document.getElementById('preview-info-mime').textContent = m.mime_type || '—';
+
+            // Download link
+            document.getElementById('preview-download').href = m.file_url;
+            document.getElementById('preview-download').download = m.filename;
+
+            // Navigation
+            const prevBtn = document.getElementById('preview-prev');
+            const nextBtn = document.getElementById('preview-next');
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+
+            previewCurrentPage = 1;
+            previewTotalPages = 1;
+            updatePreviewNav();
+
+        } else {
+            showToast('Failed to load preview.', 'error');
+            closePreview();
+        }
+    } catch (e) {
+        showToast('Failed to load preview.', 'error');
+    }
+}
+
+function updatePreviewNav() {
+    const prev = document.getElementById('preview-prev');
+    const next = document.getElementById('preview-next');
+    prev.disabled = previewCurrentPage <= 1;
+    next.disabled = previewCurrentPage >= previewTotalPages;
+}
+
+function changePreviewPage(dir) {
+    previewCurrentPage += dir;
+    updatePreviewNav();
+}
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closePreview();
+    if (e.key === 'ArrowLeft') changePreviewPage(-1);
+    if (e.key === 'ArrowRight') changePreviewPage(1);
+});
+
+function closePreview() {
+    document.getElementById('preview-modal').classList.add('hidden');
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+function showToast(message, type) {
+    let ct = document.getElementById('toast-container');
+    if (!ct) {
+        ct = document.createElement('div');
+        ct.id = 'toast-container';
+        ct.className = 'fixed top-4 right-4 z-[100] space-y-2 pointer-events-none';
+        document.body.appendChild(ct);
+    }
+    const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-slate-800' };
+    const icons = {
+        success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+        error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+        info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+    };
+
+    const toast = document.createElement('div');
+    toast.className = 'pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-xl text-white text-sm font-medium shadow-2xl ' + (colors[type] || colors.info);
+    toast.style.animation = 'slideUp 0.3s ease-out';
+    toast.innerHTML = '<svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + (icons[type] || icons.info) + '</svg><span>' + message + '</span>';
+    ct.appendChild(toast);
+
+    setTimeout(function () {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-8px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(function () { toast.remove(); }, 300);
+    }, 4000);
+}
+
+// ============================================================
+//  SIDEBAR ACTIVE STATE
+// ============================================================
+document.addEventListener('DOMContentLoaded', function () {
+    const activeLink = document.querySelector('.nav-link.active');
+    if (activeLink) activeLink.classList.remove('active');
+    document.querySelectorAll('aside nav a').forEach(function (link) {
+        const span = link.querySelector('span');
+        if (span && span.textContent.trim() === 'Media') {
+            link.classList.add('active');
+        }
+    });
+});
+</script>
+
+<!-- Upload Progress List -->
+<div id="upload-progress-list" class="hidden space-y-2"></div>
+
+<!-- Preview Modal -->
+<div id="preview-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4">
+    <div class="modal-backdrop absolute inset-0" onclick="closePreview()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-enter" style="scrollbar-width: thin;">
+        <!-- Close -->
+        <button onclick="closePreview()" class="absolute top-4 right-4 z-10 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+
+        <div class="p-8 pt-12">
+            <!-- Image / File Preview -->
+            <div id="preview-img-wrapper" class="flex items-center justify-center bg-slate-50 rounded-xl p-4 min-h-[200px] max-h-[65vh] w-full">
+                <div id="preview-main-img"></div>
+            </div>
+
+            <!-- Info -->
+            <div class="mt-5 space-y-2">
+                <h3 id="preview-filename" class="text-lg font-bold text-slate-800"></h3>
+                <div class="flex flex-wrap gap-x-4 text-sm text-slate-500">
+                    <span id="preview-info-size"></span>
+                    <span id="preview-info-type" class="bg-slate-100 px-2 py-0.5 rounded font-mono text-xs font-medium"></span>
+                    <span id="preview-info-dimensions" class="text-slate-400 text-xs"></span>
+                    <span id="preview-info-mime" class="text-slate-400 text-xs font-mono truncate max-w-[200px]"></span>
+                </div>
+
+                <!-- Download -->
+                <a id="preview-download" download="" class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm w-fit">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H7a3 3 0 00-3-3h10a3 3 0 003 3v-1m0 0a3 3 0 00-3-3h10a3 3 0 003 3-3 0 00-3 0V7a3 3 0 00-3-3H7a3 3 0 00-3-3z"/></svg>
+                    Download
+                </a>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between items-center pt-6 mt-4 border-t border-slate-100">
+                <button onclick="changePreviewPage(-1)" id="preview-prev"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7-7-7-7m0 0l7 7-7-7 7h18"></path></svg>
+                    Previous
+                </button>
+                <span class="text-xs text-slate-400">
+                    <span id="preview-page-info">Page 1 of <span id="preview-total-info">1</span></span>
+                </span>
+                <button onclick="changePreviewPage(1)" id="preview-next"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    Next
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7-7-7-7m0 0l7 7-7-7h18"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

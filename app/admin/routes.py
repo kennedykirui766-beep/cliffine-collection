@@ -1,10 +1,11 @@
+import csv
 from datetime import datetime
 from flask import current_app, jsonify, redirect, render_template, url_for
 from flask import Blueprint, render_template
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import func
 from app import db
-from app.models import AdminActivity, OrderItem, User, Product, Order, Coupon, CouponUsage, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
+from app.models import AdminActivity, Media, OrderItem, User, Product, Order, Coupon, CouponUsage, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
 from flask import render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import os
@@ -1245,8 +1246,274 @@ def messages():
 
 
 @admin_bp.route("/inventory")
+@admin_required
 def inventory():
-    return render_template("admin/inventory/index.html")
+    from sqlalchemy import func, or_
+
+    # Filters
+    search = request.args.get("search", "").strip()
+    category_filter = request.args.get("category", "all")
+    stock_filter = request.args.get("stock", "all")
+    sort_by = request.args.get("sort", "name_asc")
+    page = request.args.get("page", 1, type=int)
+    per_page = 20
+
+    # Base query
+    query = Product.query
+
+    # Search
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(or_(
+            Product.name.ilike(search_term),
+            Product.sku.ilike(search_term) if hasattr(Product, 'sku') else False,
+        ))
+
+    # Category filter
+    if category_filter and category_filter != "all":
+        query = query.filter(Product.category_id == int(category_filter))
+
+    # Stock filter
+    if stock_filter == "in_stock":
+        query = query.filter(Product.stock > 5)
+    elif stock_filter == "low_stock":
+        query = query.filter(Product.stock.between(1, 5))
+    elif stock_filter == "out_of_stock":
+        query = query.filter(Product.stock == 0)
+
+    # Sorting
+    if sort_by == "name_asc":
+        query = query.order_by(Product.name.asc())
+    elif sort_by == "name_desc":
+        query = query.order_by(Product.name.desc())
+    elif sort_by == "stock_asc":
+        query = query.order_by(Product.stock.asc())
+    elif sort_by == "stock_desc":
+        query = query.order_by(Product.stock.desc())
+    elif sort_by == "price_asc":
+        query = query.order_by(Product.price.asc())
+    elif sort_by == "price_desc":
+        query = query.order_by(Product.price.desc())
+    elif sort_by == "newest":
+        query = query.order_by(Product.created_at.desc())
+    else:
+        query = query.order_by(Product.name.asc())
+
+    # Pagination
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    products = pagination.items
+
+    # ===================== SUMMARY METRICS =====================
+    total_products = Product.query.count()
+    total_stock_units = db.session.query(func.coalesce(func.sum(Product.stock), 0)).scalar() or 0
+
+    # Stock value: use cost_price if available, otherwise use price
+    cost_field = getattr(Product, 'cost_price', None)
+    if cost_field is not None:
+        total_stock_value = db.session.query(
+            func.coalesce(func.sum(Product.stock * cost_field), 0)
+        ).scalar() or 0
+    else:
+        total_stock_value = db.session.query(
+            func.coalesce(func.sum(Product.stock * Product.price), 0)
+        ).scalar() or 0
+
+    low_stock_count = Product.query.filter(Product.stock.between(1, 5)).count()
+    out_of_stock_count = Product.query.filter(Product.stock == 0).count()
+
+    # Average stock per product
+    avg_stock = round(total_stock_units / total_products) if total_products > 0 else 0
+
+    # ===================== CATEGORIES =====================
+    categories = []
+    try:
+        from app.models import Category
+        categories = Category.query.order_by(Category.name.asc()).all()
+    except Exception:
+        pass
+
+    # ===================== STOCK DISTRIBUTION =====================
+    stock_distribution = []
+    try:
+        dist_labels = ["0 (Out)", "1-5 (Low)", "6-20 (Med)", "21-50 (Good)", "50+ (High)"]
+        dist_counts = [
+            Product.query.filter(Product.stock == 0).count(),
+            Product.query.filter(Product.stock.between(1, 5)).count(),
+            Product.query.filter(Product.stock.between(6, 20)).count(),
+            Product.query.filter(Product.stock.between(21, 50)).count(),
+            Product.query.filter(Product.stock > 50).count(),
+        ]
+        max_dist = max(dist_counts) if dist_counts else 1
+        dist_colors = ["#EF4444", "#F59E0B", "#3B82F6", "#10B981", "#5423E7"]
+        for i, label in enumerate(dist_labels):
+            stock_distribution.append({
+                "label": label,
+                "count": dist_counts[i],
+                "percentage": round((dist_counts[i] / total_products * 100), 1) if total_products > 0 else 0,
+                "width": round((dist_counts[i] / max_dist * 100), 1) if max_dist > 0 else 0,
+                "color": dist_colors[i],
+            })
+    except Exception:
+        pass
+
+    # ===================== RECENT STOCK CHANGES =====================
+    recent_changes = []
+    try:
+        from app.models import AdminActivity
+        changes = AdminActivity.query.filter(
+            AdminActivity.action.in_(['stock_adjusted', 'stock_imported']),
+        ).order_by(AdminActivity.created_at.desc()).limit(5).all()
+        for c in changes:
+            recent_changes.append({
+                "description": c.description,
+                "time": c.created_at,
+            })
+    except Exception:
+        pass
+
+    # Build product list with images
+    product_list = []
+    for p in products:
+        image_url = "https://placehold.co/80x80/F3F4F6/A0A0A0?text=Product"
+        if hasattr(p, 'images') and p.images:
+            image_url = p.images[0].image_url
+        elif hasattr(p, 'image') and p.image:
+            image_url = p.image
+
+        selling_price = p.discount_price if p.discount_price else p.price
+        stock_value = p.stock * (getattr(p, 'cost_price', None) or p.price)
+
+        product_list.append({
+            "id": p.id,
+            "name": p.name,
+            "slug": getattr(p, 'slug', ''),
+            "sku": getattr(p, 'sku', ''),
+            "price": float(p.price),
+            "discount_price": float(p.discount_price) if p.discount_price else None,
+            "selling_price": float(selling_price),
+            "cost_price": float(getattr(p, 'cost_price', 0) or 0),
+            "stock": p.stock,
+            "stock_value": float(stock_value),
+            "category": p.category.name if hasattr(p, 'category') and p.category else "Uncategorized",
+            "category_id": p.category_id if hasattr(p, 'category_id') else None,
+            "image": image_url,
+            "is_active": getattr(p, 'is_active', True),
+            "lipa_pole_pole": getattr(p, 'lipa_pole_pole', False),
+        })
+
+    return render_template(
+        "admin/inventory/index.html",
+        products=product_list,
+        pagination=pagination,
+        total_products=total_products,
+        total_stock_units=total_stock_units,
+        total_stock_value=total_stock_value,
+        low_stock_count=low_stock_count,
+        out_of_stock_count=out_of_stock_count,
+        avg_stock=avg_stock,
+        categories=categories,
+        stock_distribution=stock_distribution,
+        recent_changes=recent_changes,
+        search=search,
+        category_filter=category_filter,
+        stock_filter=stock_filter,
+        sort_by=sort_by,
+    )
+
+
+@admin_bp.route("/inventory/adjust", methods=["POST"])
+@admin_required
+def inventory_adjust():
+    from app.utils.activity import log_activity
+
+    data = request.get_json()
+    product_id = data.get("product_id")
+    adjustment = data.get("adjustment", 0)  # positive or negative integer
+    reason = data.get("reason", "").strip()
+
+    if not product_id or adjustment == 0:
+        return jsonify(success=False, message="Invalid adjustment."), 400
+
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify(success=False, message="Product not found."), 404
+
+    old_stock = product.stock
+    new_stock = old_stock + adjustment
+
+    if new_stock < 0:
+        return jsonify(success=False, message=f"Cannot reduce below 0. Current stock: {old_stock}."), 400
+
+    product.stock = new_stock
+    db.session.commit()
+
+    direction = "increased" if adjustment > 0 else "decreased"
+    log_activity(
+        current_user.id,
+        "stock_adjusted",
+        f"{product.name}: {old_stock} → {new_stock} ({direction} by {abs(adjustment)}). Reason: {reason or 'Manual adjustment'}"
+    )
+
+    return jsonify(
+        success=True,
+        message=f"Stock {direction} by {abs(adjustment)}. New stock: {new_stock}",
+        new_stock=new_stock,
+        old_stock=old_stock,
+    )
+
+
+@admin_bp.route("/inventory/bulk-update", methods=["POST"])
+@admin_required
+def inventory_bulk_update():
+    from app.utils.activity import log_activity
+
+    data = request.get_json()
+    updates = data.get("updates", [])  # [{product_id: 1, stock: 50}, ...]
+
+    if not updates:
+        return jsonify(success=False, message="No updates provided."), 400
+
+    updated = 0
+    errors = []
+
+    for item in updates:
+        product = Product.query.get(item.get("product_id"))
+        if not product:
+            errors.append(f"Product ID {item.get('product_id')} not found.")
+            continue
+
+        new_stock = item.get("stock")
+        if new_stock is None or new_stock < 0:
+            errors.append(f"Invalid stock value for {product.name}.")
+            continue
+
+        old_stock = product.stock
+        product.stock = int(new_stock)
+        updated += 1
+
+    if updated > 0:
+        db.session.commit()
+        log_activity(
+            current_user.id,
+            "stock_imported",
+            f"Bulk stock update: {updated} products adjusted."
+        )
+
+    return jsonify(
+        success=True,
+        message=f"{updated} products updated.",
+        updated=updated,
+        errors=errors if errors else None,
+    )
+
+
+@admin_bp.route("/inventory/low-stock-api")
+@admin_required
+def inventory_low_stock_api():
+    """API endpoint for dashboard or other pages to get low stock count."""
+    low = Product.query.filter(Product.stock.between(1, 5)).count()
+    out = Product.query.filter(Product.stock == 0).count()
+    return jsonify(low_stock=low, out_of_stock=out, total_alerts=low + out)
 
 
 @admin_bp.route("/shipping")
@@ -1255,21 +1522,900 @@ def shipping():
 
 
 @admin_bp.route("/reports")
+@admin_required
 def reports():
-    return render_template("admin/reports/index.html")
+    from sqlalchemy import func, extract, or_
+    from datetime import datetime, timedelta
+    from calendar import month_name, monthrange
+    import csv
+    from io import StringIO
+    from flask import Response
+
+    now = datetime.utcnow()
+    period = request.args.get("period", "month")
+    txn_search = request.args.get("txn_search", "").strip()
+    txn_status = request.args.get("txn_status", "all")
+    txn_page = request.args.get("txn_page", 1, type=int)
+
+    # ===================== DATE RANGES =====================
+    if period == "quarter":
+        current_quarter = (now.month - 1) // 3
+        current_start = datetime(now.year, current_quarter * 3 + 1, 1)
+        prev_start = current_start - timedelta(days=90)
+        period_label = f"Q{current_quarter + 1} {now.year}"
+    elif period == "year":
+        current_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        prev_start = current_start.replace(year=now.year - 1)
+        period_label = str(now.year)
+    else:
+        current_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        prev_start = (current_start - timedelta(days=1)).replace(day=1)
+        period_label = f"{month_name[now.month]} {now.year}"
+
+    current_end = now
+    prev_end = current_start
+
+    # ===================== HELPER =====================
+    def q_sum(field, start, end, status_exclude=None):
+        q = db.session.query(func.coalesce(func.sum(field), 0)).filter(
+            Order.created_at >= start,
+            Order.created_at < end,
+        )
+        if status_exclude:
+            q = q.filter(Order.status.notin_(status_exclude))
+        return q.scalar() or 0
+
+    # ===================== SUMMARY CARDS =====================
+    total_revenue = q_sum(Order.total_amount, current_start, current_end, ['Cancelled'])
+
+    # Tax — use tax_amount if available, otherwise estimate 16% VAT
+    tax_amount_field = getattr(Order, 'tax_amount', None)
+    if tax_amount_field is not None:
+        total_tax = q_sum(tax_amount_field, current_start, current_end, ['Cancelled', 'Refunded'])
+    else:
+        total_tax = round(total_revenue * 0.16 / 1.16, 0)
+
+    # Refunds
+    refunded_orders = db.session.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
+        Order.created_at >= current_start,
+        Order.created_at < current_end,
+        Order.status == 'Refunded',
+    ).scalar() or 0
+    refund_count = db.session.query(func.count(Order.id)).filter(
+        Order.created_at >= current_start,
+        Order.created_at < current_end,
+        Order.status == 'Refunded',
+    ).scalar() or 0
+
+    # Shipping Revenue
+    shipping_field = getattr(Order, 'shipping_fee', None)
+    if shipping_field is not None:
+        shipping_revenue = q_sum(shipping_field, current_start, current_end, ['Cancelled', 'Refunded'])
+    else:
+        shipping_revenue = 0
+
+    # Net Profit (Revenue - Refunds - Tax - Shipping)
+    net_profit = total_revenue - refunded_orders - total_tax
+
+    # ===================== TOP PRODUCTS =====================
+    top_products_raw = db.session.query(
+        Product.id,
+        Product.name,
+        Product.price,
+        Product.slug,
+        func.coalesce(func.sum(OrderItem.quantity), 0).label('units_sold'),
+        func.coalesce(func.sum(OrderItem.quantity * OrderItem.unit_price), 0).label('revenue'),
+    ).join(
+        OrderItem, Product.id == OrderItem.product_id
+    ).join(
+        Order, OrderItem.order_id == Order.id
+    ).filter(
+        Order.created_at >= current_start,
+        Order.created_at < current_end,
+        Order.status.notin_(['Cancelled', 'Refunded']),
+    ).group_by(
+        Product.id, Product.name, Product.price, Product.slug
+    ).order_by(
+        func.sum(OrderItem.quantity * OrderItem.unit_price).desc()
+    ).limit(8).all()
+
+    top_products = []
+    for p in top_products_raw:
+        image_url = "https://placehold.co/80x80/F3F4F6/A0A0A0?text=Product"
+        if hasattr(p, 'images') and p.images:
+            image_url = p.images[0].image_url
+        elif hasattr(p, 'image') and p.image:
+            image_url = p.image
+        top_products.append({
+            "id": p.id,
+            "name": p.name,
+            "price": float(p.price),
+            "units_sold": int(p.units_sold),
+            "revenue": float(p.revenue),
+            "image": image_url,
+            "slug": getattr(p, 'slug', ''),
+        })
+
+    # ===================== LOW STOCK =====================
+    low_stock_threshold = 10
+    low_stock = Product.query.filter(
+        Product.stock <= low_stock_threshold
+    ).order_by(Product.stock.asc()).limit(10).all()
+
+    # ===================== TRANSACTION LOG =====================
+    txn_query = Order.query.order_by(Order.created_at.desc())
+
+    if txn_search:
+        search_term = f"%{txn_search}%"
+        txn_query = txn_query.filter(or_(
+            Order.id.cast(db.String).ilike(search_term),
+            Order.customer_name.ilike(search_term),
+            Order.payment_method.ilike(search_term),
+        ))
+
+    if txn_status and txn_status != "all":
+        txn_query = txn_query.filter(Order.status == txn_status)
+
+    txn_pagination = txn_query.paginate(page=txn_page, per_page=15, error_out=False)
+    transactions = txn_pagination.items
+
+    # ===================== PERIOD GROWTH =====================
+    prev_revenue = q_sum(Order.total_amount, prev_start, prev_end, ['Cancelled'])
+    revenue_change = round(((total_revenue - prev_revenue) / prev_revenue * 100), 1) if prev_revenue > 0 else None
+
+    return render_template(
+        "admin/reports/index.html",
+        period=period,
+        period_label=period_label,
+        total_revenue=total_revenue,
+        total_tax=total_tax,
+        refunded_amount=refunded_orders,
+        refund_count=refund_count,
+        shipping_revenue=shipping_revenue,
+        net_profit=net_profit,
+        revenue_change=revenue_change,
+        top_products=top_products,
+        low_stock=low_stock,
+        low_stock_threshold=low_stock_threshold,
+        transactions=transactions,
+        txn_pagination=txn_pagination,
+        txn_search=txn_search,
+        txn_status=txn_status,
+    )
+
+
+@admin_bp.route("/reports/export")
+@admin_required
+def reports_export():
+    """Export transactions as CSV."""
+    from io import StringIO
+    from flask import Response
+
+    status_filter = request.args.get("status", "all")
+
+    query = Order.query.order_by(Order.created_at.desc())
+    if status_filter and status_filter != "all":
+        query = query.filter(Order.status == status_filter)
+
+    orders = query.limit(5000).all()
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Order ID", "Date", "Customer", "Payment Method", "Amount", "Status"])
+
+    for o in orders:
+        writer.writerow([
+            f"#{o.id}",
+            o.created_at.strftime("%Y-%m-%d %H:%M") if o.created_at else "",
+            getattr(o, 'customer_name', '') or (o.user.full_name if hasattr(o, 'user') and o.user else ''),
+            getattr(o, 'payment_method', '') or '',
+            float(o.total_amount) if o.total_amount else 0,
+            o.status,
+        ])
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=transactions_report.csv"},
+    )
+
+
+@admin_bp.route("/reports/print")
+@admin_required
+def reports_print():
+    """Print-friendly report view."""
+    from sqlalchemy import func
+    from datetime import datetime
+
+    now = datetime.utcnow()
+    current_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    total_revenue = db.session.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
+        Order.created_at >= current_start,
+        Order.status != 'Cancelled',
+    ).scalar() or 0
+
+    total_orders = db.session.query(func.count(Order.id)).filter(
+        Order.created_at >= current_start,
+    ).scalar() or 0
+
+    refunded = db.session.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
+        Order.created_at >= current_start,
+        Order.status == 'Refunded',
+    ).scalar() or 0
+
+    tax_field = getattr(Order, 'tax_amount', None)
+    if tax_field is not None:
+        total_tax = db.session.query(func.coalesce(func.sum(tax_field), 0)).filter(
+            Order.created_at >= current_start,
+            Order.status.notin_(['Cancelled', 'Refunded']),
+        ).scalar() or 0
+    else:
+        total_tax = round(total_revenue * 0.16 / 1.16, 0)
+
+    top_products = db.session.query(
+        Product.name,
+        func.coalesce(func.sum(OrderItem.quantity), 0).label('units'),
+        func.coalesce(func.sum(OrderItem.quantity * OrderItem.unit_price), 0).label('rev'),
+    ).join(OrderItem, Product.id == OrderItem.product_id).join(
+        Order, OrderItem.order_id == Order.id
+    ).filter(
+        Order.created_at >= current_start,
+        Order.status.notin_(['Cancelled', 'Refunded']),
+    ).group_by(Product.name).order_by(
+        func.sum(OrderItem.quantity * OrderItem.unit_price).desc()
+    ).limit(10).all()
+
+    recent = Order.query.order_by(Order.created_at.desc()).limit(30).all()
+
+    return render_template(
+        "admin/reports/print_report.html",
+        generated_at=now.strftime("%d %B %Y, %H:%M"),
+        period_label=f"{now.strftime('%B %Y')}",
+        total_revenue=total_revenue,
+        total_orders=total_orders,
+        total_tax=total_tax,
+        refunded=refunded,
+        net_profit=total_revenue - refunded - total_tax,
+        top_products=top_products,
+        recent_orders=recent,
+    )
+
+import re
+from flask import request, redirect, url_for, jsonify, flash
+from app.models import Page, db
+from app.utils.activity import log_activity
+from functools import wraps
+
+
+def _slugify(text):
+    text = text.lower().strip()
+    text = re.sub(r'[^\w\s-]', '', text)
+    text = re.sub(r'[-\s]+', '-', text).strip('-')
+    return text
+
 
 @admin_bp.route("/pages")
+@admin_required
 def pages():
-    return render_template("admin/pages/index.html")
+    search = request.args.get("search", "").strip()
+    status_filter = request.args.get("status", "all")
+    page = request.args.get("page", 1, type=int)
+    per_page = 15
+
+    query = Page.query.order_by(Page.sort_order.asc(), Page.title.asc())
+
+    if search:
+        query = query.filter(Page.title.ilike(f"%{search}%"))
+
+    if status_filter and status_filter != "all":
+        query = query.filter(Page.status == status_filter)
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    all_pages = pagination.items
+
+    total_published = Page.query.filter_by(status="published").count()
+    total_drafts = Page.query.filter_by(status="draft").count()
+
+    page_list = []
+    for p in all_pages:
+        page_list.append({
+            "id": p.id,
+            "title": p.title,
+            "slug": p.slug,
+            "status": p.status,
+            "is_homepage": p.is_homepage,
+            "sort_order": p.sort_order,
+            "meta_description": p.meta_description or "",
+            "content_preview": (p.content[:120] + "...") if p.content and len(p.content) > 120 else (p.content or ""),
+            "created_at": p.created_at,
+            "updated_at": p.updated_at,
+        })
+
+    return render_template(
+        "admin/pages/index.html",
+        pages=page_list,
+        pagination=pagination,
+        total_published=total_published,
+        total_drafts=total_drafts,
+        search=search,
+        status_filter=status_filter,
+    )
+
+
+@admin_bp.route("/pages/create", methods=["POST"])
+@admin_required
+def create_page():
+    data = request.get_json()
+
+    title = (data.get("title") or "").strip()
+    slug = (data.get("slug") or "").strip()
+    content = data.get("content") or ""
+    meta_description = (data.get("meta_description") or "").strip()
+    meta_keywords = (data.get("meta_keywords") or "").strip()
+    status = data.get("status", "draft")
+    sort_order = data.get("sort_order", 0)
+
+    errors = []
+    if not title:
+        errors.append("Title is required.")
+    if not slug:
+        slug = _slugify(title)
+    if not slug:
+        errors.append("Slug could not be generated from title.")
+
+    if not errors:
+        existing = Page.query.filter_by(slug=slug).first()
+        if existing:
+            errors.append(f"A page with slug '{slug}' already exists.")
+
+    if errors:
+        return jsonify(success=False, message="; ".join(errors)), 400
+
+    try:
+        sort_order = int(sort_order)
+    except (TypeError, ValueError):
+        sort_order = 0
+
+    page = Page(
+        title=title,
+        slug=slug,
+        content=content,
+        meta_description=meta_description[:500],
+        meta_keywords=meta_keywords[:500],
+        status=status,
+        sort_order=sort_order,
+    )
+    db.session.add(page)
+    db.session.commit()
+
+    log_activity(
+        current_user.id, "page_created",
+        f"Created page: {title} ({slug})"
+    )
+
+    return jsonify(
+        success=True,
+        message=f"Page '{title}' created successfully!",
+        redirect=url_for("admin.pages"),
+    )
+
+
+@admin_bp.route("/pages/<int:page_id>", methods=["GET"])
+@admin_required
+def get_page(page_id):
+    page = Page.query.get_or_404(page_id)
+    return jsonify({
+        "success": True,
+        "page": {
+            "id": page.id,
+            "title": page.title,
+            "slug": page.slug,
+            "content": page.content or "",
+            "meta_description": page.meta_description or "",
+            "meta_keywords": page.meta_keywords or "",
+            "status": page.status,
+            "is_homepage": page.is_homepage,
+            "sort_order": page.sort_order,
+            "created_at": page.created_at.isoformat() if page.created_at else "",
+            "updated_at": page.updated_at.isoformat() if page.updated_at else "",
+        }
+    })
+
+
+@admin_bp.route("/pages/<int:page_id>/update", methods=["POST"])
+@admin_required
+def update_page(page_id):
+    page = Page.query.get_or_404(page_id)
+    data = request.get_json()
+
+    title = (data.get("title") or "").strip()
+    slug = (data.get("slug") or "").strip()
+    content = data.get("content") or ""
+    meta_description = (data.get("meta_description") or "").strip()
+    meta_keywords = (data.get("meta_keywords") or "").strip()
+    status = data.get("status", page.status)
+    sort_order = data.get("sort_order", page.sort_order)
+    is_homepage = data.get("is_homepage", page.is_homepage)
+
+    errors = []
+    if not title:
+        errors.append("Title is required.")
+    if not slug:
+        slug = _slugify(title)
+    if not slug:
+        errors.append("Slug could not be generated from title.")
+
+    if not errors:
+        existing = Page.query.filter(Page.slug == slug, Page.id != page_id).first()
+        if existing:
+            errors.append(f"Another page with slug '{slug}' already exists.")
+
+    if errors:
+        return jsonify(success=False, message="; ".join(errors)), 400
+
+    page.title = title
+    page.slug = slug
+    page.content = content
+    page.meta_description = meta_description[:500]
+    page.meta_keywords = meta_keywords[:500]
+    page.status = status
+    page.is_homepage = bool(is_homepage)
+
+    try:
+        page.sort_order = int(sort_order)
+    except (TypeError, ValueError):
+        pass
+
+    db.session.commit()
+
+    log_activity(
+        current_user.id, "page_updated",
+        f"Updated page: {title} ({slug})"
+    )
+
+    # If homepage was set, unset others
+    if page.is_homepage:
+        Page.query.filter(Page.id != page.id, Page.is_homepage == True).update({"is_homepage": False})
+        db.session.commit()
+
+    return jsonify(
+        success=True,
+        message=f"Page '{title}' updated successfully!",
+    )
+
+
+@admin_bp.route("/pages/<int:page_id>/delete", methods=["POST"])
+@admin_required
+def delete_page(page_id):
+    page = Page.query.get_or_404(page_id)
+
+    confirm_text = (request.get_json() or {}).get("confirm", "")
+    if confirm_text != page.title:
+        return jsonify(
+            success=False,
+            message=f'Type "{page.title}" to confirm deletion.',
+        ), 400
+
+    log_activity(
+        current_user.id, "page_deleted",
+        f"Deleted page: {page.title} ({page.slug})"
+    )
+
+    db.session.delete(page)
+    db.session.commit()
+
+    return jsonify(
+        success=True,
+        message=f"Page '{page.title}' deleted successfully.",
+    )
+
+
+@admin_bp.route("/pages/<int:page_id>/toggle-status", methods=["POST"])
+@admin_required
+def toggle_page_status(page_id):
+    page = Page.query.get_or_404(page_id)
+    page.status = "published" if page.status == "draft" else "draft"
+    db.session.commit()
+
+    log_activity(
+        current_user.id, "page_updated",
+        f"Toggled page '{page.title}' to {page.status}"
+    )
+
+    return jsonify(
+        success=True,
+        status=page.status,
+        message=f"Page is now {page.status}.",
+    )
+
+
+@admin_bp.route("/pages/reorder", methods=["POST"])
+@admin_required
+def reorder_pages():
+    data = request.get_json()
+    items = data.get("items", [])
+
+    for item in items:
+        page = Page.query.get(item.get("id"))
+        if page:
+            page.sort_order = item.get("sort_order", 0)
+
+    db.session.commit()
+    return jsonify(success=True, message="Page order updated.")
+
+
+@admin_bp.route("/pages/check-slug", methods=["GET"])
+@admin_required
+def check_slug():
+    slug = request.args.get("slug", "").strip()
+    exclude = request.args.get("exclude", type=int)
+
+    if not slug:
+        return jsonify(available=True, slug="")
+
+    slug = _slugify(slug)
+    if not slug:
+        return jsonify(available=False, slug="")
+
+    query = Page.query.filter_by(slug=slug)
+    if exclude:
+        query = query.filter(Page.id != exclude)
+
+    exists = query.first() is not None
+    return jsonify(available=not exists, slug=slug)
+
+
+import os
+from flask import request, jsonify, send_from_directory, current_app
+from werkzeug.utils import secure_filename
+
+
+def _get_upload_dir():
+    d = os.path.join(current_app.root_path, "static", "uploads", "media")
+    os.makedirs(d, exist_ok=True)
+    os.makedirs(os.path.join(d, "thumbnails"), exist_ok=True)
+    return d
+
+
+def _generate_thumbnail(file_path, max_size=(300, 300)):
+    """Generate a thumbnail. Returns True if successful."""
+    try:
+        from PIL import Image as PILImage
+        img = PILImage.open(file_path)
+        img.thumbnail(max_size, PILImage.LANCZOS)
+        thumb_dir = os.path.dirname(file_path) + "/thumbnails/"
+        os.makedirs(thumb_dir, exist_ok=True)
+        thumb_name = "thumb_" + os.path.basename(file_path)
+        thumb_path = thumb_dir + thumb_name
+        img.save(thumb_path, "WEBP", quality=80)
+        return True
+    except Exception:
+        return False
+
+
+def _get_file_type(mime_type):
+    if not mime_type:
+        return "other"
+    m = mime_type.lower()
+    if m.startswith("image/"):
+        return "image"
+    elif m.startswith("video/"):
+        return "video"
+    elif m.startswith("audio/"):
+        return "audio"
+    elif m in ("application/pdf",):
+        return "document"
+    elif m.startswith("text/") or m in ("application/json", "application/xml", "application/javascript", "application/zip"):
+        return "document"
+    return "other"
 
 
 @admin_bp.route("/media")
+@admin_required
 def media():
-    return render_template("admin/media/index.html")
+    search = request.args.get("search", "").strip()
+    file_type = request.args.get("type", "all")
+    page = request.args.get("page", 1, type=int)
+    per_page = 24
 
-@admin_bp.route("/settings")
+    query = Media.query.order_by(Media.created_at.desc())
+
+    if search:
+        query = query.filter(Media.filename.ilike(f"%{search}%"))
+
+    if file_type and file_type != "all":
+        query = query.filter_by(file_type=file_type)
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    media_list = []
+    for m in pagination.items:
+        media_list.append({
+            "id": m.id,
+            "filename": m.filename,
+            "file_url": m.file_url,
+            "thumbnail_url": m.thumbnail_url,
+            "file_type": m.file_type,
+            "mime_type": m.mime_type or "",
+            "file_size": m.file_size,
+            "width": m.width,
+            "height": m.height,
+            "created_at": m.created_at.isoformat() if m.created_at else "",
+        })
+
+    # Counts per type
+    type_counts = {}
+    for t in ["image", "video", "document", "audio", "other"]:
+        type_counts[t] = Media.query.filter_by(file_type=t).count()
+
+    total_size = db.session.query(
+        func.coalesce(func.sum(Media.file_size), 0)
+    ).scalar() or 0
+
+    return render_template(
+        "admin/media/index.html",
+        media=media_list,
+        pagination=pagination,
+        search=search,
+        file_type=file_type,
+        type_counts=type_counts,
+        total_size=total_size,
+    )
+
+
+@admin_bp.route("/media/upload", methods=["POST"])
+@admin_required
+def media_upload():
+    if "file" not in request.files:
+        return jsonify(success=False, message="No file selected."), 400
+
+    file = request.files["file"]
+    if not file.filename:
+        return jsonify(success=False, message="No file selected."), 400
+
+    upload_dir = _get_upload_dir()
+
+    # Generate unique filename to avoid overwrites
+    name, ext = os.path.splitext(file.filename)
+    timestamp = int(datetime.utcnow().timestamp())
+    stored_name = secure_filename(f"{name}_{timestamp}{ext}")
+    stored_path = os.path.join(upload_dir, stored_name)
+
+    # Save file
+    file.save(stored_path)
+
+    # Generate thumbnail for images
+    if _get_file_type(file.mimetype) == "image":
+        _generate_thumbnail(stored_path)
+
+    file_type = _get_file_type(file.mimetype)
+    file_size = os.path.getsize(stored_path)
+    width, height = None, None
+    if file_type == "image":
+        try:
+            from PIL import Image as PILImage
+            with PILImage.open(stored_path) as img:
+                width, height = img.size
+        except Exception:
+            pass
+
+    media = Media(
+        filename=file.filename,
+        stored_name=stored_name,
+        file_path=f"uploads/media/{stored_name}",
+        file_type=file_type,
+        mime_type=file.mimetype,
+        file_size=file_size,
+        width=width,
+        height=height,
+        uploaded_by=current_user.id,
+    )
+    db.session.add(media)
+    db.session.commit()
+
+    return jsonify(
+        success=True,
+        media={
+            "id": media.id,
+            "filename": media.filename,
+            "file_url": media.file_url,
+            "thumbnail_url": media.thumbnail_url,
+            "file_type": media.file_type,
+            "mime_type": media.mime_type or "",
+            "file_size": media.file_size,
+            "width": media.width,
+            "height": media.height,
+            "created_at": media.created_at.isoformat(),
+        },
+    )
+
+
+@admin_bp.route("/media/<int:media_id>", methods=["DELETE"])
+@admin_required
+def media_delete(media_id):
+    media = Media.query.get_or_404(media_id)
+
+    # Delete files from disk
+    try:
+        fpath = os.path.join(current_app.root_path, media.file_path)
+        if os.path.exists(fpath):
+            os.remove(fpath)
+    except OSError:
+        pass
+
+    # Delete thumbnail
+    if media.file_type == "image":
+        try:
+            thumb_dir = os.path.dirname(media.file_path) + "/thumbnails/"
+            thumb_path = os.path.join(current_app.root_path, thumb_dir, "thumb_" + media.stored_name)
+            if os.path.exists(thumb_path):
+                os.remove(thumb_path)
+        except OSError:
+            pass
+
+    from app.utils.activity import log_activity
+    log_activity(
+        current_user.id, "media_deleted",
+        f"Deleted file: {media.filename} ({media.file_type}, {media.file_size} bytes)"
+    )
+
+    db.session.delete(media)
+    db.session.commit()
+
+    return jsonify(success=True, message=f"'{media.filename}' deleted.")
+
+
+@admin_bp.route("/media/files/<path:filename>")
+@admin_required
+def serve_media(filename):
+    upload_dir = _get_upload_dir()
+    return send_from_directory(upload_dir, filename)
+
+@admin_bp.route("/settings", methods=["GET", "POST"])
 def settings():
-    return render_template("admin/settings/index.html")
+    import json
+    import os
+    
+    settings_file = "settings_data.json"
+    default_settings = {
+        "general": {
+            "store_name": "Cliffine Collection",
+            "contact_email": "support@cliffine.co.ke",
+            "phone_number": "+254 700 000 000",
+            "default_currency": "KES",
+            "store_address": "",
+        },
+        "payments": {
+            "mpesa_enabled": False,
+            "paybill_number": "",
+            "account_number": "",
+            "tax_rate": 16,
+            "default_payment_method": "M-Pesa",
+        },
+        "shipping": {
+            "zones": [
+                {"region": "Nairobi", "method": "Pickup / Courier", "cost": 200},
+                {"region": "Major Towns", "method": "Standard", "cost": 350},
+            ],
+            "free_shipping_threshold": "",
+            "estimated_delivery": "1-3 Business Days",
+        },
+        "emails": {
+            "smtp_host": "",
+            "smtp_port": "",
+            "smtp_username": "",
+            "smtp_password": "",
+            "notify_new_order": True,
+            "notify_payment_receipts": True,
+            "notify_chama_updates": False,
+            "notify_newsletters": False,
+        },
+        "coupons": {
+            "enabled": True,
+            "default_discount_type": "Percentage",
+            "expiry_reminder": "3 Days Before",
+        },
+        "security": {
+            "two_factor_enabled": False,
+            "session_timeout": 60,
+        },
+        "advanced": {
+            "maintenance_mode": False,
+            "google_analytics_id": "",
+            "custom_css": "",
+        },
+    }
+
+    if request.method == "POST":
+        data = request.get_json() if request.is_json else request.form.to_dict()
+        
+        # Build settings from form data
+        saved_settings = default_settings.copy()
+        
+        # General
+        saved_settings["general"]["store_name"] = data.get("store_name", "")
+        saved_settings["general"]["contact_email"] = data.get("contact_email", "")
+        saved_settings["general"]["phone_number"] = data.get("phone_number", "")
+        saved_settings["general"]["default_currency"] = data.get("default_currency", "KES")
+        saved_settings["general"]["store_address"] = data.get("store_address", "")
+        
+        # Payments
+        saved_settings["payments"]["mpesa_enabled"] = data.get("mpesa_enabled") == "true"
+        saved_settings["payments"]["paybill_number"] = data.get("paybill_number", "")
+        saved_settings["payments"]["account_number"] = data.get("account_number", "")
+        saved_settings["payments"]["tax_rate"] = int(data.get("tax_rate", 16) or 16)
+        saved_settings["payments"]["default_payment_method"] = data.get("default_payment_method", "M-Pesa")
+        
+        # Shipping
+        shipping_zones = []
+        zones_data = data.get("shipping_zones", "[]")
+        if isinstance(zones_data, str):
+            try:
+                import json
+                zones_data = json.loads(zones_data)
+            except:
+                zones_data = []
+        saved_settings["shipping"]["zones"] = zones_data
+        saved_settings["shipping"]["free_shipping_threshold"] = data.get("free_shipping_threshold", "")
+        saved_settings["shipping"]["estimated_delivery"] = data.get("estimated_delivery", "")
+        
+        # Emails
+        saved_settings["emails"]["smtp_host"] = data.get("smtp_host", "")
+        saved_settings["emails"]["smtp_port"] = data.get("smtp_port", "")
+        saved_settings["emails"]["smtp_username"] = data.get("smtp_username", "")
+        saved_settings["emails"]["smtp_password"] = data.get("smtp_password", "")
+        saved_settings["emails"]["notify_new_order"] = data.get("notify_new_order") == "true"
+        saved_settings["emails"]["notify_payment_receipts"] = data.get("notify_payment_receipts") == "true"
+        saved_settings["emails"]["notify_chama_updates"] = data.get("notify_chama_updates") == "true"
+        saved_settings["emails"]["notify_newsletters"] = data.get("notify_newsletters") == "true"
+        
+        # Coupons
+        saved_settings["coupons"]["enabled"] = data.get("coupons_enabled") == "true"
+        saved_settings["coupons"]["default_discount_type"] = data.get("default_discount_type", "Percentage")
+        saved_settings["coupons"]["expiry_reminder"] = data.get("expiry_reminder", "3 Days Before")
+        
+        # Security
+        saved_settings["security"]["two_factor_enabled"] = data.get("two_factor_enabled") == "true"
+        saved_settings["security"]["session_timeout"] = int(data.get("session_timeout", 60) or 60)
+        
+        # Handle password change separately
+        new_password = data.get("new_password", "")
+        if new_password:
+            # Hash and update password logic here
+            pass
+        
+        # Advanced
+        saved_settings["advanced"]["maintenance_mode"] = data.get("maintenance_mode") == "true"
+        saved_settings["advanced"]["google_analytics_id"] = data.get("google_analytics_id", "")
+        saved_settings["advanced"]["custom_css"] = data.get("custom_css", "")
+        
+        # Save to file (in production, use database)
+        try:
+            with open(settings_file, "w") as f:
+                json.dump(saved_settings, f, indent=2)
+        except Exception as e:
+            pass
+        
+        return jsonify({"success": True, "message": "Settings saved successfully!"})
+    
+    # Load settings
+    current_settings = default_settings.copy()
+    try:
+        if os.path.exists(settings_file):
+            with open(settings_file, "r") as f:
+                loaded = json.load(f)
+                # Deep merge
+                for section in default_settings:
+                    if section in loaded:
+                        if isinstance(default_settings[section], dict):
+                            current_settings[section].update(loaded[section])
+                        else:
+                            current_settings[section] = loaded[section]
+    except Exception as e:
+        pass
+    
+    return render_template("admin/settings/index.html", settings=current_settings)
 
 import os
 from flask import (
@@ -1577,8 +2723,278 @@ def admin_profile_delete():
 
 
 @admin_bp.route("/analytics")
+@admin_required
 def analytics():
-    return render_template("admin/analytics/index.html")  
+    from sqlalchemy import func, extract
+    from datetime import datetime, timedelta
+    from calendar import month_name, monthrange
+    import json
+
+    period = request.args.get("period", "month")
+    now = datetime.utcnow()
+
+    # ===================== DATE RANGES =====================
+    if period == "today":
+        current_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        current_end = now
+        prev_start = current_start - timedelta(days=1)
+        prev_end = current_start
+        period_label = f"Today, {now.strftime('%d %b %Y')}"
+        prev_period_label = "Yesterday"
+    elif period == "year":
+        current_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        current_end = now
+        prev_start = current_start.replace(year=now.year - 1)
+        prev_end = current_start
+        period_label = str(now.year)
+        prev_period_label = str(now.year - 1)
+    else:
+        current_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        current_end = now
+        prev_start = (current_start - timedelta(days=1)).replace(day=1)
+        prev_end = current_start
+        period_label = f"{month_name[now.month]} {now.year}"
+        prev_period_label = f"{month_name[prev_start.month]} {prev_start.year}"
+
+    # ===================== HELPERS =====================
+    def calc_growth(curr, prev):
+        if not prev or prev == 0:
+            return None
+        return round(((curr - prev) / prev) * 100, 1)
+
+    def query_revenue(start, end):
+        return db.session.query(
+            func.coalesce(func.sum(Order.total_amount), 0)
+        ).filter(
+            Order.created_at >= start,
+            Order.created_at < end,
+            Order.status != 'Cancelled'
+        ).scalar() or 0
+
+    def query_order_count(start, end):
+        return db.session.query(func.count(Order.id)).filter(
+            Order.created_at >= start,
+            Order.created_at < end,
+        ).scalar() or 0
+
+    # ===================== TOP METRICS =====================
+    current_revenue = query_revenue(current_start, current_end)
+    prev_revenue = query_revenue(prev_start, prev_end)
+    revenue_growth = calc_growth(current_revenue, prev_revenue)
+
+    current_orders = query_order_count(current_start, current_end)
+    prev_orders = query_order_count(prev_start, prev_end)
+    orders_growth = calc_growth(current_orders, prev_orders)
+
+    # Products Sold (units)
+    products_sold = db.session.query(
+        func.coalesce(func.sum(OrderItem.quantity), 0)
+    ).join(Order, OrderItem.order_id == Order.id).filter(
+        Order.created_at >= current_start,
+        Order.created_at < current_end,
+        Order.status != 'Cancelled'
+    ).scalar() or 0
+
+    # Average Order Value
+    avg_order_value = round(current_revenue / current_orders) if current_orders > 0 else 0
+
+    # ===================== CHART DATA =====================
+    def build_chart_data(p_start, p_end, p_type, ref_now=None):
+        if p_type == "today":
+            data = db.session.query(
+                extract('hour', Order.created_at).label('key'),
+                func.coalesce(func.sum(Order.total_amount), 0).label('val')
+            ).filter(
+                Order.created_at >= p_start,
+                Order.created_at < p_end,
+                Order.status != 'Cancelled'
+            ).group_by(extract('hour', Order.created_at)).all()
+
+            n = (ref_now.hour + 1) if ref_now else 24
+            labels = [f"{h}:00" for h in range(n)]
+            values = [0.0] * n
+            for row in data:
+                idx = int(row.key)
+                if idx < n:
+                    values[idx] = float(row.val)
+
+        elif p_type == "year":
+            data = db.session.query(
+                extract('month', Order.created_at).label('key'),
+                func.coalesce(func.sum(Order.total_amount), 0).label('val')
+            ).filter(
+                Order.created_at >= p_start,
+                Order.created_at < p_end,
+                Order.status != 'Cancelled'
+            ).group_by(extract('month', Order.created_at)).all()
+
+            n = ref_now.month if ref_now else 12
+            labels = [month_name[m][:3] for m in range(1, n + 1)]
+            values = [0.0] * n
+            for row in data:
+                idx = int(row.key) - 1
+                if idx < n:
+                    values[idx] = float(row.val)
+
+        else:  # month
+            if ref_now:
+                days = ref_now.day
+            else:
+                days = monthrange(p_start.year, p_start.month)[1]
+
+            data = db.session.query(
+                extract('day', Order.created_at).label('key'),
+                func.coalesce(func.sum(Order.total_amount), 0).label('val')
+            ).filter(
+                Order.created_at >= p_start,
+                Order.created_at < p_end,
+                Order.status != 'Cancelled'
+            ).group_by(extract('day', Order.created_at)).all()
+
+            labels = [str(d) for d in range(1, days + 1)]
+            values = [0.0] * days
+            for row in data:
+                idx = int(row.key) - 1
+                if idx < days:
+                    values[idx] = float(row.val)
+
+        return labels, values
+
+    chart_labels, chart_values = build_chart_data(current_start, current_end, period, now)
+
+    if period == "today":
+        _, prev_chart_values = build_chart_data(prev_start, prev_end, "today", now - timedelta(days=1))
+    elif period == "year":
+        _, prev_chart_values = build_chart_data(prev_start, prev_end, "year", prev_start.replace(month=12, day=31))
+    else:
+        _, prev_chart_values = build_chart_data(prev_start, prev_end, "month", prev_end - timedelta(days=1))
+
+    while len(prev_chart_values) < len(chart_values):
+        prev_chart_values.append(0.0)
+
+    # ===================== PAYMENT METHODS =====================
+    payment_methods = []
+    payment_colors = ['#16A34A', '#5423E7', '#D4AF37', '#EC4899', '#F97316', '#06B6D4']
+    try:
+        pay_data = db.session.query(
+            Order.payment_method,
+            func.count(Order.id).label('cnt'),
+            func.coalesce(func.sum(Order.total_amount), 0).label('rev')
+        ).filter(
+            Order.created_at >= current_start,
+            Order.created_at < current_end,
+            Order.status != 'Cancelled',
+            Order.payment_method.isnot(None),
+            Order.payment_method != ''
+        ).group_by(Order.payment_method).order_by(func.count(Order.id).desc()).all()
+
+        total_pay = sum(p.cnt for p in pay_data) or 1
+        for i, p in enumerate(pay_data):
+            payment_methods.append({
+                "name": (p.payment_method or "Other").title(),
+                "count": p.cnt,
+                "revenue": float(p.rev),
+                "percentage": round((p.cnt / total_pay) * 100, 1),
+                "color": payment_colors[i % len(payment_colors)]
+            })
+    except Exception:
+        pass
+
+    # ===================== ORDER STATUS =====================
+    status_colors = {
+        'Completed': 'bg-green-500', 'Delivered': 'bg-green-500',
+        'Processing': 'bg-blue-500', 'Pending': 'bg-yellow-500',
+        'Shipped': 'bg-indigo-500', 'Cancelled': 'bg-red-400',
+        'Refunded': 'bg-red-500', 'Returned': 'bg-orange-400',
+    }
+    status_data = db.session.query(
+        Order.status, func.count(Order.id).label('cnt')
+    ).filter(
+        Order.created_at >= current_start,
+        Order.created_at < current_end,
+    ).group_by(Order.status).all()
+
+    total_status = sum(s.cnt for s in status_data) or 1
+    order_statuses = sorted([
+        {
+            "status": s.status,
+            "count": s.cnt,
+            "percentage": round((s.cnt / total_status) * 100, 1),
+            "color": status_colors.get(s.status, 'bg-slate-400')
+        }
+        for s in status_data
+    ], key=lambda x: x['count'], reverse=True)
+
+    # ===================== CUSTOMER STATS =====================
+    total_customers = User.query.filter_by(role='customer').count()
+    new_customers = db.session.query(func.count(User.id)).filter(
+        User.role == 'customer',
+        User.created_at >= current_start,
+        User.created_at < current_end,
+    ).scalar() or 0
+
+    returning_customers = db.session.query(
+        func.count(func.distinct(Order.user_id))
+    ).filter(
+        Order.user_id.isnot(None),
+        Order.status != 'Cancelled'
+    ).group_by(Order.user_id).having(func.count(Order.id) > 1).count()
+
+    # ===================== CHAMA =====================
+    active_chamas = 0
+    chama_members = 0
+    try:
+        active_chamas = Chama.query.filter_by(is_active=True).count()
+        chama_members = ChamaMember.query.count()
+    except Exception:
+        pass
+
+    # ===================== COUPON STATS =====================
+    coupon_usage = 0
+    total_discount = 0
+    try:
+        coupon_usage = db.session.query(func.count(Order.id)).filter(
+            Order.created_at >= current_start,
+            Order.created_at < current_end,
+            Order.coupon_id.isnot(None),
+            Order.status != 'Cancelled'
+        ).scalar() or 0
+
+        total_discount = db.session.query(
+            func.coalesce(func.sum(Order.discount_amount), 0)
+        ).filter(
+            Order.created_at >= current_start,
+            Order.created_at < current_end,
+            Order.coupon_id.isnot(None),
+            Order.status != 'Cancelled'
+        ).scalar() or 0
+    except Exception:
+        pass
+
+    return render_template(
+        "admin/analytics/index.html",
+        period=period,
+        period_label=period_label,
+        prev_period_label=prev_period_label,
+        current_revenue=current_revenue,
+        revenue_growth=revenue_growth,
+        current_orders=current_orders,
+        orders_growth=orders_growth,
+        products_sold=products_sold,
+        avg_order_value=avg_order_value,
+        chart_labels=json.dumps(chart_labels),
+        chart_values=json.dumps(chart_values),
+        prev_chart_values=json.dumps(prev_chart_values),
+        payment_methods=payment_methods,
+        order_statuses=order_statuses,
+        total_customers=total_customers,
+        new_customers=new_customers,
+        returning_customers=returning_customers,
+        active_chamas=active_chamas,
+        chama_members=chama_members,
+        coupon_usage=coupon_usage,
+        total_discount=total_discount,
+    ) 
 
 
 

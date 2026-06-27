@@ -1,0 +1,818 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Inventory Management{% endblock %}
+
+{% block page_title %}Inventory Management{% endblock %}
+
+{% block head %}
+<style>
+    .stock-bar {
+        transition: width 0.5s ease, background-color 0.3s ease;
+    }
+    .adjust-input {
+        -moz-appearance: textfield;
+    }
+    .adjust-input::-webkit-outer-spin-button,
+    .adjust-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .modal-backdrop {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-enter { animation: slideUp 0.25s ease-out; }
+    .inv-filter-btn.active {
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        color: #5423E7;
+        font-weight: 600;
+    }
+    .inv-filter-btn:not(.active):hover {
+        background: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .check-cell input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #5423E7;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <p class="text-xs text-slate-500 uppercase font-medium">Products</p>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800">{{ "{:,}".format(total_products) }}</h3>
+    </div>
+    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            </div>
+            <p class="text-xs text-slate-500 uppercase font-medium">Total Units</p>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800">{{ "{:,}".format(total_stock_units) }}</h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">Avg {{ avg_stock }} per product</p>
+    </div>
+    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-accent-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <p class="text-xs text-slate-500 uppercase font-medium">Stock Value</p>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800">KES {{ "{:,.0f}".format(total_stock_value) }}</h3>
+    </div>
+    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-amber-200">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <p class="text-xs text-amber-600 uppercase font-medium">Low Stock</p>
+        </div>
+        <h3 class="text-2xl font-bold text-amber-600">{{ low_stock_count }}</h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">1–5 units remaining</p>
+    </div>
+    <div class="stat-card bg-white rounded-xl p-5 shadow-sm border border-red-200">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+            </div>
+            <p class="text-xs text-red-500 uppercase font-medium">Out of Stock</p>
+        </div>
+        <h3 class="text-2xl font-bold text-red-600">{{ out_of_stock_count }}</h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">0 units</p>
+    </div>
+</div>
+
+<!-- Stock Distribution + Recent Changes -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <!-- Stock Distribution -->
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <h3 class="text-lg font-bold text-slate-800 mb-4">Stock Distribution</h3>
+        <div class="space-y-3">
+            {% for dist in stock_distribution %}
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-slate-600 font-medium">{{ dist.label }}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-400 text-xs">{{ dist.count }} products</span>
+                        <span class="font-bold text-slate-800 w-12 text-right">{{ dist.percentage }}%</span>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2.5">
+                    <div class="stock-bar h-2.5 rounded-full" style="width: {{ dist.width }}%; background-color: {{ dist.color }};"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Changes -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <h3 class="text-lg font-bold text-slate-800 mb-4">Recent Adjustments</h3>
+        {% if recent_changes %}
+        <div class="space-y-3">
+            {% for change in recent_changes %}
+            <div class="flex gap-3">
+                <div class="w-2 h-2 mt-1.5 rounded-full bg-blue-500 flex-shrink-0"></div>
+                <div class="min-w-0">
+                    <p class="text-sm text-slate-700 leading-snug">{{ change.description[:80] }}{% if change.description|length > 80 %}...{% endif %}</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">{{ change.time.strftime('%d %b, %H:%M') }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-400 text-center py-6">No recent adjustments.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Toolbar: Search, Filters, Actions -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-6">
+    <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+        <!-- Left: Search + Filters -->
+        <div class="flex flex-col sm:flex-row gap-3 flex-1 w-full lg:w-auto">
+            <!-- Search -->
+            <form method="GET" action="{{ url_for('admin.inventory') }}" class="relative flex-1 sm:max-w-xs">
+                <input type="text"
+                       name="search"
+                       value="{{ search }}"
+                       placeholder="Search products..."
+                       class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-shadow">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="hidden" name="category" value="{{ category_filter }}">
+                <input type="hidden" name="stock" value="{{ stock_filter }}">
+                <input type="hidden" name="sort" value="{{ sort_by }}">
+            </form>
+
+            <!-- Category Filter -->
+            <select id="category-select" class="text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary/50 outline-none bg-white min-w-[150px]"
+                    onchange="applyFilter('category', this.value)">
+                <option value="all" {{ 'selected' if category_filter == 'all' }}>All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {{ 'selected' if category_filter == cat.id|string }}">{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Stock Filter -->
+            <select id="stock-select" class="text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary/50 outline-none bg-white min-w-[130px]"
+                    onchange="applyFilter('stock', this.value)">
+                <option value="all" {{ 'selected' if stock_filter == 'all' }}>All Stock Levels</option>
+                <option value="in_stock" {{ 'selected' if stock_filter == 'in_stock' }}>In Stock (6+)</option>
+                <option value="low_stock" {{ 'selected' if stock_filter == 'low_stock' }}>Low Stock (1–5)</option>
+                <option value="out_of_stock" {{ 'selected' if stock_filter == 'out_of_stock' }}>Out of Stock</option>
+            </select>
+
+            <!-- Sort -->
+            <select id="sort-select" class="text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary/50 outline-none bg-white min-w-[150px]"
+                    onchange="applyFilter('sort', this.value)">
+                <option value="name_asc" {{ 'selected' if sort_by == 'name_asc' }}>Name A–Z</option>
+                <option value="name_desc" {{ 'selected' if sort_by == 'name_desc' }}>Name Z–A</option>
+                <option value="stock_asc" {{ 'selected' if sort_by == 'stock_asc' }}>Stock: Low → High</option>
+                <option value="stock_desc" {{ 'selected' if sort_by == 'stock_desc' }}>Stock: High → Low</option>
+                <option value="price_asc" {{ 'selected' if sort_by == 'price_asc' }}>Price: Low → High</option>
+                <option value="price_desc" {{ 'selected' if sort_by == 'price_desc' }}>Price: High → Low</option>
+                <option value="newest" {{ 'selected' if sort_by == 'newest' }}>Newest First</option>
+            </select>
+        </div>
+
+        <!-- Right: Actions -->
+        <div class="flex items-center gap-2 shrink-0">
+            <button id="bulk-update-btn" onclick="openBulkModal()" disabled
+                    class="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Bulk Update
+                <span id="bulk-count" class="hidden bg-primary text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+            </button>
+            <a href="{{ url_for('admin.add_product') }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Product
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Main Inventory Table -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mb-6">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left" id="inventory-table">
+            <thead class="bg-slate-50 border-b border-slate-100">
+                <tr>
+                    <th class="py-3 px-4 w-10">
+                        <input type="checkbox" id="select-all" class="check-cell" onchange="toggleSelectAll(this.checked)">
+                    </th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product</th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Price</th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock Level</th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Stock Value</th>
+                    <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100" id="inventory-body">
+                {% for p in products %}
+                <tr class="hover:bg-slate-50/50 transition-colors inventory-row" data-product-id="{{ p.id }}">
+                    <td class="py-3 px-4 check-cell">
+                        <input type="checkbox" class="product-check" value="{{ p.id }}" onchange="updateBulkCount()">
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-3">
+                            <img src="{{ p.image }}" alt="{{ p.name }}"
+                                 class="w-11 h-11 rounded-lg object-cover bg-slate-100 flex-shrink-0"
+                                 onerror="this.src='https://placehold.co/80x80/F3F4F6/A0A0A0?text=Product'">
+                            <div class="min-w-0">
+                                <a href="{{ url_for('admin.edit_product', product_id=p.id) }}" class="text-sm font-medium text-slate-800 hover:text-primary transition-colors truncate block max-w-[200px]">
+                                    {{ p.name }}
+                                </a>
+                                {% if p.sku %}
+                                <p class="text-[11px] text-slate-400 font-mono">{{ p.sku }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">{{ p.category }}</span>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <p class="text-sm font-semibold text-slate-800">KES {{ "{:,.0f}".format(p.selling_price) }}</p>
+                        {% if p.discount_price %}
+                        <p class="text-[11px] text-slate-400 line-through">KES {{ "{:,.0f}".format(p.price) }}</p>
+                        {% endif %}
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 min-w-[100px]">
+                                <div class="w-full bg-slate-100 rounded-full h-2 mb-1">
+                                    {% set max_stock = 50 %}
+                                    {% set stock_pct = (p.stock / max_stock * 100) | int %}
+                                    {% set stock_pct = [stock_pct, 100] | min %}
+                                    <div class="stock-bar h-2 rounded-full
+                                        {% if p.stock == 0 %}bg-red-500
+                                        {% elif p.stock <= 3 %}bg-red-400
+                                        {% elif p.stock <= 5 %}bg-amber-400
+                                        {% elif p.stock <= 20 %}bg-blue-400
+                                        {% else %}bg-green-500{% endif %}"
+                                         style="width: {{ stock_pct }}%"></div>
+                                </div>
+                            </div>
+                            <span class="text-sm font-bold min-w-[36px] text-right
+                                {% if p.stock == 0 %}text-red-600
+                                {% elif p.stock <= 5 %}text-amber-600
+                                {% else %}text-slate-800{% endif %}">
+                                {{ p.stock }}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-right text-sm text-slate-600">
+                        KES {{ "{:,.0f}".format(p.stock_value) }}
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="openAdjustModal({{ p.id }}, '{{ p.name|e }}', {{ p.stock }})"
+                                    class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                                    title="Adjust Stock">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                            </button>
+                            <a href="{{ url_for('admin.edit_product', product_id=p.id) }}"
+                               class="p-2 text-slate-400 hover:text-accent-dark hover:bg-accent/5 rounded-lg transition-colors"
+                               title="Edit Product">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="py-16 text-center">
+                        <svg class="w-12 h-12 text-slate-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        <p class="text-sm text-slate-500 font-medium">No products found</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            {% if search %}No results for "{{ search }}"{% else %}Add products to see them here.{% endif %}
+                        </p>
+                        {% if search %}
+                        <a href="{{ url_for('admin.inventory') }}" class="inline-flex items-center gap-1.5 mt-3 text-sm text-primary hover:underline">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Clear search
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+        <p class="text-xs text-slate-500">
+            Showing {{ (pagination.page - 1) * pagination.per_page + 1 }}–{{ [pagination.page * pagination.per_page, pagination.total] | min }} of {{ pagination.total }}
+        </p>
+        <div class="flex gap-1">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('admin.inventory', page=pagination.prev_num, search=search, category=category_filter, stock=stock_filter, sort=sort_by) }}"
+               class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:border-primary hover:text-primary transition-colors">
+                ← Prev
+            </a>
+            {% endif %}
+            {% for p in pagination.iter_pages() %}
+                {% if p %}
+                    {% if p == pagination.page %}
+                    <span class="px-3 py-1.5 text-xs font-medium text-white bg-primary rounded-lg">{{ p }}</span>
+                    {% else %}
+                    <a href="{{ url_for('admin.inventory', page=p, search=search, category=category_filter, stock=stock_filter, sort=sort_by) }}"
+                       class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:border-primary hover:text-primary transition-colors">{{ p }}</a>
+                    {% endif %}
+                {% else %}
+                <span class="px-2 text-slate-400 text-xs">…</span>
+                {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+            <a href="{{ url_for('admin.inventory', page=pagination.next_num, search=search, category=category_filter, stock=stock_filter, sort=sort_by) }}"
+               class="px-3 py-1.5 text-xs font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors">
+                Next →
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+let selectedIds = new Set();
+
+// ============================================================
+//  FILTER NAVIGATION (no page reload for filters)
+// ============================================================
+function applyFilter(key, value) {
+    const params = new URLSearchParams(window.location.search);
+    params.set(key, value);
+    params.delete('page');
+    window.location.href = '{{ url_for("admin.inventory") }}?' + params.toString();
+}
+
+// ============================================================
+//  SELECT ALL / BULK COUNT
+// ============================================================
+function toggleSelectAll(checked) {
+    document.querySelectorAll('.product-check').forEach(function (cb) {
+        cb.checked = checked;
+        if (checked) {
+            selectedIds.add(cb.value);
+        } else {
+            selectedIds.delete(cb.value);
+        }
+    });
+    updateBulkCount();
+}
+
+function updateBulkCount() {
+    selectedIds.clear();
+    document.querySelectorAll('.product-check:checked').forEach(function (cb) {
+        selectedIds.add(cb.value);
+    });
+
+    const btn = document.getElementById('bulk-update-btn');
+    const badge = document.getElementById('bulk-count');
+    const selectAll = document.getElementById('select-all');
+
+    if (selectedIds.size > 0) {
+        btn.disabled = false;
+        badge.textContent = selectedIds.size;
+        badge.classList.remove('hidden');
+    } else {
+        btn.disabled = true;
+        badge.classList.add('hidden');
+    }
+
+    // Sync select-all checkbox
+    const total = document.querySelectorAll('.product-check').length;
+    const checked = document.querySelectorAll('.product-check:checked').length;
+    if (checked === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+    } else if (checked === total) {
+        selectAll.checked = true;
+        selectAll.indeterminate = false;
+    } else {
+        selectAll.checked = false;
+        selectAll.indeterminate = true;
+    }
+}
+
+// ============================================================
+//  STOCK ADJUST MODAL
+// ============================================================
+function openAdjustModal(productId, productName, currentStock) {
+    document.getElementById('adj-product-id').value = productId;
+    document.getElementById('adj-product-name').textContent = productName;
+    document.getElementById('adj-current-stock').textContent = currentStock;
+    document.getElementById('adj-amount').value = '';
+    document.getElementById('adj-reason').value = '';
+    document.getElementById('adj-new-preview').textContent = currentStock;
+    document.getElementById('adj-new-preview').className = 'text-2xl font-bold text-slate-800';
+
+    const modal = document.getElementById('adjust-modal');
+    modal.classList.remove('hidden');
+    setTimeout(function () { document.getElementById('adj-amount').focus(); }, 100);
+
+    // Reset quick buttons
+    document.querySelectorAll('.quick-adj-btn').forEach(function (b) {
+        b.classList.remove('bg-primary/10', 'text-primary', 'ring-1', 'ring-primary/20');
+        b.classList.add('bg-slate-100', 'text-slate-600');
+    });
+}
+
+function closeAdjustModal() {
+    document.getElementById('adjust-modal').classList.add('hidden');
+}
+
+// Live preview of new stock
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('adj-amount');
+    if (input) {
+        input.addEventListener('input', function () {
+            const current = parseInt(document.getElementById('adj-current-stock').textContent);
+            const val = parseInt(this.value) || 0;
+            const newStock = current + val;
+            const preview = document.getElementById('adj-new-preview');
+
+            preview.textContent = isNaN(newStock) ? '—' : newStock;
+            if (newStock < 0) {
+                preview.className = 'text-2xl font-bold text-red-500';
+            } else if (newStock === 0) {
+                preview.className = 'text-2xl font-bold text-red-600';
+            } else if (newStock <= 5) {
+                preview.className = 'text-2xl font-bold text-amber-600';
+            } else {
+                preview.className = 'text-2xl font-bold text-green-600';
+            }
+
+            // Highlight active quick button
+            const quickVals = [-10, -5, -1, 1, 5, 10, 25, 50];
+            document.querySelectorAll('.quick-adj-btn').forEach(function (btn) {
+                const bv = parseInt(btn.dataset.val);
+                if (bv === val && val !== 0) {
+                    btn.classList.add('bg-primary/10', 'text-primary', 'ring-1', 'ring-primary/20');
+                    btn.classList.remove('bg-slate-100', 'text-slate-600');
+                } else {
+                    btn.classList.remove('bg-primary/10', 'text-primary', 'ring-1', 'ring-primary/20');
+                    btn.classList.add('bg-slate-100', 'text-slate-600');
+                }
+            });
+        });
+    }
+});
+
+function setQuickAdjust(val) {
+    document.getElementById('adj-amount').value = val;
+    document.getElementById('adj-amount').dispatchEvent(new Event('input'));
+}
+
+async function submitAdjustment() {
+    const productId = document.getElementById('adj-product-id').value;
+    const amount = parseInt(document.getElementById('adj-amount').value);
+    const reason = document.getElementById('adj-reason').value.trim();
+
+    if (!amount || amount === 0) {
+        showToast('Enter a quantity to adjust.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('adj-submit-btn');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Saving...';
+
+    try {
+        const res = await fetch('{{ url_for("admin.inventory_adjust") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: productId, adjustment: amount, reason: reason }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast(data.message, 'success');
+            closeAdjustModal();
+
+            // Update the row in the table
+            const row = document.querySelector('tr[data-product-id="' + productId + '"]');
+            if (row) {
+                const stockCell = row.querySelector('.text-sm.font-bold.min-w-\\[36px\\]');
+                if (stockCell) {
+                    stockCell.textContent = data.new_stock;
+                    stockCell.className = 'text-sm font-bold min-w-[36px] text-right ' +
+                        (data.new_stock === 0 ? 'text-red-600' :
+                         data.new_stock <= 5 ? 'text-amber-600' : 'text-slate-800');
+                }
+
+                // Update bar
+                const bar = row.querySelector('.stock-bar');
+                if (bar) {
+                    const pct = Math.min((data.new_stock / 50) * 100, 100);
+                    bar.style.width = pct + '%';
+                    bar.className = 'stock-bar h-2 rounded-full ' +
+                        (data.new_stock === 0 ? 'bg-red-500' :
+                         data.new_stock <= 3 ? 'bg-red-400' :
+                         data.new_stock <= 5 ? 'bg-amber-400' :
+                         data.new_stock <= 20 ? 'bg-blue-400' : 'bg-green-500');
+                }
+
+                // Update stock value
+                const priceText = row.querySelector('td:nth-child(4) p.text-sm.font-semibold');
+                const valueCell = row.querySelector('td:nth-child(6)');
+                if (priceText && valueCell) {
+                    const price = parseFloat(priceText.textContent.replace(/[^0-9.]/g, ''));
+                    if (!isNaN(price)) {
+                        valueCell.textContent = 'KES ' + (price * data.new_stock).toLocaleString('en-US', { maximumFractionDigits: 0 });
+                    }
+                }
+            }
+
+            // Reload after 1s to refresh all counts
+            setTimeout(function () { location.reload(); }, 1000);
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (err) {
+        showToast('Failed to save adjustment.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
+}
+
+// ============================================================
+//  BULK UPDATE MODAL
+// ============================================================
+function openBulkModal() {
+    if (selectedIds.size === 0) return;
+    document.getElementById('bulk-count-label').textContent = selectedIds.size + ' product' + (selectedIds.size !== 1 ? 's' : '') + ' selected';
+    document.getElementById('bulk-action').value = 'set';
+    document.getElementById('bulk-value').value = '';
+    document.getElementById('bulk-modal').classList.remove('hidden');
+    setTimeout(function () { document.getElementById('bulk-value').focus(); }, 100);
+}
+
+function closeBulkModal() {
+    document.getElementById('bulk-modal').classList.add('hidden');
+}
+
+function onBulkActionChange() {
+    const action = document.getElementById('bulk-action').value;
+    const valInput = document.getElementById('bulk-value');
+    const label = document.getElementById('bulk-value-label');
+
+    if (action === 'set') {
+        valInput.type = 'number';
+        valInput.placeholder = 'e.g. 50';
+        valInput.min = '0';
+        label.textContent = 'Set stock to:';
+    } else {
+        valInput.type = 'number';
+        valInput.placeholder = 'e.g. 10';
+        valInput.min = '';
+        label.textContent = action === 'add' ? 'Add this many:' : 'Subtract this many:';
+    }
+}
+
+async function submitBulkUpdate() {
+    const action = document.getElementById('bulk-action').value;
+    const value = parseInt(document.getElementById('bulk-value').value);
+
+    if (isNaN(value) || value < 0) {
+        showToast('Enter a valid number.', 'error');
+        return;
+    }
+
+    // Build updates array
+    const updates = [];
+    document.querySelectorAll('.product-check:checked').forEach(function (cb) {
+        const row = cb.closest('tr');
+        const currentStock = parseInt(row.querySelector('.text-sm.font-bold.min-w-\\[36px\\]')?.textContent) || 0;
+        let newStock;
+
+        if (action === 'set') {
+            newStock = value;
+        } else if (action === 'add') {
+            newStock = currentStock + value;
+        } else {
+            newStock = currentStock - value;
+        }
+
+        if (newStock >= 0) {
+            updates.push({ product_id: cb.value, stock: newStock });
+        }
+    });
+
+    if (updates.length === 0) {
+        showToast('No valid updates to make.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('bulk-submit-btn');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Updating...';
+
+    try {
+        const res = await fetch('{{ url_for("admin.inventory_bulk_update") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ updates: updates }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast(data.message, 'success');
+            if (data.errors && data.errors.length > 0) {
+                showToast(data.errors.join(', '), 'error');
+            }
+            closeBulkModal();
+            setTimeout(function () { location.reload(); }, 800);
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (err) {
+        showToast('Bulk update failed.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    if (!container) {
+        const c = document.createElement('div');
+        c.id = 'toast-container';
+        c.className = 'fixed top-4 right-4 z-[100] space-y-2 pointer-events-none';
+        document.body.appendChild(c);
+    }
+    const ct = document.getElementById('toast-container');
+
+    const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-slate-800' };
+    const icons = {
+        success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+        error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+        info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+    };
+
+    const toast = document.createElement('div');
+    toast.className = 'pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-xl text-white text-sm font-medium shadow-2xl ' + (colors[type] || colors.info);
+    toast.style.animation = 'slideUp 0.3s ease-out';
+    toast.innerHTML = '<svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + (icons[type] || icons.info) + '</svg><span>' + message + '</span>';
+    ct.appendChild(toast);
+
+    setTimeout(function () {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-8px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(function () { toast.remove(); }, 300);
+    }, 4000);
+}
+
+// ============================================================
+//  KEYBOARD SHORTCUTS & MODALS
+// ============================================================
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        closeAdjustModal();
+        closeBulkModal();
+    }
+});
+
+// Close modals on backdrop click
+document.addEventListener('click', function (e) {
+    if (e.target.id === 'adjust-modal') closeAdjustModal();
+    if (e.target.id === 'bulk-modal') closeBulkModal();
+});
+
+// Sidebar active state
+document.addEventListener('DOMContentLoaded', function () {
+    const activeLink = document.querySelector('.nav-link.active');
+    if (activeLink) activeLink.classList.remove('active');
+    document.querySelectorAll('aside nav a').forEach(function (link) {
+        const span = link.querySelector('span');
+        if (span && span.textContent.trim() === 'Inventory') {
+            link.classList.add('active');
+        }
+    });
+});
+</script>
+
+<!-- Adjust Stock Modal -->
+<div id="adjust-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4">
+    <div class="modal-backdrop absolute inset-0" onclick="closeAdjustModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden modal-enter">
+        <div class="p-6 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-800">Adjust Stock</h3>
+            <p class="text-sm text-slate-500 mt-0.5">
+                <span id="adj-product-name" class="font-medium text-slate-700">Product</span>
+                — Current stock: <span id="adj-current-stock" class="font-bold">0</span>
+            </p>
+        </div>
+        <div class="p-6 space-y-5">
+            <!-- Quick adjust buttons -->
+            <div>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Quick Adjust</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="setQuickAdjust(-10)" data-val="-10" class="quick-adj-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 transition-all hover:shadow-sm">-10</button>
+                    <button onclick="setQuickAdjust(-5)" data-val="-5" class="quick-adj-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 transition-all hover:shadow-sm">-5</button>
+                    <button onclick="setQuickAdjust(-1)" data-val="-1" class="quick-adj-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 transition-all hover:shadow-sm">-1</button>
+                    <button onclick="setQuickAdjust(1)" data-val="1" class="quick-adj-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 transition-all hover:shadow-sm">+1</button>
+                    <button onclick="setQuickAdjust(5)" data-val="5" class="quick-adj-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 transition-all hover:shadow-sm">+5</button>
+                    <button onclick="setQuickAdjust(10)" data-val="10" class="quick-adj-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 transition-all hover:shadow-sm">+10</button>
+                    <button onclick="setQuickAdjust(25)" data-val="25" class="quick-adj-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 transition-all hover:shadow-sm">+25</button>
+                    <button onclick="setQuickAdjust(50)" data-val="50" class="quick-adj-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 transition-all hover:shadow-sm">+50</button>
+                </div>
+            </div>
+
+            <!-- Manual input -->
+            <div>
+                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Adjustment Amount</label>
+                <input type="number" id="adj-amount" class="adjust-input w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-lg font-bold text-center" placeholder="Use negative to reduce">
+                <p class="text-[11px] text-slate-400 mt-1 text-center">Positive to add, negative to subtract</p>
+            </div>
+
+            <!-- Reason -->
+            <div>
+                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Reason (optional)</label>
+                <input type="text" id="adj-reason" placeholder="e.g. Stock take, new shipment, damage..." class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm">
+            </div>
+
+            <!-- Preview -->
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">New Stock</p>
+                <p id="adj-new-preview" class="text-2xl font-bold text-slate-800">—</p>
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+            <button onclick="closeAdjustModal()" class="px-4 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+            <button onclick="submitAdjustment()" id="adj-submit-btn" class="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors shadow-sm">Save Adjustment</button>
+        </div>
+        <input type="hidden" id="adj-product-id" value="">
+    </div>
+</div>
+
+<!-- Bulk Update Modal -->
+<div id="bulk-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4">
+    <div class="modal-backdrop absolute inset-0" onclick="closeBulkModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden modal-enter">
+        <div class="p-6 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-800">Bulk Stock Update</h3>
+            <p class="text-sm text-slate-500 mt-0.5"><span id="bulk-count-label">0 products</span> will be updated.</p>
+        </div>
+        <div class="p-6 space-y-5">
+            <div>
+                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Action</label>
+                <select id="bulk-action" onchange="onBulkActionChange()" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none text-sm bg-white">
+                    <option value="set">Set stock to a specific value</option>
+                    <option value="add">Add a fixed quantity</option>
+                    <option value="subtract">Subtract a fixed quantity</option>
+                </select>
+            </div>
+            <div>
+                <label id="bulk-value-label" class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Set stock to:</label>
+                <input type="number" id="bulk-value" class="adjust-input w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none text-lg font-bold text-center" placeholder="e.g. 50" min="0">
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+                <svg class="w-4 h-4 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <p class="text-xs text-amber-700">This will immediately update stock levels for all selected products. This action cannot be undone.</p>
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+            <button onclick="closeBulkModal()" class="px-4 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+            <button onclick="submitBulkUpdate()" id="bulk-submit-btn" class="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors shadow-sm">Update Stock</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
