@@ -260,7 +260,7 @@ def admin_login():
         return redirect(url_for("admin.admin_dashboard"))
 
     if request.method == "POST":
-        email = request.form["email"].strip().lower()
+        email = request.form["email"]
         password = request.form["password"]
 
         admin = User.query.filter_by(
@@ -268,21 +268,10 @@ def admin_login():
             role="admin"
         ).first()
 
-        print("=" * 60)
-        print("Email entered:", email)
-        print("Admin found:", admin)
-
-        if admin:
-            print("Role:", admin.role)
-            print("Hash:", admin.password_hash)
-            print("Password check:", check_password_hash(admin.password_hash, password))
-
         if admin and check_password_hash(admin.password_hash, password):
-            print("LOGIN SUCCESS")
             login_user(admin)
             return redirect(url_for("admin.admin_dashboard"))
 
-        print("LOGIN FAILED")
         flash("Invalid admin credentials", "danger")
 
     return render_template("admin/login.html")    
