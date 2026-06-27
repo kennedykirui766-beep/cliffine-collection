@@ -260,30 +260,32 @@ def admin_login():
         return redirect(url_for("admin.admin_dashboard"))
 
     if request.method == "POST":
-    email = request.form["email"].strip().lower()
-    password = request.form["password"]
+        email = request.form["email"].strip().lower()
+        password = request.form["password"]
 
-    admin = User.query.filter_by(
-        email=email,
-        role="admin"
-    ).first()
+        admin = User.query.filter_by(
+            email=email,
+            role="admin"
+        ).first()
 
-    print("=" * 60)
-    print("Email entered:", email)
-    print("Admin found:", admin)
+        print("=" * 60)
+        print("Email entered:", email)
+        print("Admin found:", admin)
 
-    if admin:
-        print("Role:", admin.role)
-        print("Hash:", admin.password_hash)
-        print("Password check:", check_password_hash(admin.password_hash, password))
+        if admin:
+            print("Role:", admin.role)
+            print("Hash:", admin.password_hash)
+            print("Password check:", check_password_hash(admin.password_hash, password))
 
-    if admin and check_password_hash(admin.password_hash, password):
-        print("LOGIN SUCCESS")
-        login_user(admin)
-        return redirect(url_for("admin.admin_dashboard"))
+        if admin and check_password_hash(admin.password_hash, password):
+            print("LOGIN SUCCESS")
+            login_user(admin)
+            return redirect(url_for("admin.admin_dashboard"))
 
-    print("LOGIN FAILED")
-    flash("Invalid admin credentials", "danger")    
+        print("LOGIN FAILED")
+        flash("Invalid admin credentials", "danger")
+
+    return render_template("admin/login.html")    
 
 @admin_bp.route("/logout")
 @login_required
