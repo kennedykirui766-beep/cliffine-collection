@@ -98,8 +98,8 @@
         <tr>
             <td>#{{ o.id }}</td>
             <td>{{ o.created_at.strftime('%d %b %Y') if o.created_at else '—' }}</td>
-            <td>{{ getattr(o, 'customer_name', '') or (o.user.full_name if o.user else '—') }}</td>
-            <td>{{ (getattr(o, 'payment_method', '') or '—')|title }}</td>
+            <td>{{ o.full_name or (o.user.full_name if o.user else '—') }}</td>
+            <td>{{ (o.payments[0].payment_method if o.payments else '—')|title }}</td>
             <td class="text-right {% if o.status == 'Refunded' %}text-red{% endif %}">
                 {% if o.status == 'Refunded' %}- {% endif %}KES {{ "{:,.0f}".format(o.total_amount or 0) }}
             </td>
