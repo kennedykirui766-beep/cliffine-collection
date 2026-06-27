@@ -1,5 +1,8 @@
 from datetime import datetime
 from itertools import product
+import os
+
+from flask import current_app
 from app import db
 from flask_login import UserMixin
 
@@ -317,27 +320,6 @@ class Review(db.Model):
     comment = db.Column(db.Text)
 
     is_approved = db.Column(db.Boolean, default=False)
-
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-
-# ===============================
-# CONTACT MESSAGES
-# ===============================
-class Message(db.Model):
-    __tablename__ = "messages"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    name = db.Column(db.String(150))
-    email = db.Column(db.String(150))
-    phone = db.Column(db.String(50))
-
-    subject = db.Column(db.String(200))
-
-    message = db.Column(db.Text)
-
-    is_read = db.Column(db.Boolean, default=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -859,4 +841,43 @@ class Media(db.Model):
         return self.file_url
 
     def __repr__(self):
-        return f"<Media {self.filename}>"        
+        return f"<Media {self.filename}>"
+    
+
+class Message(db.Model):
+    __tablename__ = "messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(20))
+    subject = db.Column(db.String(200), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default="new")
+    order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=True)
+    is_guest = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    customer = db.relationship("User", backref="messages", lazy="joined")
+    order = db.relationship("Order", backref="messages", lazy="joined")
+    replies = db.relationship(
+        "MessageReply",
+        backref="message",
+        lazy="dynamic",
+        order_by="MessageReply.created_at.asc",
+        cascade="all, delete-orphan",
+    )
+
+
+class MessageReply(db.Model):
+    __tablename__ = "message_replies"
+
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey("messages.id"), nullable=False)
+    sender_type = db.Column(db.String(10), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    message = db.relationship("Message", backref="replies_list")    

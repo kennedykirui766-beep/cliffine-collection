@@ -1240,9 +1240,242 @@ def chama_members():
     )
 
 
+import re
+from datetime import datetime
+
+
+def _time_ago(dt):
+    if not dt:
+        return ""
+    now = datetime.utcnow()
+    diff = now - dt
+    s = int(diff.total_seconds())
+    if s < 60:
+        return "Just now"
+    elif s < 3600:
+        return f"{s // 60} min ago"
+    elif s < 86400:
+        return f"{s // 3600}h ago"
+    elif s < 604800:
+        return f"{s // 86400}d ago"
+    return dt.strftime("%d %b %Y")
+
+
 @admin_bp.route("/messages")
+@login_required
 def messages():
-    return render_template("admin/messages/index.html")
+    status_filter = request.args.get("status", "all")
+    search = request.args.get("q", "").strip()
+
+    if status_filter == "archived":
+        query = Message.query.filter(Message.status == "archived")
+    else:
+        query = Message.query.filter(Message.status != "archived")
+        if status_filter != "all":
+            query = query.filter(Message.status == status_filter)
+
+    if search:
+        term = f"%{search}%"
+        query = query.filter(
+            db.or_(
+                Message.name.ilike(term),
+                Message.email.ilike(term),
+                Message.phone.ilike(term),
+                Message.subject.ilike(term),
+                Message.body.ilike(term),
+            )
+        )
+
+    msgs = query.order_by(Message.created_at.desc()).all()
+
+    total_count = Message.query.filter(Message.status != "archived").count()
+    new_count = Message.query.filter(Message.status == "new").count()
+    pending_count = Message.query.filter(Message.status == "pending").count()
+    resolved_count = Message.query.filter(Message.status == "resolved").count()
+
+    message_list = []
+    for m in msgs:
+        message_list.append(
+            {
+                "id": m.id,
+                "name": m.name,
+                "email": m.email,
+                "subject": m.subject,
+                "preview": m.body[:120] + ("..." if len(m.body) > 120 else ""),
+                "status": m.status,
+                "time_ago": _time_ago(m.created_at),
+                "created_at": m.created_at.strftime("%d %b %Y, %H:%M")
+                if m.created_at
+                else "",
+                "initial": m.name[0].upper() if m.name else "?",
+                "order_id": m.order_id,
+                "reply_count": m.replies.filter_by(sender_type="admin").count(),
+            }
+        )
+
+    return render_template(
+        "admin/messages/index.html",
+        messages=message_list,
+        status_filter=status_filter,
+        search=search,
+        total_count=total_count,
+        new_count=new_count,
+        pending_count=pending_count,
+        resolved_count=resolved_count,
+    )
+
+
+@admin_bp.route("/messages/<int:message_id>")
+@login_required
+def get_message(message_id):
+    msg = Message.query.get_or_404(message_id)
+
+    if msg.status == "new":
+        msg.status = "read"
+        db.session.commit()
+
+    replies = []
+    for r in msg.replies.all():
+        replies.append(
+            {
+                "id": r.id,
+                "sender_type": r.sender_type,
+                "body": r.body,
+                "time_ago": _time_ago(r.created_at),
+                "created_at": r.created_at.strftime("%d %b %Y, %H:%M")
+                if r.created_at
+                else "",
+            }
+        )
+
+    return jsonify(
+        {
+            "id": msg.id,
+            "name": msg.name,
+            "email": msg.email,
+            "phone": msg.phone or "",
+            "subject": msg.subject,
+            "body": msg.body,
+            "status": msg.status,
+            "created_at": msg.created_at.strftime("%d %b %Y, %H:%M")
+            if msg.created_at
+            else "",
+            "is_guest": msg.is_guest,
+            "customer_id": msg.customer_id,
+            "order_id": msg.order_id,
+            "replies": replies,
+        }
+    )
+
+
+@admin_bp.route("/messages/<int:message_id>/reply", methods=["POST"])
+@login_required
+def reply_message(message_id):
+    msg = Message.query.get_or_404(message_id)
+    data = request.get_json()
+    body = data.get("body", "").strip()
+
+    if not body:
+        return jsonify({"error": "Reply cannot be empty"}), 400
+
+    reply = MessageReply(message_id=msg.id, sender_type="admin", body=body)
+    db.session.add(reply)
+    msg.status = "replied"
+    msg.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    # TODO: send email to msg.email here if SMTP is configured
+
+    return jsonify(
+        {
+            "success": True,
+            "reply": {
+                "id": reply.id,
+                "sender_type": "admin",
+                "body": reply.body,
+                "time_ago": "Just now",
+                "created_at": reply.created_at.strftime("%d %b %Y, %H:%M"),
+            },
+            "new_status": "replied",
+        }
+    )
+
+
+@admin_bp.route("/messages/<int:message_id>/status", methods=["POST"])
+@login_required
+def update_message_status(message_id):
+    msg = Message.query.get_or_404(message_id)
+    data = request.get_json()
+    new_status = data.get("status")
+
+    valid = ["new", "read", "pending", "replied", "resolved", "archived"]
+    if new_status not in valid:
+        return jsonify({"error": "Invalid status"}), 400
+
+    msg.status = new_status
+    msg.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({"success": True, "new_status": new_status})
+
+
+@admin_bp.route("/messages/<int:message_id>/archive", methods=["POST"])
+@login_required
+def archive_message(message_id):
+    msg = Message.query.get_or_404(message_id)
+    msg.status = "archived"
+    msg.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+@admin_bp.route("/messages/<int:message_id>/delete", methods=["POST"])
+@login_required
+def delete_message(message_id):
+    msg = Message.query.get_or_404(message_id)
+    MessageReply.query.filter_by(message_id=msg.id).delete()
+    db.session.delete(msg)
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+@admin_bp.route("/messages/bulk", methods=["POST"])
+@login_required
+def bulk_messages_action():
+    data = request.get_json()
+    ids = data.get("ids", [])
+    action = data.get("action")
+
+    if not ids or not action:
+        return jsonify({"error": "Missing data"}), 400
+
+    msgs = Message.query.filter(Message.id.in_(ids)).all()
+
+    if action == "mark_read":
+        for m in msgs:
+            if m.status == "new":
+                m.status = "read"
+                m.updated_at = datetime.utcnow()
+    elif action == "archive":
+        for m in msgs:
+            m.status = "archived"
+            m.updated_at = datetime.utcnow()
+    elif action == "delete":
+        for m in msgs:
+            MessageReply.query.filter_by(message_id=m.id).delete()
+            db.session.delete(m)
+    elif action == "resolve":
+        for m in msgs:
+            m.status = "resolved"
+            m.updated_at = datetime.utcnow()
+    elif action == "pending":
+        for m in msgs:
+            m.status = "pending"
+            m.updated_at = datetime.utcnow()
+    else:
+        return jsonify({"error": "Invalid action"}), 400
+
+    db.session.commit()
+    return jsonify({"success": True, "affected": len(msgs), "action": action})
 
 
 @admin_bp.route("/inventory")
