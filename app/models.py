@@ -853,7 +853,6 @@ class MessageReply(db.Model):
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    message = db.relationship("Message", backref="replies_list")
 
 
 class Message(db.Model):
