@@ -1288,7 +1288,7 @@ def _allowed_file(filename):
 @admin_bp.route("/profile", methods=["GET", "POST"])
 @admin_required
 def admin_profile():
-    admin = admin.query.get(current_user.id)
+    admin = User.query.get(current_user.id)
     if not admin:
         flash("Admin account not found.", "error")
         return redirect(url_for("admin.admin_dashboard"))
@@ -1338,7 +1338,7 @@ def admin_profile():
 @admin_bp.route("/profile/update", methods=["POST"])
 @admin_required
 def admin_profile_update():
-    admin = admin.query.get(current_user.id)
+    admin = User.query.get(current_user.id)
     if not admin:
         return jsonify(success=False, message="Admin not found."), 404
 
@@ -1397,7 +1397,7 @@ def admin_profile_update():
 @admin_bp.route("/profile/password", methods=["POST"])
 @admin_required
 def admin_profile_password():
-    admin = admin.query.get(current_user.id)
+    admin = User.query.get(current_user.id)
     if not admin:
         return jsonify(success=False, message="Admin not found."), 404
 
@@ -1429,7 +1429,7 @@ def admin_profile_password():
 @admin_bp.route("/profile/photo", methods=["POST"])
 @admin_required
 def admin_profile_photo():
-    admin = admin.query.get(current_user.id)
+    admin = User.query.get(current_user.id)
     if not admin:
         return jsonify(success=False, message="Admin not found."), 404
 
@@ -1482,7 +1482,7 @@ def admin_profile_photo():
 @admin_bp.route("/profile/preferences", methods=["POST"])
 @admin_required
 def admin_profile_preferences():
-    admin = admin.query.get(current_user.id)
+    admin = User.query.get(current_user.id)
     if not admin:
         return jsonify(success=False, message="Admin not found."), 404
 
@@ -1505,7 +1505,7 @@ def admin_profile_preferences():
 @admin_bp.route("/profile/delete", methods=["POST"])
 @admin_required
 def admin_profile_delete():
-    admin = admin.query.get(current_user.id)
+    admin = User.query.get(current_user.id)
     if not admin:
         return jsonify(success=False, message="Admin not found."), 404
 
