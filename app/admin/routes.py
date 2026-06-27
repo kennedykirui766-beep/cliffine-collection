@@ -4,7 +4,7 @@ from flask import Blueprint, render_template
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import func
 from app import db
-from app.models import OrderItem, User, Product, Order, Coupon, CouponUsage, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
+from app.models import AdminActivity, OrderItem, User, Product, Order, Coupon, CouponUsage, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
 from flask import render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import os
@@ -1271,9 +1271,282 @@ def media():
 def settings():
     return render_template("admin/settings/index.html")
 
-@admin_bp.route("/profile")
+import os
+from flask import (
+    render_template, request, redirect, url_for,
+    flash, jsonify, current_app
+)
+from werkzeug.utils import secure_filename
+from app.utils.activity import log_activity, get_activity_colors, get_action_labels
+
+
+def _allowed_file(filename):
+    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@admin_bp.route("/profile", methods=["GET", "POST"])
+@admin_required
 def admin_profile():
-    return render_template("admin/profile.html")
+    admin = admin.query.get(current_user.id)
+    if not admin:
+        flash("Admin account not found.", "error")
+        return redirect(url_for("admin.admin_dashboard"))
+
+    # Pre-fill username from email if empty (migration fallback)
+    if not admin.username:
+        admin.username = admin.email.split("@")[0]
+        db.session.commit()
+
+    # Fetch recent activity
+    recent_activity = (
+        AdminActivity.query
+        .filter_by(admin_id=admin.id)
+        .order_by(AdminActivity.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    activity_data = []
+    for act in recent_activity:
+        activity_data.append({
+            "color": get_activity_colors(act.action),
+            "label": get_action_labels(act.action),
+            "description": act.description,
+            "ip": act.ip_address,
+            "time": act.created_at,
+        })
+
+    prefs = admin.get_preferences()
+
+    # Count other admins for danger zone
+    other_admins_count = admin.query.filter(
+        admin.id != admin.id,
+        admin.role == "admin",
+        admin.is_active == True,
+    ).count()
+
+    return render_template(
+        "admin/profile.html",
+        admin=admin,
+        prefs=prefs,
+        activity_data=activity_data,
+        other_admins_count=other_admins_count,
+    )
+
+
+@admin_bp.route("/profile/update", methods=["POST"])
+@admin_required
+def admin_profile_update():
+    admin = admin.query.get(current_user.id)
+    if not admin:
+        return jsonify(success=False, message="Admin not found."), 404
+
+    first_name = request.form.get("first_name", "").strip()
+    last_name = request.form.get("last_name", "").strip()
+    username = request.form.get("username", "").strip()
+    email = request.form.get("email", "").strip()
+    phone = request.form.get("phone", "").strip()
+
+    # Validation
+    errors = []
+    if not first_name:
+        errors.append("First name is required.")
+    if not email:
+        errors.append("Email is required.")
+    if username and len(username) < 3:
+        errors.append("Username must be at least 3 characters.")
+
+    # Check uniqueness
+    if email != admin.email:
+        existing = admin.query.filter_by(email=email).first()
+        if existing:
+            errors.append("This email is already in use.")
+    if username and username != admin.username:
+        existing = admin.query.filter_by(username=username).first()
+        if existing:
+            errors.append("This username is already taken.")
+
+    if errors:
+        return jsonify(success=False, message="; ".join(errors))
+
+    # Update
+    admin.first_name = first_name
+    admin.last_name = last_name or None
+    admin.username = username or admin.email.split("@")[0]
+    admin.email = email
+    admin.phone = phone or None
+
+    db.session.commit()
+    log_activity(
+        admin.id, "profile_update",
+        f"Updated profile: {admin.full_name} ({admin.email})"
+    )
+
+    return jsonify(
+        success=True,
+        message="Profile updated successfully!",
+        data={
+            "full_name": admin.full_name,
+            "display_name": admin.display_name,
+            "email": admin.email,
+        }
+    )
+
+
+@admin_bp.route("/profile/password", methods=["POST"])
+@admin_required
+def admin_profile_password():
+    admin = admin.query.get(current_user.id)
+    if not admin:
+        return jsonify(success=False, message="Admin not found."), 404
+
+    current_password = request.form.get("current_password", "")
+    new_password = request.form.get("new_password", "")
+    confirm_password = request.form.get("confirm_password", "")
+
+    # Validation
+    if not current_password:
+        return jsonify(success=False, message="Current password is required.")
+    if not new_password:
+        return jsonify(success=False, message="New password is required.")
+    if len(new_password) < 8:
+        return jsonify(success=False, message="New password must be at least 8 characters.")
+    if new_password != confirm_password:
+        return jsonify(success=False, message="New passwords do not match.")
+    if current_password == new_password:
+        return jsonify(success=False, message="New password must be different from current password.")
+    if not admin.check_password(current_password):
+        return jsonify(success=False, message="Current password is incorrect.")
+
+    admin.set_password(new_password)
+    db.session.commit()
+    log_activity(admin.id, "password_change", "Password was changed.")
+
+    return jsonify(success=True, message="Password changed successfully!")
+
+
+@admin_bp.route("/profile/photo", methods=["POST"])
+@admin_required
+def admin_profile_photo():
+    admin = admin.query.get(current_user.id)
+    if not admin:
+        return jsonify(success=False, message="Admin not found."), 404
+
+    if "photo" not in request.files:
+        return jsonify(success=False, message="No file selected.")
+
+    file = request.files["photo"]
+    if file.filename == "":
+        return jsonify(success=False, message="No file selected.")
+
+    if not _allowed_file(file.filename):
+        return jsonify(success=False, message="Invalid file type. Use PNG, JPG, or WebP.")
+
+    # Check file size (max 2MB)
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+    if size > 2 * 1024 * 1024:
+        return jsonify(success=False, message="File too large. Maximum size is 2MB.")
+
+    # Delete old photo
+    if admin.profile_image:
+        old_path = os.path.join(current_app.root_path, admin.profile_image.lstrip("/"))
+        if os.path.exists(old_path):
+            try:
+                os.remove(old_path)
+            except OSError:
+                pass
+
+    # Save new photo
+    upload_dir = os.path.join(current_app.root_path, "static", "uploads", "profiles")
+    os.makedirs(upload_dir, exist_ok=True)
+
+    ext = file.filename.rsplit(".", 1)[1].lower()
+    filename = secure_filename(f"admin_{admin.id}_{int(datetime.utcnow().timestamp())}.{ext}")
+    filepath = os.path.join(upload_dir, filename)
+    file.save(filepath)
+
+    admin.profile_image = f"static/uploads/profiles/{filename}"
+    db.session.commit()
+    log_activity(admin.id, "photo_update", "Updated profile photo.")
+
+    return jsonify(
+        success=True,
+        message="Profile photo updated!",
+        image_url=admin.profile_image_url,
+    )
+
+
+@admin_bp.route("/profile/preferences", methods=["POST"])
+@admin_required
+def admin_profile_preferences():
+    admin = admin.query.get(current_user.id)
+    if not admin:
+        return jsonify(success=False, message="Admin not found."), 404
+
+    data = request.get_json() or {}
+
+    prefs = admin.get_preferences()
+    prefs["language"] = data.get("language", prefs["language"])
+    prefs["timezone"] = data.get("timezone", prefs["timezone"])
+    prefs["email_notifications"] = bool(data.get("email_notifications", prefs["email_notifications"]))
+    prefs["sms_notifications"] = bool(data.get("sms_notifications", prefs["sms_notifications"]))
+    prefs["two_factor"] = bool(data.get("two_factor", prefs["two_factor"]))
+
+    admin.preferences = prefs
+    db.session.commit()
+    log_activity(admin.id, "preferences_update", "Updated notification preferences.")
+
+    return jsonify(success=True, message="Preferences saved!")
+
+
+@admin_bp.route("/profile/delete", methods=["POST"])
+@admin_required
+def admin_profile_delete():
+    admin = admin.query.get(current_user.id)
+    if not admin:
+        return jsonify(success=False, message="Admin not found."), 404
+
+    # Safety: check if there are other active admins
+    other_admins = admin.query.filter(
+        admin.id != admin.id,
+        admin.role == "admin",
+        admin.is_active == True,
+    ).count()
+
+    if other_admins == 0:
+        return jsonify(
+            success=False,
+            message="Cannot delete the only admin account. Create another admin first."
+        )
+
+    confirm_text = (request.get_json() or {}).get("confirm", "")
+    if confirm_text != "DELETE":
+        return jsonify(success=False, message='Type "DELETE" to confirm.')
+
+    log_activity(admin.id, "account_delete", f"Account {admin.email} deleted by self.")
+
+    # Delete profile image
+    if admin.profile_image:
+        old_path = os.path.join(current_app.root_path, admin.profile_image.lstrip("/"))
+        if os.path.exists(old_path):
+            try:
+                os.remove(old_path)
+            except OSError:
+                pass
+
+    # Deactivate rather than hard delete (safer)
+    admin.is_active = False
+    admin.email = f"deleted_{admin.id}_{admin.email}"
+    admin.profile_image = None
+    db.session.commit()
+
+    from flask_login import logout_user
+    logout_user()
+
+    return jsonify(success=True, message="Account deleted. Redirecting...", redirect=url_for("main.home"))
 
 
 @admin_bp.route("/analytics")

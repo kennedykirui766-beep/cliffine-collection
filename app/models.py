@@ -15,24 +15,53 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100))
 
+    username = db.Column(db.String(80), unique=True, index=True)       # NEW
     email = db.Column(db.String(150), unique=True, nullable=False, index=True)
     phone = db.Column(db.String(50))
 
     password_hash = db.Column(db.String(255), nullable=False)
+    profile_image = db.Column(db.String(255), default=None)             # NEW
+    preferences = db.Column(db.JSON, default=dict)                      # NEW
 
-    role = db.Column(db.String(50), default="customer")  # admin, customer
+    role = db.Column(db.String(50), default="customer")
 
     address = db.Column(db.Text)
     city = db.Column(db.String(100))
     country = db.Column(db.String(100), default="Kenya")
 
     is_active = db.Column(db.Boolean, default=True)
-
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # relationships
     orders = db.relationship("Order", backref="user", lazy="dynamic")
     reviews = db.relationship("Review", backref="user", lazy="dynamic")
+    admin_activities = db.relationship("AdminActivity", backref="admin", lazy="dynamic")
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name or ''}".strip()
+
+    @property
+    def display_name(self):
+        return self.username or self.full_name or self.email.split("@")[0]
+
+    @property
+    def profile_image_url(self):
+        if self.profile_image:
+            return "/" + self.profile_image.lstrip("/")
+        return None
+
+    def get_preferences(self):
+        defaults = {
+            "language": "en",
+            "timezone": "Africa/Nairobi",
+            "email_notifications": True,
+            "sms_notifications": False,
+            "two_factor": False,
+        }
+        prefs = defaults.copy()
+        if self.preferences and isinstance(self.preferences, dict):
+            prefs.update(self.preferences)
+        return prefs
 
     def set_password(self, password):
         from werkzeug.security import generate_password_hash
@@ -44,6 +73,18 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f"<User {self.email}>"
+
+
+class AdminActivity(db.Model):
+    __tablename__ = "admin_activities"
+
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    action = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, default="")
+    ip_address = db.Column(db.String(45), default="")
+    user_agent = db.Column(db.Text, default="")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
 # ===============================

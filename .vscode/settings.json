@@ -43,6 +43,7 @@
         "onupdate",
         "Paybill",
         "Pesa",
+        "prefs",
         "psycopg",
         "rarr",
         "rgba",

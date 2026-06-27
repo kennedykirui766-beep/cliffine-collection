@@ -6,7 +6,6 @@
 
 {% block head %}
 <style>
-    /* Toggle Switch Specific Styles */
     .toggle-checkbox:checked {
         right: 0;
         border-color: #5423E7;
@@ -14,43 +13,101 @@
     .toggle-checkbox:checked + .toggle-label {
         background-color: #5423E7;
     }
+
+    /* Photo upload hover */
+    .photo-upload-overlay {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    .photo-wrapper:hover .photo-upload-overlay {
+        opacity: 1;
+    }
+
+    /* Toast animation */
+    @keyframes toastIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes toastOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    .toast-enter { animation: toastIn 0.3s ease-out forwards; }
+    .toast-exit { animation: toastOut 0.3s ease-in forwards; }
+
+    /* Delete modal backdrop */
+    .modal-backdrop {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+    }
+
+    /* Password strength bar */
+    .strength-bar {
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Action Buttons (Moved from Header to Content Area) -->
-<div class="flex justify-end gap-3 mb-6">
-    <button class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm bg-white">
-        Cancel
-    </button>
-    <button class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-        Save Changes
-    </button>
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-2 pointer-events-none"></div>
+
+<!-- Action Buttons -->
+<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+    <div>
+        <p class="text-sm text-slate-500">Manage your account details and security settings.</p>
+    </div>
+    <div class="flex gap-3">
+        <a href="{{ url_for('admin.admin_profile') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm shadow-sm bg-white">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            Cancel
+        </a>
+        <button onclick="saveProfile()" id="save-profile-btn" class="inline-flex items-center gap-2 px-5 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Save Changes
+        </button>
+    </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    
+
     <!-- Left Column: Profile Card -->
     <div class="lg:col-span-1 space-y-6">
+
         <!-- Profile Picture Card -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="h-32 bg-gradient-to-r from-primary to-primary-light"></div>
+            <div class="h-32 bg-gradient-to-r from-primary to-primary-light relative">
+                <!-- Decorative pattern -->
+                <div class="absolute inset-0 opacity-10">
+                    <svg width="100%" height="100%"><defs><pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="white"/></pattern></defs><rect width="100%" height="100%" fill="url(#dots)"/></svg>
+                </div>
+            </div>
             <div class="relative px-6 pb-6">
                 <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
-                    <div class="relative">
-                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=5423E7&color=fff&size=128" class="w-24 h-24 rounded-full border-4 border-white shadow-md" alt="Profile">
-                        <button class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow border border-slate-100 hover:bg-slate-50">
-                            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        </button>
+                    <div class="relative photo-wrapper group cursor-pointer" onclick="document.getElementById('photo-input').click()">
+                        <img id="profile-photo"
+                             src="{{ admin.profile_image_url or 'https://ui-avatars.com/api/?name=' + admin.full_name|urlencode + '&background=5423E7&color=fff&size=256&bold=true' }}"
+                             class="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover"
+                             alt="{{ admin.full_name }}">
+                        <!-- Upload overlay -->
+                        <div class="photo-upload-overlay absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </div>
+                        <!-- Spinner -->
+                        <div id="photo-spinner" class="hidden absolute inset-0 rounded-full bg-white/80 flex items-center justify-center">
+                            <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        </div>
                     </div>
+                    <input type="file" id="photo-input" accept="image/png,image/jpeg,image/gif,image/webp" class="hidden" onchange="uploadPhoto(this)">
                 </div>
                 <div class="pt-16 text-center">
-                    <h3 class="text-xl font-bold text-slate-800">Admin User</h3>
-                    <p class="text-sm text-slate-500">admin@cliffine.co.ke</p>
+                    <h3 id="display-name" class="text-xl font-bold text-slate-800">{{ admin.full_name }}</h3>
+                    <p id="display-email" class="text-sm text-slate-500">{{ admin.email }}</p>
                     <span class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                        Administrator
+                        {{ admin.role|title }}
                     </span>
+                    <p class="text-xs text-slate-400 mt-3">Member since {{ admin.created_at.strftime('%b %Y') }}</p>
                 </div>
             </div>
         </div>
@@ -58,63 +115,75 @@
         <!-- Activity Card -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
             <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Recent Activity
             </h4>
+            {% if activity_data %}
             <ul class="space-y-4 text-sm">
+                {% for act in activity_data %}
                 <li class="flex gap-3">
-                    <div class="w-2 h-2 mt-2 rounded-full bg-green-500"></div>
-                    <div>
-                        <p class="text-slate-700">Logged in from <span class="font-medium">Nairobi, KE</span></p>
-                        <p class="text-xs text-slate-400">Today, 10:30 AM</p>
+                    <div class="w-2 h-2 mt-2 rounded-full {{ act.color }} flex-shrink-0"></div>
+                    <div class="min-w-0">
+                        <p class="text-slate-700">
+                            {{ act.label }}
+                            {% if act.description %}
+                            <span class="font-medium text-slate-600"> — {{ act.description[:60] }}{% if act.description|length > 60 %}...{% endif %}</span>
+                            {% endif %}
+                        </p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <p class="text-xs text-slate-400">{{ act.time.strftime('%d %b, %H:%M') }}</p>
+                            {% if act.ip %}
+                            <span class="text-slate-300">·</span>
+                            <p class="text-[11px] text-slate-300">{{ act.ip }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </li>
-                <li class="flex gap-3">
-                    <div class="w-2 h-2 mt-2 rounded-full bg-blue-500"></div>
-                    <div>
-                        <p class="text-slate-700">Updated <span class="font-medium">Product #123</span></p>
-                        <p class="text-xs text-slate-400">Yesterday, 02:15 PM</p>
-                    </div>
-                </li>
-                <li class="flex gap-3">
-                    <div class="w-2 h-2 mt-2 rounded-full bg-amber-500"></div>
-                    <div>
-                        <p class="text-slate-700">Changed password</p>
-                        <p class="text-xs text-slate-400">Oct 20, 2026</p>
-                    </div>
-                </li>
+                {% endfor %}
             </ul>
+            {% else %}
+            <p class="text-sm text-slate-400 text-center py-4">No recent activity.</p>
+            {% endif %}
         </div>
     </div>
 
     <!-- Right Column: Forms -->
     <div class="lg:col-span-2 space-y-6">
-        
+
         <!-- Personal Information -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-slate-800">Personal Information</h3>
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    Personal Information
+                </h3>
                 <p class="text-sm text-slate-500">Update your personal details here.</p>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-6 space-y-4" id="profile-form">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                        <input type="text" value="Admin User" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">First Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="first_name" value="{{ admin.first_name }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-shadow">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                        <input type="text" value="admin_user" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                        <input type="text" id="last_name" value="{{ admin.last_name or '' }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-shadow">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                        <input type="email" value="admin@cliffine.co.ke" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                        <input type="text" id="username" value="{{ admin.username or '' }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-shadow" placeholder="e.g. admin_user">
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+                        <input type="email" id="email" value="{{ admin.email }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-shadow">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-                        <input type="text" value="+254 700 000 000" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <input type="text" id="phone" value="{{ admin.phone or '' }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-shadow" placeholder="+254 700 000 000">
                     </div>
                 </div>
             </div>
@@ -123,32 +192,68 @@
         <!-- Security Settings -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-slate-800">Security Settings</h3>
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    Security Settings
+                </h3>
                 <p class="text-sm text-slate-500">Ensure your account is secure.</p>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-6 space-y-5">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
-                        <input type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <input type="password" id="current_password" placeholder="••••••••" class="w-full px-4 py-2.5 pr-10 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-shadow">
+                        <button type="button" onclick="togglePassword('current_password', this)" class="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors">
+                            <svg class="w-4 h-4 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg class="w-4 h-4 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                        </button>
                     </div>
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-slate-700 mb-1">New Password</label>
-                        <input type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <input type="password" id="new_password" placeholder="Min 8 characters" class="w-full px-4 py-2.5 pr-10 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-shadow" oninput="checkPasswordStrength(this.value)">
+                        <button type="button" onclick="togglePassword('new_password', this)" class="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors">
+                            <svg class="w-4 h-4 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg class="w-4 h-4 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                        </button>
                     </div>
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
-                        <input type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                        <input type="password" id="confirm_password" placeholder="Re-enter password" class="w-full px-4 py-2.5 pr-10 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-shadow">
+                        <button type="button" onclick="togglePassword('confirm_password', this)" class="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors">
+                            <svg class="w-4 h-4 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg class="w-4 h-4 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                        </button>
                     </div>
                 </div>
-                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg mt-2">
+
+                <!-- Password Strength Indicator -->
+                <div id="strength-container" class="hidden">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs text-slate-500">Password strength</span>
+                        <span id="strength-label" class="text-xs font-medium text-slate-400">—</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div id="strength-bar" class="strength-bar h-full rounded-full bg-slate-200" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Save Password Button -->
+                <div class="flex justify-end">
+                    <button onclick="savePassword()" id="save-password-btn" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-900 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        Update Password
+                    </button>
+                </div>
+
+                <!-- 2FA Toggle -->
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
                     <div>
                         <h4 class="font-semibold text-slate-800 text-sm">Two-Factor Authentication</h4>
                         <p class="text-xs text-slate-500">Add an extra layer of security to your account.</p>
                     </div>
-                    <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" checked name="toggle" id="2fa_toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none"/>
-                        <label for="2fa_toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
+                    <div class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="2fa_toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer outline-none transition-all duration-200" {% if prefs.two_factor %}checked{% endif %} onchange="toggle2FA(this.checked)">
+                        <label for="2fa_toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer transition-colors duration-200"></label>
                     </div>
                 </div>
             </div>
@@ -157,38 +262,55 @@
         <!-- Preferences -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-slate-800">Preferences</h3>
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                    Preferences
+                </h3>
                 <p class="text-sm text-slate-500">Customize your admin experience.</p>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-6 space-y-5">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Language</label>
-                        <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
-                            <option selected>English (US)</option>
-                            <option>Swahili</option>
+                        <select id="pref_language" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none bg-white transition-shadow">
+                            <option value="en" {% if prefs.language == 'en' %}selected{% endif %}>English (US)</option>
+                            <option value="sw" {% if prefs.language == 'sw' %}selected{% endif %}>Swahili</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Timezone</label>
-                        <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white">
-                            <option selected>Africa/Nairobi (EAT)</option>
-                            <option>UTC</option>
+                        <select id="pref_timezone" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none bg-white transition-shadow">
+                            <option value="Africa/Nairobi" {% if prefs.timezone == 'Africa/Nairobi' %}selected{% endif %}>Africa/Nairobi (EAT, UTC+3)</option>
+                            <option value="UTC" {% if prefs.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                            <option value="Africa/Lagos" {% if prefs.timezone == 'Africa/Lagos' %}selected{% endif %}>Africa/Lagos (WAT, UTC+1)</option>
+                            <option value="Europe/London" {% if prefs.timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT/BST)</option>
                         </select>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Notification Preferences</label>
-                    <div class="space-y-2">
-                        <label class="flex items-center gap-3">
-                            <input type="checkbox" checked class="rounded text-primary focus:ring-primary">
-                            <span class="text-sm text-slate-600">Email Notifications</span>
+                    <label class="block text-sm font-medium text-slate-700 mb-3">Notification Preferences</label>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors">
+                            <input type="checkbox" id="pref_email_notif" {% if prefs.email_notifications %}checked{% endif %} class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
+                            <div>
+                                <span class="text-sm font-medium text-slate-700">Email Notifications</span>
+                                <p class="text-xs text-slate-400">Receive order alerts and system updates via email.</p>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-3">
-                            <input type="checkbox" class="rounded text-primary focus:ring-primary">
-                            <span class="text-sm text-slate-600">SMS Notifications</span>
+                        <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors">
+                            <input type="checkbox" id="pref_sms_notif" {% if prefs.sms_notifications %}checked{% endif %} class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer">
+                            <div>
+                                <span class="text-sm font-medium text-slate-700">SMS Notifications</span>
+                                <p class="text-xs text-slate-400">Get critical alerts sent to your phone.</p>
+                            </div>
                         </label>
                     </div>
+                </div>
+                <div class="flex justify-end">
+                    <button onclick="savePreferences()" id="save-prefs-btn" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-900 transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Save Preferences
+                    </button>
                 </div>
             </div>
         </div>
@@ -196,15 +318,24 @@
         <!-- Danger Zone -->
         <div class="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
             <div class="p-6 border-b border-red-100 bg-red-50">
-                <h3 class="text-lg font-bold text-red-800">Danger Zone</h3>
+                <h3 class="text-lg font-bold text-red-800 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Danger Zone
+                </h3>
                 <p class="text-sm text-red-600">Irreversible and destructive actions.</p>
             </div>
-            <div class="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <h4 class="font-semibold text-slate-800">Delete Account</h4>
-                    <p class="text-sm text-slate-500">Once deleted, your account cannot be recovered.</p>
+                    <p class="text-sm text-slate-500">
+                        {% if other_admins_count == 0 %}
+                        <span class="text-red-600 font-medium">Cannot delete — you are the only admin.</span>
+                        {% else %}
+                        Once deleted, your account cannot be recovered. {{ other_admins_count }} other admin{{ 's' if other_admins_count != 1 else '' }} remain.
+                        {% endif %}
+                    </p>
                 </div>
-                <button class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-sm whitespace-nowrap">
+                <button onclick="openDeleteModal()" {% if other_admins_count == 0 %}disabled{% endif %} class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-sm whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
                     Delete My Account
                 </button>
             </div>
@@ -212,9 +343,418 @@
 
     </div>
 </div>
+
+<!-- Delete Account Modal -->
+<div id="delete-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDeleteModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
+        <!-- Red Header -->
+        <div class="bg-red-600 px-6 py-5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Delete Account</h3>
+                    <p class="text-red-100 text-sm">This action cannot be undone.</p>
+                </div>
+            </div>
+        </div>
+        <!-- Body -->
+        <div class="px-6 py-5">
+            <div class="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
+                <p class="text-sm text-red-700">
+                    <strong>Warning:</strong> This will permanently deactivate your admin account (<strong>{{ admin.email }}</strong>).
+                    You will be logged out immediately. {{ other_admins_count }} other admin{{ 's' if other_admins_count != 1 else '' }} will remain active.
+                </p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                    Type <code class="bg-red-50 text-red-600 px-1.5 py-0.5 rounded text-xs font-bold">DELETE</code> to confirm
+                </label>
+                <input type="text" id="delete-confirm-input" placeholder="DELETE" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-300 focus:border-red-400 outline-none font-mono text-sm uppercase tracking-wider transition-shadow" oninput="checkDeleteConfirm(this.value)">
+            </div>
+        </div>
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+            <button onclick="closeDeleteModal()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                Cancel
+            </button>
+            <button onclick="deleteAccount()" id="delete-account-btn" disabled class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                Delete Account Permanently
+            </button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
-{# The sidebar toggle script is already in admin_base.html, so we don't need to repeat it here. #}
-{# You can add page-specific scripts here if needed in the future. #}
+<script>
+// ============================================================
+//  TOAST NOTIFICATIONS
+// ============================================================
+function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    const colors = {
+        success: 'bg-green-600',
+        error: 'bg-red-600',
+        info: 'bg-slate-800',
+    };
+    const icons = {
+        success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+        error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+        info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-xl text-white text-sm font-medium shadow-2xl toast-enter ${colors[type] || colors.info}`;
+    toast.innerHTML = `<svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[type] || icons.info}</svg><span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+// ============================================================
+//  PROFILE UPDATE
+// ============================================================
+async function saveProfile() {
+    const btn = document.getElementById('save-profile-btn');
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Saving...';
+
+    const data = {
+        first_name: document.getElementById('first_name').value.trim(),
+        last_name: document.getElementById('last_name').value.trim(),
+        username: document.getElementById('username').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+    };
+
+    try {
+        const res = await fetch('{{ url_for("admin.admin_profile_update") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(data),
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            showToast(result.message, 'success');
+            // Update display name in sidebar card
+            if (result.data) {
+                document.getElementById('display-name').textContent = result.data.full_name;
+                document.getElementById('display-email').textContent = result.data.email;
+            }
+            // Update sidebar avatar fallback
+            const sidebarImg = document.querySelector('.sidebar img[alt="Admin"]');
+            if (sidebarImg && !document.getElementById('profile-photo').src.includes('uploads')) {
+                sidebarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(result.data.full_name)}&background=5423E7&color=fff&size=64&bold=true`;
+            }
+        } else {
+            showToast(result.message, 'error');
+        }
+    } catch (err) {
+        showToast('Failed to save. Check your connection.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }
+}
+
+// ============================================================
+//  PASSWORD CHANGE
+// ============================================================
+async function savePassword() {
+    const btn = document.getElementById('save-password-btn');
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Updating...';
+
+    const data = {
+        current_password: document.getElementById('current_password').value,
+        new_password: document.getElementById('new_password').value,
+        confirm_password: document.getElementById('confirm_password').value,
+    };
+
+    // Client-side validation
+    if (!data.current_password) { showToast('Enter your current password.', 'error'); resetBtn(); return; }
+    if (!data.new_password) { showToast('Enter a new password.', 'error'); resetBtn(); return; }
+    if (data.new_password.length < 8) { showToast('New password must be at least 8 characters.', 'error'); resetBtn(); return; }
+    if (data.new_password !== data.confirm_password) { showToast('Passwords do not match.', 'error'); resetBtn(); return; }
+
+    function resetBtn() { btn.disabled = false; btn.innerHTML = originalHTML; }
+
+    try {
+        const res = await fetch('{{ url_for("admin.admin_profile_password") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(data),
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            showToast(result.message, 'success');
+            document.getElementById('current_password').value = '';
+            document.getElementById('new_password').value = '';
+            document.getElementById('confirm_password').value = '';
+            document.getElementById('strength-container').classList.add('hidden');
+            document.getElementById('strength-bar').style.width = '0%';
+        } else {
+            showToast(result.message, 'error');
+        }
+    } catch (err) {
+        showToast('Failed to update password.', 'error');
+    } finally {
+        resetBtn();
+    }
+}
+
+// ============================================================
+//  PASSWORD VISIBILITY TOGGLE
+// ============================================================
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const eyeOpen = btn.querySelector('.eye-open');
+    const eyeClosed = btn.querySelector('.eye-closed');
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        eyeOpen.classList.add('hidden');
+        eyeClosed.classList.remove('hidden');
+    } else {
+        input.type = 'password';
+        eyeOpen.classList.remove('hidden');
+        eyeClosed.classList.add('hidden');
+    }
+}
+
+// ============================================================
+//  PASSWORD STRENGTH CHECKER
+// ============================================================
+function checkPasswordStrength(password) {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+    return Math.min(score, 4);
+}
+
+function checkPasswordStrength(password) {
+    const container = document.getElementById('strength-container');
+    const bar = document.getElementById('strength-bar');
+    const label = document.getElementById('strength-label');
+
+    if (!password) {
+        container.classList.add('hidden');
+        return;
+    }
+    container.classList.remove('hidden');
+
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+
+    const levels = [
+        { width: '15%', color: '#EF4444', label: 'Very Weak', text: 'text-red-500' },
+        { width: '35%', color: '#F97316', label: 'Weak', text: 'text-orange-500' },
+        { width: '55%', color: '#EAB308', label: 'Fair', text: 'text-yellow-500' },
+        { width: '80%', color: '#22C55E', label: 'Strong', text: 'text-green-500' },
+        { width: '100%', color: '#16A34A', label: 'Very Strong', text: 'text-green-600' },
+    ];
+
+    const level = levels[Math.min(score, 4)];
+    bar.style.width = level.width;
+    bar.style.backgroundColor = level.color;
+    label.textContent = level.label;
+    label.className = `text-xs font-medium ${level.text}`;
+}
+
+// ============================================================
+//  PHOTO UPLOAD
+// ============================================================
+async function uploadPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Client-side validation
+    const allowed = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+        showToast('Invalid file type. Use PNG, JPG, GIF, or WebP.', 'error');
+        input.value = '';
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('File too large. Maximum 2MB.', 'error');
+        input.value = '';
+        return;
+    }
+
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('profile-photo').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // Show spinner
+    document.getElementById('photo-spinner').classList.remove('hidden');
+
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    try {
+        const res = await fetch('{{ url_for("admin.admin_profile_photo") }}', {
+            method: 'POST',
+            body: formData,
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            showToast(result.message, 'success');
+            // Update with server URL (permanent)
+            document.getElementById('profile-photo').src = result.image_url;
+            // Update sidebar avatar
+            const sidebarImg = document.querySelector('.sidebar img[alt="Admin"]');
+            if (sidebarImg) sidebarImg.src = result.image_url;
+        } else {
+            showToast(result.message, 'error');
+            // Revert to original
+            document.getElementById('profile-photo').src = '{{ admin.profile_image_url or "https://ui-avatars.com/api/?name=" + admin.full_name|urlencode + "&background=5423E7&color=fff&size=256&bold=true" }}';
+        }
+    } catch (err) {
+        showToast('Upload failed. Try again.', 'error');
+        document.getElementById('profile-photo').src = '{{ admin.profile_image_url or "https://ui-avatars.com/api/?name=" + admin.full_name|urlencode + "&background=5423E7&color=fff&size=256&bold=true" }}';
+    } finally {
+        document.getElementById('photo-spinner').classList.add('hidden');
+        input.value = '';
+    }
+}
+
+// ============================================================
+//  PREFERENCES
+// ============================================================
+async function savePreferences() {
+    const btn = document.getElementById('save-prefs-btn');
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Saving...';
+
+    const data = {
+        language: document.getElementById('pref_language').value,
+        timezone: document.getElementById('pref_timezone').value,
+        email_notifications: document.getElementById('pref_email_notif').checked,
+        sms_notifications: document.getElementById('pref_sms_notif').checked,
+        two_factor: document.getElementById('2fa_toggle').checked,
+    };
+
+    try {
+        const res = await fetch('{{ url_for("admin.admin_profile_preferences") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            showToast(result.message, 'success');
+        } else {
+            showToast(result.message, 'error');
+        }
+    } catch (err) {
+        showToast('Failed to save preferences.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }
+}
+
+async function toggle2FA(checked) {
+    // Auto-save when toggled
+    try {
+        await fetch('{{ url_for("admin.admin_profile_preferences") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                language: document.getElementById('pref_language').value,
+                timezone: document.getElementById('pref_timezone').value,
+                email_notifications: document.getElementById('pref_email_notif').checked,
+                sms_notifications: document.getElementById('pref_sms_notif').checked,
+                two_factor: checked,
+            }),
+        });
+        showToast(checked ? 'Two-factor authentication enabled.' : 'Two-factor authentication disabled.', 'info');
+    } catch (err) {
+        // Revert toggle on error
+        document.getElementById('2fa_toggle').checked = !checked;
+        showToast('Failed to update setting.', 'error');
+    }
+}
+
+// ============================================================
+//  DELETE ACCOUNT
+// ============================================================
+function openDeleteModal() {
+    document.getElementById('delete-modal').classList.remove('hidden');
+    document.getElementById('delete-confirm-input').value = '';
+    document.getElementById('delete-account-btn').disabled = true;
+    setTimeout(() => document.getElementById('delete-confirm-input').focus(), 100);
+}
+
+function closeDeleteModal() {
+    document.getElementById('delete-modal').classList.add('hidden');
+}
+
+function checkDeleteConfirm(value) {
+    document.getElementById('delete-account-btn').disabled = value !== 'DELETE';
+}
+
+// Close modal on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDeleteModal();
+});
+
+async function deleteAccount() {
+    const input = document.getElementById('delete-confirm-input').value.trim();
+    if (input !== 'DELETE') return;
+
+    const btn = document.getElementById('delete-account-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block"></div> Deleting...';
+
+    try {
+        const res = await fetch('{{ url_for("admin.admin_profile_delete") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ confirm: 'DELETE' }),
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            showToast('Account deleted. Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = result.redirect || '/';
+            }, 1500);
+        } else {
+            showToast(result.message, 'error');
+            btn.disabled = false;
+            btn.textContent = 'Delete Account Permanently';
+        }
+    } catch (err) {
+        showToast('Failed to delete account.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Delete Account Permanently';
+    }
+}
+</script>
 {% endblock %}
