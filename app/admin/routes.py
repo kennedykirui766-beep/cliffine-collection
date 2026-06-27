@@ -1429,6 +1429,9 @@ def admin_profile_password():
 @admin_bp.route("/profile/photo", methods=["POST"])
 @admin_required
 def admin_profile_photo():
+    import cloudinary
+    from cloudinary.uploader import upload as cloudinary_upload, destroy as cloudinary_destroy
+
     admin = User.query.get(current_user.id)
     if not admin:
         return jsonify(success=False, message="Admin not found."), 404
@@ -1450,32 +1453,56 @@ def admin_profile_photo():
     if size > 2 * 1024 * 1024:
         return jsonify(success=False, message="File too large. Maximum size is 2MB.")
 
-    # Delete old photo
+    public_id = f"admin_profiles/{admin.id}"
+
+    # Delete old photo from Cloudinary
     if admin.profile_image:
-        old_path = os.path.join(current_app.root_path, admin.profile_image.lstrip("/"))
-        if os.path.exists(old_path):
+        # If the stored URL is a Cloudinary URL, extract public_id and destroy it
+        if "cloudinary.com" in admin.profile_image:
             try:
-                os.remove(old_path)
-            except OSError:
+                cloudinary_destroy(public_id, invalidate=True)
+            except Exception:
                 pass
+        else:
+            # Legacy local file — remove from disk
+            old_path = os.path.join(current_app.root_path, admin.profile_image.lstrip("/"))
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except OSError:
+                    pass
 
-    # Save new photo
-    upload_dir = os.path.join(current_app.root_path, "static", "uploads", "profiles")
-    os.makedirs(upload_dir, exist_ok=True)
+    # Upload to Cloudinary
+    try:
+        upload_result = cloudinary_upload(
+            file,
+            public_id=public_id,
+            folder="admin_profiles",
+            overwrite=True,
+            width=400,
+            height=400,
+            crop="limit",
+            quality="auto:good",
+            fetch_format="auto",
+            resource_type="image",
+        )
+    except Exception as e:
+        return jsonify(success=False, message=f"Upload failed: {str(e)}"), 500
 
-    ext = file.filename.rsplit(".", 1)[1].lower()
-    filename = secure_filename(f"admin_{admin.id}_{int(datetime.utcnow().timestamp())}.{ext}")
-    filepath = os.path.join(upload_dir, filename)
-    file.save(filepath)
+    # Use the secure URL
+    image_url = upload_result.get("secure_url", "")
 
-    admin.profile_image = f"static/uploads/profiles/{filename}"
+    if not image_url:
+        return jsonify(success=False, message="Upload returned no image URL."), 500
+
+    admin.profile_image = image_url
     db.session.commit()
-    log_activity(admin.id, "photo_update", "Updated profile photo.")
+    log_activity(admin.id, "photo_update", "Updated profile photo via Cloudinary.")
 
     return jsonify(
         success=True,
         message="Profile photo updated!",
-        image_url=admin.profile_image_url,
+        image_url=image_url,
     )
 
 

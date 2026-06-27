@@ -451,8 +451,14 @@ async function saveProfile() {
                 document.getElementById('display-name').textContent = result.data.full_name;
                 document.getElementById('display-email').textContent = result.data.email;
             }
-            // Update sidebar avatar fallback
-            const sidebarImg = document.querySelector('.sidebar img[alt="Admin"]');
+            // Update header + dropdown avatars
+                const headerAvatar = document.getElementById('header-avatar');
+                const dropdownAvatar = document.getElementById('dropdown-avatar');
+                if (headerAvatar && !document.getElementById('profile-photo').src.includes('uploads') && !document.getElementById('profile-photo').src.includes('cloudinary')) {
+                    const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(result.data.full_name)}&background=5423E7&color=fff&size=128&bold=true`;
+                    if (headerAvatar) headerAvatar.src = fallbackUrl;
+                    if (dropdownAvatar) dropdownAvatar.src = fallbackUrl;
+                }
             if (sidebarImg && !document.getElementById('profile-photo').src.includes('uploads')) {
                 sidebarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(result.data.full_name)}&background=5423E7&color=fff&size=64&bold=true`;
             }
@@ -625,8 +631,11 @@ async function uploadPhoto(input) {
             // Update with server URL (permanent)
             document.getElementById('profile-photo').src = result.image_url;
             // Update sidebar avatar
-            const sidebarImg = document.querySelector('.sidebar img[alt="Admin"]');
-            if (sidebarImg) sidebarImg.src = result.image_url;
+            // Update header + dropdown avatars
+            const headerAvatar = document.getElementById('header-avatar');
+            const dropdownAvatar = document.getElementById('dropdown-avatar');
+            if (headerAvatar) headerAvatar.src = result.image_url;
+            if (dropdownAvatar) dropdownAvatar.src = result.image_url;
         } else {
             showToast(result.message, 'error');
             // Revert to original
