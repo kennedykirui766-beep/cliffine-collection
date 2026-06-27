@@ -1604,7 +1604,7 @@ def reports():
         Product.price,
         Product.slug,
         func.coalesce(func.sum(OrderItem.quantity), 0).label('units_sold'),
-        func.coalesce(func.sum(OrderItem.quantity * OrderItem.unit_price), 0).label('revenue'),
+        func.coalesce(func.sum(OrderItem.quantity * OrderItem.price), 0).label('revenue'),
     ).join(
         OrderItem, Product.id == OrderItem.product_id
     ).join(
@@ -1616,7 +1616,7 @@ def reports():
     ).group_by(
         Product.id, Product.name, Product.price, Product.slug
     ).order_by(
-        func.sum(OrderItem.quantity * OrderItem.unit_price).desc()
+        func.sum(OrderItem.quantity * OrderItem.price).desc()
     ).limit(8).all()
 
     top_products = []
@@ -1757,14 +1757,14 @@ def reports_print():
     top_products = db.session.query(
         Product.name,
         func.coalesce(func.sum(OrderItem.quantity), 0).label('units'),
-        func.coalesce(func.sum(OrderItem.quantity * OrderItem.unit_price), 0).label('rev'),
+        func.coalesce(func.sum(OrderItem.quantity * OrderItem.price), 0).label('rev'),
     ).join(OrderItem, Product.id == OrderItem.product_id).join(
         Order, OrderItem.order_id == Order.id
     ).filter(
         Order.created_at >= current_start,
         Order.status.notin_(['Cancelled', 'Refunded']),
     ).group_by(Product.name).order_by(
-        func.sum(OrderItem.quantity * OrderItem.unit_price).desc()
+        func.sum(OrderItem.quantity * OrderItem.price).desc()
     ).limit(10).all()
 
     recent = Order.query.order_by(Order.created_at.desc()).limit(30).all()
