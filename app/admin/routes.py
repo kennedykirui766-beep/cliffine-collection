@@ -765,6 +765,60 @@ def all_orders():
     )
 
 
+from datetime import datetime
+from flask import request, redirect, url_for, flash
+
+@admin_bp.route("/orders/<int:order_id>/confirm", methods=["POST"])
+@admin_required
+def confirm_order(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    if order.status != "pending":
+        flash(f"Order #{order.id} is not pending (current: {order.status}).", "warning")
+        return redirect(url_for("admin.pending_orders"))
+
+    # Capture optional manual M-Pesa txn from the modal
+    manual_txn = (request.form.get("manual_txn_id") or "").strip()
+    if manual_txn and not getattr(order, "transaction_id", None):
+        order.transaction_id = manual_txn
+        if hasattr(order, "payment_status") and order.payment_status != "paid":
+            order.payment_status = "paid"
+
+    note = (request.form.get("confirm_note") or "").strip()
+    if note:
+        order.note = ((order.note or "") + "\n[confirm] " + note).strip()
+
+    order.status = "processing"
+    if hasattr(order, "confirmed_at"):
+        order.confirmed_at = datetime.utcnow()
+
+    db.session.commit()
+    flash(f"Order #{order.id} confirmed and moved to processing.", "success")
+    return redirect(url_for("admin.pending_orders"))
+
+
+@admin_bp.route("/orders/<int:order_id>/cancel", methods=["POST"])
+@admin_required
+def cancel_order(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    if order.status == "delivered":
+        flash("Delivered orders cannot be cancelled.", "warning")
+        return redirect(url_for("admin.pending_orders"))
+
+    reason = (request.form.get("cancel_reason") or "").strip()
+    if reason:
+        order.note = ((order.note or "") + "\n[cancel] " + reason).strip()
+
+    order.status = "cancelled"
+    if hasattr(order, "cancelled_at"):
+        order.cancelled_at = datetime.utcnow()
+
+    db.session.commit()
+    flash(f"Order #{order.id} has been cancelled.", "success")
+    return redirect(url_for("admin.cancelled_orders"))
+
+
 @admin_bp.route("/orders/pending")
 def pending_orders():
 
@@ -778,6 +832,21 @@ def pending_orders():
         "admin/orders/pending_orders.html",
         orders=orders
     )
+
+@admin_bp.route("/orders/<int:order_id>/confirm", methods=["POST"])
+def confirm_order(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    if order.status != "pending":
+        flash(f"Order #{order.id} is not pending (current: {order.status}).", "warning")
+        return redirect(url_for("admin.pending_orders"))
+
+    order.status = "processing"
+    order.confirmed_at = datetime.utcnow()  # remove if you don't have this column
+    db.session.commit()
+
+    flash(f"Order #{order.id} confirmed and moved to processing.", "success")
+    return redirect(url_for("admin.pending_orders"))
 
 
 @admin_bp.route("/orders/processing")

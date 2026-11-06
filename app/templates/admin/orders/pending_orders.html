@@ -38,17 +38,17 @@
             <p class="text-xs text-white/70">Pending Value</p>
             <h3 class="text-xl font-bold text-white mt-1" data-metric-value="pending-value">KES {{ "{:,.0f}".format(total_value) }}</h3>
         </div>
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-green-500" data-metric="paid-count" data-filter-payment="paid">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-green-500 hover:ring-2 hover:ring-green-500/30 cursor-pointer transition-all" data-metric="paid-count" data-filter-payment="paid" title="Filter to paid orders awaiting processing">
             <p class="text-xs text-slate-500">Paid (Awaiting Process)</p>
             <h3 class="text-xl font-bold text-green-600 mt-1" data-metric-value="paid-count">{{ paid_count }}</h3>
             <p class="text-xs text-slate-400 mt-0.5">Ready to ship</p>
         </div>
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-orange-500" data-metric="unpaid-count" data-filter-payment="pending">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-orange-500 hover:ring-2 hover:ring-orange-500/30 cursor-pointer transition-all" data-metric="unpaid-count" data-filter-payment="pending" title="Filter to unpaid orders">
             <p class="text-xs text-slate-500">Unpaid</p>
             <h3 class="text-xl font-bold text-orange-600 mt-1" data-metric-value="unpaid-count">{{ unpaid_count }}</h3>
             <p class="text-xs text-slate-400 mt-0.5">Needs verification</p>
         </div>
-        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-red-500" data-metric="failed-count" data-filter-payment="failed">
+        <div class="stat-card bg-white rounded-xl p-4 shadow-sm border border-slate-100 border-l-4 border-l-red-500 hover:ring-2 hover:ring-red-500/30 cursor-pointer transition-all" data-metric="failed-count" data-filter-payment="failed" title="Filter to failed payments">
             <p class="text-xs text-slate-500">Failed Payments</p>
             <h3 class="text-xl font-bold text-red-600 mt-1" data-metric-value="failed-count">{{ failed_count }}</h3>
             <p class="text-xs text-slate-400 mt-0.5">Action required</p>
@@ -152,6 +152,7 @@
                 <tbody class="divide-y divide-slate-100" id="ordersTableBody">
                     
                     {% for order in orders %}
+                        {% set pay_status_lc = (order.payment_status or 'pending')|lower %}
                         {% set payment_colors = {
                             'paid': 'bg-green-100 text-green-700',
                             'pending': 'bg-amber-100 text-amber-700',
@@ -165,11 +166,13 @@
                             data-customer-name="{{ (order.user.full_name if order.user else 'Guest User')|lower }}"
                             data-customer-email="{{ (order.user.email if order.user and order.user.email else '')|lower }}"
                             data-customer-phone="{{ (order.phone if order.phone else '')|lower }}"
-                            data-payment-status="{{ order.payment_status if order.payment_status else '' }}"
+                            data-payment-status="{{ pay_status_lc }}"
                             data-payment-method="{{ (order.payment_method if order.payment_method else '')|lower }}"
                             data-date="{{ order.created_at.strftime('%Y-%m-%d') if order.created_at else '' }}"
                             data-date-iso="{{ order.created_at.isoformat() if order.created_at else '' }}"
-                            data-amount="{{ order.total_amount }}">
+                            data-amount="{{ order.total_amount or 0 }}"
+                            data-confirm-url="{{ url_for('admin.confirm_order', order_id=order.id) }}"
+                            data-cancel-url="{{ url_for('admin.cancel_order', order_id=order.id) }}">
                             <td class="p-4"><input type="checkbox" class="order-checkbox rounded border-slate-300 text-primary focus:ring-primary"></td>
                             <td class="p-4">
                                 <a href="{{ url_for('admin.order_details', order_id=order.id) }}" class="font-semibold text-primary hover:underline">#ORD-{{ order.id }}</a>
@@ -192,8 +195,8 @@
                                 <div class="text-xs text-slate-400">{{ order.created_at.strftime('%I:%M %p') if order.created_at else '' }}</div>
                             </td>
                             <td class="p-4 hidden sm:table-cell">
-                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ payment_colors.get(order.payment_status, 'bg-slate-100 text-slate-600') }}">
-                                    {{ order.payment_status|capitalize if order.payment_status else 'N/A' }}
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ payment_colors.get(pay_status_lc, 'bg-slate-100 text-slate-600') }}">
+                                    {{ pay_status_lc|capitalize }}
                                 </span>
                                 {% if order.transaction_id or order.mpesa_receipt_number %}
                                 <p class="text-[10px] text-slate-400 font-mono mt-1 truncate max-w-[100px]" title="{{ order.transaction_id or order.mpesa_receipt_number }}">
@@ -202,7 +205,7 @@
                                 {% endif %}
                             </td>
                             <td class="p-4 text-right">
-                                <p class="font-bold text-slate-800">KES {{ "{:,.0f}".format(order.total_amount) }}</p>
+                                <p class="font-bold text-slate-800">KES {{ "{:,.0f}".format(order.total_amount or 0) }}</p>
                                 <p class="text-xs text-slate-400">{{ order.payment_method|capitalize if order.payment_method else 'N/A' }}</p>
                             </td>
                             <td class="p-4 text-center">
@@ -217,15 +220,17 @@
                                         title="Approve & Process"
                                         data-order-id="{{ order.id }}"
                                         data-total="{{ order.total_amount or 0 }}"
-                                        data-pay-status="{{ order.payment_status }}"
-                                        data-txn-id="{{ order.transaction_id or order.mpesa_receipt_number or '' }}">
+                                        data-pay-status="{{ pay_status_lc }}"
+                                        data-txn-id="{{ order.transaction_id or order.mpesa_receipt_number or '' }}"
+                                        data-confirm-url="{{ url_for('admin.confirm_order', order_id=order.id) }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </button>
 
                                     <button 
                                         class="cancel-order-btn p-2 hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors" 
                                         title="Cancel Order"
-                                        data-order-id="{{ order.id }}">
+                                        data-order-id="{{ order.id }}"
+                                        data-cancel-url="{{ url_for('admin.cancel_order', order_id=order.id) }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                     </button>
                                 </div>
@@ -278,6 +283,10 @@
                 </p>
                 <div id="selectionActions" class="hidden items-center gap-3 pl-4 border-l border-slate-300">
                     <span class="text-xs text-slate-500"><span id="selectedCount">0</span> selected</span>
+                    <button id="bulkConfirmBtn" class="text-xs px-2.5 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">Confirm</button>
+                    <button id="bulkCancelBtn"  class="text-xs px-2.5 py-1 bg-red-600   text-white rounded hover:bg-red-700   transition-colors">Cancel</button>
+                    <button id="bulkExportBtn"  class="text-xs px-2.5 py-1 bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors">Export</button>
+                    <button id="bulkClearBtn"   class="text-xs px-2.5 py-1 border border-slate-300 text-slate-600 rounded hover:bg-slate-100 transition-colors">Clear</button>
                 </div>
             </div>
             <div class="flex items-center gap-6 text-sm">
@@ -337,9 +346,9 @@
                 </div>
                 <div class="p-6 border-t border-slate-100 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('confirmModal')" class="px-4 py-2 text-slate-600 font-medium rounded-lg hover:bg-slate-100 transition-colors">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+                    <button type="submit" id="confirmSubmitBtn" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Confirm Payment
+                        <span>Confirm Payment</span>
                     </button>
                 </div>
             </form>
@@ -372,9 +381,9 @@
                 </div>
                 <div class="p-6 border-t border-slate-100 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('cancelModal')" class="px-4 py-2 text-slate-600 font-medium rounded-lg hover:bg-slate-100 transition-colors">Keep Order</button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                    <button type="submit" id="cancelSubmitBtn" class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        Cancel Order
+                        <span>Cancel Order</span>
                     </button>
                 </div>
             </form>
@@ -393,43 +402,17 @@
 
 {% block scripts %}
     <script>
-        // --- Core Modal & Logic Functions ---
+        // ============================================================
+        // CORE HELPERS
+        // ============================================================
+
         function toggleModal(modalId) {
             const modal = document.getElementById(modalId);
+            if (!modal) return;
             modal.classList.toggle('hidden');
             modal.classList.toggle('flex');
         }
 
-        function openConfirmModal(orderId, amount, payStatus, txnId) {
-            document.getElementById('confirmOrderId').textContent = orderId;
-            document.getElementById('confirmAmount').textContent = Number(amount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-            
-            const payStatusEl = document.getElementById('confirmPayStatus');
-            payStatusEl.textContent = payStatus.charAt(0).toUpperCase() + payStatus.slice(1);
-            payStatusEl.className = payStatus === 'paid' ? 'font-medium text-green-600' : 'font-medium text-amber-600';
-
-            // If payment is pending/failed, show the manual transaction ID input
-            const manualField = document.getElementById('manualTxnField');
-            const manualInput = document.getElementById('manual_txn_id');
-            if (payStatus !== 'paid' && !txnId) {
-                manualField.classList.remove('hidden');
-                manualInput.required = true;
-            } else {
-                manualField.classList.add('hidden');
-                manualInput.required = false;
-            }
-
-            document.getElementById('confirmForm').action = `/admin/orders/${orderId}/confirm`;
-            toggleModal('confirmModal');
-        }
-
-        function openCancelModal(orderId) {
-            document.getElementById('cancelOrderId').textContent = orderId;
-            document.getElementById('cancelForm').action = `/admin/orders/${orderId}/cancel`;
-            toggleModal('cancelModal');
-        }
-
-        // --- Toast Notification ---
         function showToast(message, type) {
             type = type || 'success';
             var toast = document.getElementById('toast');
@@ -440,9 +423,9 @@
 
             var iconConfigs = {
                 success: { cls: 'text-green-400', path: 'M5 13l4 4L19 7' },
-                info: { cls: 'text-blue-400', path: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+                info:    { cls: 'text-blue-400',  path: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
                 warning: { cls: 'text-amber-400', path: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z' },
-                error: { cls: 'text-red-400', path: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' }
+                error:   { cls: 'text-red-400',   path: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' }
             };
 
             var config = iconConfigs[type] || iconConfigs.success;
@@ -452,86 +435,223 @@
             toast.classList.remove('translate-y-4', 'opacity-0', 'pointer-events-none');
             toast.classList.add('translate-y-0', 'opacity-100');
 
-            setTimeout(function() {
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(function() {
                 toast.classList.add('translate-y-4', 'opacity-0', 'pointer-events-none');
                 toast.classList.remove('translate-y-0', 'opacity-100');
             }, 3000);
         }
 
-        // --- Attach Event Listeners using Data Attributes ---
+        // ============================================================
+        // CONFIRM MODAL
+        // ============================================================
+
+        function openConfirmModal(orderId, amount, payStatus, txnId, confirmUrl) {
+            payStatus = (payStatus || 'pending').toLowerCase();
+
+            document.getElementById('confirmOrderId').textContent = orderId;
+            document.getElementById('confirmAmount').textContent = Number(amount || 0).toLocaleString('en-US', {
+                minimumFractionDigits: 0, maximumFractionDigits: 0
+            });
+
+            const payStatusEl = document.getElementById('confirmPayStatus');
+            payStatusEl.textContent = payStatus.charAt(0).toUpperCase() + payStatus.slice(1);
+            payStatusEl.className = payStatus === 'paid' ? 'font-medium text-green-600' : 'font-medium text-amber-600';
+
+            const manualField = document.getElementById('manualTxnField');
+            const manualInput = document.getElementById('manual_txn_id');
+            if (payStatus !== 'paid' && !txnId) {
+                manualField.classList.remove('hidden');
+                manualInput.required = true;
+            } else {
+                manualField.classList.add('hidden');
+                manualInput.required = false;
+                manualInput.value = '';
+            }
+
+            document.getElementById('confirmForm').action = confirmUrl;
+            document.getElementById('confirmForm').reset();
+            // reset() wipes textarea + hidden state; reapply the required state
+            if (payStatus !== 'paid' && !txnId) {
+                manualInput.required = true;
+            }
+
+            toggleModal('confirmModal');
+        }
+
+        // ============================================================
+        // CANCEL MODAL
+        // ============================================================
+
+        function openCancelModal(orderId, cancelUrl) {
+            document.getElementById('cancelOrderId').textContent = orderId;
+            document.getElementById('cancelForm').action = cancelUrl;
+            document.getElementById('cancelForm').reset();
+            toggleModal('cancelModal');
+        }
+
+        // ============================================================
+        // AJAX FORM SUBMIT (confirm / cancel)
+        // ============================================================
+
+        async function submitModalForm(formEl, submitBtnEl, successMessage, onSuccess) {
+            const originalHtml = submitBtnEl.innerHTML;
+            submitBtnEl.disabled = true;
+            submitBtnEl.innerHTML = '<span>Processing…</span>';
+
+            try {
+                const res = await fetch(formEl.action, {
+                    method: 'POST',
+                    body: new FormData(formEl),
+                    credentials: 'same-origin',
+                    redirect: 'manual'   // let us see the 302 ourselves; follow explicitly below
+                });
+
+                // Flask returns 302 → follow it ourselves with a GET
+                if (res.type === 'opaqueredirect' || res.status === 302 || res.status === 0) {
+                    showToast(successMessage, 'success');
+                    if (onSuccess) onSuccess();
+                    return true;
+                }
+
+                if (res.ok) {
+                    showToast(successMessage, 'success');
+                    if (onSuccess) onSuccess();
+                    return true;
+                }
+
+                // Try to read server-side flash message from HTML (best-effort)
+                let errMsg = 'Server responded HTTP ' + res.status;
+                try {
+                    const text = await res.text();
+                    const m = text.match(/class="[^"]*flash[^"]*"[^>]*>([\s\S]*?)</i);
+                    if (m) errMsg = m[1].trim();
+                } catch (_) {}
+                showToast(errMsg, 'error');
+                return false;
+            } catch (err) {
+                showToast('Network error — please retry.', 'error');
+                return false;
+            } finally {
+                submitBtnEl.disabled = false;
+                submitBtnEl.innerHTML = originalHtml;
+            }
+        }
+
+        // ============================================================
+        // BOOT
+        // ============================================================
+
         document.addEventListener('DOMContentLoaded', function() {
+
+            // --- Bind row buttons ---
             document.querySelectorAll('.confirm-order-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     openConfirmModal(
                         btn.dataset.orderId,
                         btn.dataset.total,
                         btn.dataset.payStatus,
-                        btn.dataset.txnId
+                        btn.dataset.txnId,
+                        btn.dataset.confirmUrl
                     );
                 });
             });
 
             document.querySelectorAll('.cancel-order-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    openCancelModal(btn.dataset.orderId);
+                    openCancelModal(btn.dataset.orderId, btn.dataset.cancelUrl);
                 });
             });
 
+            // --- Modal form submissions ---
+            const confirmForm = document.getElementById('confirmForm');
+            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+            confirmForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const row = document.querySelector('.order-row[data-order-id="' + document.getElementById('confirmOrderId').textContent + '"]');
+                const ok = await submitModalForm(
+                    confirmForm,
+                    confirmSubmitBtn,
+                    'Order confirmed successfully.',
+                    () => {
+                        toggleModal('confirmModal');
+                        if (row) row.remove();
+                        refreshAfterRemoval();
+                    }
+                );
+            });
+
+            const cancelForm = document.getElementById('cancelForm');
+            const cancelSubmitBtn = document.getElementById('cancelSubmitBtn');
+            cancelForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const row = document.querySelector('.order-row[data-order-id="' + document.getElementById('cancelOrderId').textContent + '"]');
+                const ok = await submitModalForm(
+                    cancelForm,
+                    cancelSubmitBtn,
+                    'Order cancelled.',
+                    () => {
+                        toggleModal('cancelModal');
+                        if (row) row.remove();
+                        refreshAfterRemoval();
+                    }
+                );
+            });
+
 
             // ============================================================
-            // FILTERING & SEARCH ENGINE
+            // FILTERS / SEARCH
             // ============================================================
 
-            var searchInput = document.getElementById('searchInput');
-            var clearSearchBtn = document.getElementById('clearSearchBtn');
-            var paymentStatusFilter = document.getElementById('paymentStatusFilter');
-            var paymentMethodFilter = document.getElementById('paymentMethodFilter');
-            var dateFrom = document.getElementById('dateFrom');
-            var dateTo = document.getElementById('dateTo');
-            var applyFilterBtn = document.getElementById('applyFilterBtn');
-            var clearFilterBtn = document.getElementById('clearFilterBtn');
-            var clearAllFiltersBtn = document.getElementById('clearAllFiltersBtn');
-            var clearFiltersFromEmpty = document.getElementById('clearFiltersFromEmpty');
-            var activeFiltersBar = document.getElementById('activeFiltersBar');
-            var activeFilterPills = document.getElementById('activeFilterPills');
-            var ordersTableBody = document.getElementById('ordersTableBody');
-            var emptyStateNoOrders = document.getElementById('emptyStateNoOrders');
-            var emptyStateFiltered = document.getElementById('emptyStateFiltered');
-            var showingCount = document.getElementById('showingCount');
-            var totalCount = document.getElementById('totalCount');
-            var footerPaidCount = document.getElementById('footerPaidCount');
-            var footerUnpaidCount = document.getElementById('footerUnpaidCount');
-            var footerTotalValue = document.getElementById('footerTotalValue');
-            var selectAllCheckbox = document.getElementById('selectAllCheckbox');
-            var selectionActions = document.getElementById('selectionActions');
-            var selectedCountEl = document.getElementById('selectedCount');
-            var pageTitleBadge = document.getElementById('pageTitleBadge');
+            const searchInput = document.getElementById('searchInput');
+            const clearSearchBtn = document.getElementById('clearSearchBtn');
+            const paymentStatusFilter = document.getElementById('paymentStatusFilter');
+            const paymentMethodFilter = document.getElementById('paymentMethodFilter');
+            const dateFrom = document.getElementById('dateFrom');
+            const dateTo = document.getElementById('dateTo');
+            const applyFilterBtn = document.getElementById('applyFilterBtn');
+            const clearFilterBtn = document.getElementById('clearFilterBtn');
+            const clearAllFiltersBtn = document.getElementById('clearAllFiltersBtn');
+            const clearFiltersFromEmpty = document.getElementById('clearFiltersFromEmpty');
+            const activeFiltersBar = document.getElementById('activeFiltersBar');
+            const activeFilterPills = document.getElementById('activeFilterPills');
+            const ordersTableBody = document.getElementById('ordersTableBody');
+            const emptyStateNoOrders = document.getElementById('emptyStateNoOrders');
+            const emptyStateFiltered = document.getElementById('emptyStateFiltered');
+            const showingCount = document.getElementById('showingCount');
+            const totalCount = document.getElementById('totalCount');
+            const footerPaidCount = document.getElementById('footerPaidCount');
+            const footerUnpaidCount = document.getElementById('footerUnpaidCount');
+            const footerTotalValue = document.getElementById('footerTotalValue');
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            const selectionActions = document.getElementById('selectionActions');
+            const selectedCountEl = document.getElementById('selectedCount');
+            const pageTitleBadge = document.getElementById('pageTitleBadge');
 
-            var orderRows = document.querySelectorAll('.order-row');
-            var totalOrdersCount = orderRows.length;
+            let orderRows = Array.from(document.querySelectorAll('.order-row'));
+            let totalOrdersCount = orderRows.length;
+            let isFiltered = false;
+            let searchDebounceTimer = null;
 
-            var isFiltered = false;
-            var searchDebounceTimer = null;
+            // Track how many were originally shown to support refreshAfterRemoval
+            function refreshAfterRemoval() {
+                orderRows = Array.from(document.querySelectorAll('.order-row'));
+                totalOrdersCount = orderRows.length;
+                applyFilters();
+            }
 
-            // --- Real-time search with debounce ---
             searchInput.addEventListener('input', function() {
                 clearSearchBtn.classList.toggle('hidden', !this.value.trim());
                 clearTimeout(searchDebounceTimer);
-                searchDebounceTimer = setTimeout(function() {
-                    applyFilters();
-                }, 250);
+                searchDebounceTimer = setTimeout(applyFilters, 250);
             });
 
-            // --- Live filter on dropdown change ---
             paymentStatusFilter.addEventListener('change', applyFilters);
             paymentMethodFilter.addEventListener('change', applyFilters);
             dateFrom.addEventListener('change', applyFilters);
             dateTo.addEventListener('change', applyFilters);
-
-            // --- Apply button (explicit) ---
             applyFilterBtn.addEventListener('click', applyFilters);
 
-            // --- Clear search X button ---
             clearSearchBtn.addEventListener('click', function() {
                 searchInput.value = '';
                 clearSearchBtn.classList.add('hidden');
@@ -539,68 +659,49 @@
                 applyFilters();
             });
 
-            // --- Clear buttons ---
             clearFilterBtn.addEventListener('click', clearAllFilters);
             clearAllFiltersBtn.addEventListener('click', clearAllFilters);
             clearFiltersFromEmpty.addEventListener('click', clearAllFilters);
 
-            // --- Core Filter Logic ---
             function applyFilters() {
-                var searchTerm = searchInput.value.trim().toLowerCase();
-                var statusVal = paymentStatusFilter.value;
-                var methodVal = paymentMethodFilter.value;
-                var fromVal = dateFrom.value;
-                var toVal = dateTo.value;
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                const statusVal = paymentStatusFilter.value;
+                const methodVal = paymentMethodFilter.value;
+                const fromVal = dateFrom.value;
+                const toVal = dateTo.value;
 
-                var visibleCount = 0;
-                var visibleValue = 0;
-                var visiblePaid = 0;
-                var visibleUnpaid = 0;
-                var visibleFailed = 0;
+                // Guard: from > to
+                if (fromVal && toVal && fromVal > toVal) {
+                    showToast('"From" date is after "To" date.', 'warning');
+                    return;
+                }
+
+                let visibleCount = 0, visibleValue = 0;
+                let visiblePaid = 0, visibleUnpaid = 0, visibleFailed = 0;
 
                 orderRows.forEach(function(row) {
-                    var orderId = row.dataset.orderId;
-                    var customerName = row.dataset.customerName;
-                    var customerEmail = row.dataset.customerEmail;
-                    var customerPhone = row.dataset.customerPhone;
-                    var paymentStatus = row.dataset.paymentStatus;
-                    var paymentMethod = row.dataset.paymentMethod;
-                    var orderDate = row.dataset.date;
-                    var amount = parseFloat(row.dataset.amount) || 0;
+                    const orderId = row.dataset.orderId;
+                    const customerName = row.dataset.customerName || '';
+                    const customerEmail = row.dataset.customerEmail || '';
+                    const customerPhone = row.dataset.customerPhone || '';
+                    const paymentStatus = row.dataset.paymentStatus || '';
+                    const paymentMethod = row.dataset.paymentMethod || '';
+                    const orderDate = row.dataset.date || '';
+                    const amount = parseFloat(row.dataset.amount) || 0;
 
-                    var matchesSearch = true;
-                    var matchesStatus = true;
-                    var matchesMethod = true;
-                    var matchesDateFrom = true;
-                    var matchesDateTo = true;
+                    let matchesSearch = true, matchesStatus = true, matchesMethod = true;
+                    let matchesDateFrom = true, matchesDateTo = true;
 
-                    // Search: match against order ID, name, email, phone
                     if (searchTerm) {
-                        var searchFields = [orderId, customerName, customerEmail, customerPhone].join(' ');
+                        const searchFields = [orderId, customerName, customerEmail, customerPhone].join(' ');
                         matchesSearch = searchFields.indexOf(searchTerm) !== -1;
                     }
+                    if (statusVal) matchesStatus = paymentStatus === statusVal;
+                    if (methodVal) matchesMethod = paymentMethod === methodVal;
+                    if (fromVal) matchesDateFrom = orderDate >= fromVal;
+                    if (toVal) matchesDateTo = orderDate <= toVal;
 
-                    // Payment status filter
-                    if (statusVal) {
-                        matchesStatus = paymentStatus === statusVal;
-                    }
-
-                    // Payment method filter
-                    if (methodVal) {
-                        matchesMethod = paymentMethod === methodVal;
-                    }
-
-                    // Date from filter
-                    if (fromVal) {
-                        matchesDateFrom = orderDate >= fromVal;
-                    }
-
-                    // Date to filter
-                    if (toVal) {
-                        matchesDateTo = orderDate <= toVal;
-                    }
-
-                    var isVisible = matchesSearch && matchesStatus && matchesMethod && matchesDateFrom && matchesDateTo;
+                    const isVisible = matchesSearch && matchesStatus && matchesMethod && matchesDateFrom && matchesDateTo;
                     row.style.display = isVisible ? '' : 'none';
 
                     if (isVisible) {
@@ -612,7 +713,6 @@
                     }
                 });
 
-                // Update UI
                 isFiltered = !!(searchTerm || statusVal || methodVal || fromVal || toVal);
                 updateMetrics(visibleCount, visibleValue, visiblePaid, visibleUnpaid, visibleFailed);
                 updateFooter(visibleCount, visibleValue, visiblePaid, visibleUnpaid);
@@ -622,85 +722,66 @@
                 updateSelectAllState();
             }
 
-            // --- Update Metrics Cards ---
             function updateMetrics(visibleCount, visibleValue, visiblePaid, visibleUnpaid, visibleFailed) {
                 if (!isFiltered) {
-                    // Restore original values
-                    var keys = ['total-pending', 'paid-count', 'unpaid-count', 'failed-count'];
-                    keys.forEach(function(key) {
-                        var el = document.querySelector('[data-metric-value="' + key + '"]');
-                        if (el && el.dataset.original) {
-                            el.textContent = el.dataset.original;
-                        }
+                    ['total-pending', 'paid-count', 'unpaid-count', 'failed-count'].forEach(function(key) {
+                        const el = document.querySelector('[data-metric-value="' + key + '"]');
+                        if (el && el.dataset.original !== undefined) el.textContent = el.dataset.original;
                     });
-                    var valEl = document.querySelector('[data-metric-value="pending-value"]');
-                    if (valEl && valEl.dataset.original) {
-                        valEl.textContent = 'KES ' + parseFloat(valEl.dataset.original).toLocaleString(undefined, {maximumFractionDigits: 0});
+                    const valEl = document.querySelector('[data-metric-value="pending-value"]');
+                    if (valEl && valEl.dataset.original !== undefined) {
+                        valEl.textContent = 'KES ' + parseFloat(valEl.dataset.original).toLocaleString(undefined, { maximumFractionDigits: 0 });
                     }
-                    // Remove highlights
                     document.querySelectorAll('[data-metric]').forEach(function(card) {
                         card.classList.remove('ring-2', 'ring-primary/30', 'bg-primary/5');
                     });
-                    // Reset page title badge
-                    if (pageTitleBadge) {
-                        pageTitleBadge.textContent = totalOrdersCount + ' Pending';
-                    }
+                    if (pageTitleBadge) pageTitleBadge.textContent = totalOrdersCount + ' Pending';
                     return;
                 }
 
-                // Update with filtered values
                 document.querySelector('[data-metric-value="total-pending"]').textContent = visibleCount;
-                document.querySelector('[data-metric-value="pending-value"]').textContent = 'KES ' + visibleValue.toLocaleString(undefined, {maximumFractionDigits: 0});
+                document.querySelector('[data-metric-value="pending-value"]').textContent = 'KES ' + visibleValue.toLocaleString(undefined, { maximumFractionDigits: 0 });
                 document.querySelector('[data-metric-value="paid-count"]').textContent = visiblePaid;
                 document.querySelector('[data-metric-value="unpaid-count"]').textContent = visibleUnpaid;
                 document.querySelector('[data-metric-value="failed-count"]').textContent = visibleFailed;
 
-                // Highlight active metric card
                 document.querySelectorAll('[data-metric]').forEach(function(card) {
                     card.classList.remove('ring-2', 'ring-primary/30', 'bg-primary/5');
                 });
-                var activePayment = paymentStatusFilter.value;
+                const activePayment = paymentStatusFilter.value;
                 if (activePayment) {
-                    var activeCard = document.querySelector('[data-filter-payment="' + activePayment + '"]');
-                    if (activeCard) {
-                        activeCard.classList.add('ring-2', 'ring-primary/30', 'bg-primary/5');
-                    }
+                    const activeCard = document.querySelector('[data-filter-payment="' + activePayment + '"]');
+                    if (activeCard) activeCard.classList.add('ring-2', 'ring-primary/30', 'bg-primary/5');
                 }
 
-                // Update page title badge
-                if (pageTitleBadge) {
-                    pageTitleBadge.textContent = visibleCount + ' of ' + totalOrdersCount + ' Pending';
-                }
+                if (pageTitleBadge) pageTitleBadge.textContent = visibleCount + ' of ' + totalOrdersCount + ' Pending';
             }
 
-            // --- Store original metric values ---
             function storeOriginalMetrics() {
                 document.querySelectorAll('[data-metric-value]').forEach(function(el) {
-                    var text = el.textContent.replace(/[^0-9.-]/g, '');
-                    el.dataset.original = text;
+                    if (el.dataset.original === undefined) {
+                        const text = el.textContent.replace(/[^0-9.-]/g, '');
+                        el.dataset.original = text;
+                    }
                 });
             }
             storeOriginalMetrics();
 
-            // --- Update Footer ---
             function updateFooter(visibleCount, visibleValue, visiblePaid, visibleUnpaid) {
                 showingCount.textContent = visibleCount;
                 totalCount.textContent = totalOrdersCount;
                 footerPaidCount.textContent = visiblePaid;
                 footerUnpaidCount.textContent = visibleUnpaid;
-                footerTotalValue.textContent = 'KES ' + visibleValue.toLocaleString(undefined, {maximumFractionDigits: 0});
+                footerTotalValue.textContent = 'KES ' + visibleValue.toLocaleString(undefined, { maximumFractionDigits: 0 });
             }
 
-            // --- Handle Empty States ---
             function handleEmptyStates(visibleCount) {
                 if (totalOrdersCount === 0) {
                     emptyStateNoOrders.style.display = '';
                     emptyStateFiltered.classList.add('hidden');
                     return;
                 }
-
                 emptyStateNoOrders.style.display = 'none';
-
                 if (visibleCount === 0 && isFiltered) {
                     emptyStateFiltered.classList.remove('hidden');
                 } else {
@@ -708,39 +789,34 @@
                 }
             }
 
-            // --- Active Filter Pills ---
             function updateActiveFilterPills(searchTerm, statusVal, methodVal, fromVal, toVal) {
                 activeFilterPills.innerHTML = '';
-                var hasActiveFilters = false;
+                let hasActiveFilters = false;
 
                 if (searchTerm) {
                     hasActiveFilters = true;
-                    var displaySearch = searchTerm.length > 20 ? searchTerm.substring(0, 20) + '...' : searchTerm;
+                    const displaySearch = searchTerm.length > 20 ? searchTerm.substring(0, 20) + '...' : searchTerm;
                     activeFilterPills.appendChild(createPill('Search: "' + displaySearch + '"', function() {
                         searchInput.value = '';
                         clearSearchBtn.classList.add('hidden');
                         applyFilters();
                     }));
                 }
-
                 if (statusVal) {
                     hasActiveFilters = true;
-                    var statusLabel = statusVal === 'pending' ? 'Unpaid / Pending' : statusVal.charAt(0).toUpperCase() + statusVal.slice(1);
+                    const statusLabel = statusVal === 'pending' ? 'Unpaid / Pending' : statusVal.charAt(0).toUpperCase() + statusVal.slice(1);
                     activeFilterPills.appendChild(createPill('Payment: ' + statusLabel, function() {
                         paymentStatusFilter.value = '';
                         applyFilters();
                     }));
                 }
-
                 if (methodVal) {
                     hasActiveFilters = true;
-                    var methodLabel = methodVal.charAt(0).toUpperCase() + methodVal.slice(1);
-                    activeFilterPills.appendChild(createPill('Method: ' + methodLabel, function() {
+                    activeFilterPills.appendChild(createPill('Method: ' + methodVal.charAt(0).toUpperCase() + methodVal.slice(1), function() {
                         paymentMethodFilter.value = '';
                         applyFilters();
                     }));
                 }
-
                 if (fromVal) {
                     hasActiveFilters = true;
                     activeFilterPills.appendChild(createPill('From: ' + formatDateDisplay(fromVal), function() {
@@ -748,7 +824,6 @@
                         applyFilters();
                     }));
                 }
-
                 if (toVal) {
                     hasActiveFilters = true;
                     activeFilterPills.appendChild(createPill('To: ' + formatDateDisplay(toVal), function() {
@@ -767,7 +842,7 @@
             }
 
             function createPill(text, onRemove) {
-                var pill = document.createElement('span');
+                const pill = document.createElement('span');
                 pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full border border-primary/20';
                 pill.innerHTML = text + ' <button class="hover:text-primary-dark transition-colors" title="Remove filter"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg></button>';
                 pill.querySelector('button').addEventListener('click', function(e) {
@@ -778,20 +853,14 @@
             }
 
             function formatDateDisplay(dateStr) {
-                var d = new Date(dateStr + 'T00:00:00');
+                const d = new Date(dateStr + 'T00:00:00');
                 return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             }
 
-            // --- Clear Button Visibility ---
             function updateClearButtonVisibility() {
-                if (isFiltered) {
-                    clearFilterBtn.classList.remove('hidden');
-                } else {
-                    clearFilterBtn.classList.add('hidden');
-                }
+                clearFilterBtn.classList.toggle('hidden', !isFiltered);
             }
 
-            // --- Clear All Filters ---
             function clearAllFilters() {
                 searchInput.value = '';
                 clearSearchBtn.classList.add('hidden');
@@ -803,32 +872,25 @@
                 showToast('Filters cleared', 'info');
             }
 
-            // --- Metric Card Click to Filter ---
+            // Metric cards → filter
             document.querySelectorAll('[data-filter-payment]').forEach(function(card) {
-                card.style.cursor = 'pointer';
                 card.addEventListener('click', function() {
-                    var status = this.dataset.filterPayment;
-                    if (paymentStatusFilter.value === status) {
-                        paymentStatusFilter.value = '';
-                    } else {
-                        paymentStatusFilter.value = status;
-                    }
+                    const status = this.dataset.filterPayment;
+                    paymentStatusFilter.value = paymentStatusFilter.value === status ? '' : status;
                     applyFilters();
                     document.getElementById('pendingOrdersTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
             });
 
-            // --- Keyboard Shortcuts ---
+            // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
                 if (e.key === '/' && ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(document.activeElement.tagName) === -1) {
                     e.preventDefault();
                     searchInput.focus();
                 }
                 if (e.key === 'Escape') {
-                    // Close any open modal first
-                    var modals = document.querySelectorAll('[id$="Modal"]');
-                    var modalOpen = false;
-                    modals.forEach(function(modal) {
+                    let modalOpen = false;
+                    document.querySelectorAll('[id$="Modal"]').forEach(function(modal) {
                         if (!modal.classList.contains('hidden')) {
                             toggleModal(modal.id);
                             modalOpen = true;
@@ -846,15 +908,15 @@
 
 
             // ============================================================
-            // COLUMN SORTING
+            // SORTING
             // ============================================================
 
-            var currentSort = { column: null, direction: 'asc' };
+            let currentSort = { column: null, direction: 'asc' };
 
             document.querySelectorAll('[data-sort]').forEach(function(th) {
                 th.addEventListener('click', function() {
-                    var column = this.dataset.sort;
-                    
+                    const column = this.dataset.sort;
+
                     if (currentSort.column === column) {
                         currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
                     } else {
@@ -862,65 +924,57 @@
                         currentSort.direction = 'asc';
                     }
 
-                    // Update sort indicators
                     document.querySelectorAll('[data-sort]').forEach(function(header) {
                         header.classList.remove('text-slate-800');
-                        header.querySelector('svg').style.opacity = '0.4';
-                        header.querySelector('svg').style.transform = '';
+                        const svg = header.querySelector('svg');
+                        if (svg) { svg.style.opacity = '0.4'; svg.style.transform = ''; }
                     });
                     this.classList.add('text-slate-800');
-                    this.querySelector('svg').style.opacity = '1';
-                    this.querySelector('svg').style.transform = currentSort.direction === 'desc' ? 'rotate(180deg)' : '';
+                    const svg = this.querySelector('svg');
+                    if (svg) {
+                        svg.style.opacity = '1';
+                        svg.style.transform = currentSort.direction === 'desc' ? 'rotate(180deg)' : '';
+                    }
 
                     sortTable(column, currentSort.direction);
                 });
             });
 
             function sortTable(column, direction) {
-                var rows = Array.from(orderRows);
-                var multiplier = direction === 'asc' ? 1 : -1;
+                const rows = Array.from(orderRows);
+                const multiplier = direction === 'asc' ? 1 : -1;
 
                 rows.sort(function(a, b) {
-                    var valA, valB;
-
                     switch (column) {
                         case 'order-id':
-                            valA = parseInt(a.dataset.orderId) || 0;
-                            valB = parseInt(b.dataset.orderId) || 0;
-                            return (valA - valB) * multiplier;
-                        case 'date':
-                            valA = a.dataset.dateIso || '';
-                            valB = b.dataset.dateIso || '';
-                            if (valA < valB) return -1 * multiplier;
-                            if (valA > valB) return 1 * multiplier;
+                            return ((parseInt(a.dataset.orderId) || 0) - (parseInt(b.dataset.orderId) || 0)) * multiplier;
+                        case 'date': {
+                            const va = a.dataset.dateIso || '', vb = b.dataset.dateIso || '';
+                            if (va < vb) return -1 * multiplier;
+                            if (va > vb) return 1 * multiplier;
                             return 0;
+                        }
                         case 'amount':
-                            valA = parseFloat(a.dataset.amount) || 0;
-                            valB = parseFloat(b.dataset.amount) || 0;
-                            return (valA - valB) * multiplier;
+                            return ((parseFloat(a.dataset.amount) || 0) - (parseFloat(b.dataset.amount) || 0)) * multiplier;
                         default:
                             return 0;
                     }
                 });
 
-                rows.forEach(function(row) {
-                    ordersTableBody.appendChild(row);
-                });
+                rows.forEach(function(row) { ordersTableBody.appendChild(row); });
+                orderRows = Array.from(document.querySelectorAll('.order-row'));
             }
 
 
             // ============================================================
-            // SELECT ALL / BULK ACTIONS
+            // SELECTION / BULK
             // ============================================================
 
             selectAllCheckbox.addEventListener('change', function() {
-                var checkboxes = document.querySelectorAll('.order-checkbox');
-                var isChecked = this.checked;
-                checkboxes.forEach(function(cb) {
-                    var row = cb.closest('.order-row');
-                    if (row && row.style.display !== 'none') {
-                        cb.checked = isChecked;
-                    }
+                const isChecked = this.checked;
+                document.querySelectorAll('.order-checkbox').forEach(function(cb) {
+                    const row = cb.closest('.order-row');
+                    if (row && row.style.display !== 'none') cb.checked = isChecked;
                 });
                 updateSelectionCount();
             });
@@ -933,112 +987,179 @@
             });
 
             function updateSelectionCount() {
-                var checked = document.querySelectorAll('.order-checkbox:checked');
-                var count = checked.length;
+                const count = document.querySelectorAll('.order-checkbox:checked').length;
                 selectedCountEl.textContent = count;
-                if (count > 0) {
-                    selectionActions.classList.remove('hidden');
-                    selectionActions.classList.add('flex');
-                } else {
-                    selectionActions.classList.add('hidden');
-                    selectionActions.classList.remove('flex');
-                }
+                selectionActions.classList.toggle('hidden', count === 0);
+                selectionActions.classList.toggle('flex', count > 0);
             }
 
             function updateSelectAllState() {
-                var visibleCheckboxes = Array.from(document.querySelectorAll('.order-checkbox')).filter(function(cb) {
-                    var row = cb.closest('.order-row');
+                const visible = Array.from(document.querySelectorAll('.order-checkbox')).filter(function(cb) {
+                    const row = cb.closest('.order-row');
                     return row && row.style.display !== 'none';
                 });
-                var allChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(function(cb) { return cb.checked; });
-                selectAllCheckbox.checked = allChecked;
-                selectAllCheckbox.indeterminate = !allChecked && visibleCheckboxes.some(function(cb) { return cb.checked; });
+                const checkedVisible = visible.filter(function(cb) { return cb.checked; });
+                selectAllCheckbox.checked = visible.length > 0 && checkedVisible.length === visible.length;
+                selectAllCheckbox.indeterminate = !selectAllCheckbox.checked && checkedVisible.length > 0;
             }
 
+            function getSelectedIds() {
+                return Array.from(document.querySelectorAll('.order-checkbox:checked'))
+                    .map(function(cb) { return cb.closest('.order-row'); })
+                    .filter(Boolean)
+                    .map(function(row) { return row.dataset.orderId; });
+            }
+
+            document.getElementById('bulkClearBtn').addEventListener('click', function() {
+                document.querySelectorAll('.order-checkbox:checked').forEach(function(cb) { cb.checked = false; });
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+                updateSelectionCount();
+            });
+
+            document.getElementById('bulkConfirmBtn').addEventListener('click', async function() {
+                const ids = getSelectedIds();
+                if (!ids.length) return;
+                if (!confirm('Confirm ' + ids.length + ' order(s)?')) return;
+
+                let ok = 0, fail = 0;
+                for (const id of ids) {
+                    const row = document.querySelector('.order-row[data-order-id="' + id + '"]');
+                    if (!row) continue;
+                    try {
+                        const res = await fetch(row.dataset.confirmUrl, {
+                            method: 'POST', credentials: 'same-origin', redirect: 'manual'
+                        });
+                        if (res.type === 'opaqueredirect' || res.status === 302 || res.ok) {
+                            row.remove(); ok++;
+                        } else { fail++; }
+                    } catch (_) { fail++; }
+                }
+                showToast('Confirmed ' + ok + (fail ? ', failed ' + fail : ''), fail ? 'warning' : 'success');
+                selectAllCheckbox.checked = false;
+                updateSelectionCount();
+                refreshAfterRemoval();
+            });
+
+            document.getElementById('bulkCancelBtn').addEventListener('click', async function() {
+                const ids = getSelectedIds();
+                if (!ids.length) return;
+                const reason = prompt('Reason for cancelling ' + ids.length + ' order(s):');
+                if (!reason) return;
+
+                let ok = 0, fail = 0;
+                for (const id of ids) {
+                    const row = document.querySelector('.order-row[data-order-id="' + id + '"]');
+                    if (!row) continue;
+                    try {
+                        const body = new FormData();
+                        body.append('cancel_reason', reason);
+                        const res = await fetch(row.dataset.cancelUrl, {
+                            method: 'POST', body: body, credentials: 'same-origin', redirect: 'manual'
+                        });
+                        if (res.type === 'opaqueredirect' || res.status === 302 || res.ok) {
+                            row.remove(); ok++;
+                        } else { fail++; }
+                    } catch (_) { fail++; }
+                }
+                showToast('Cancelled ' + ok + (fail ? ', failed ' + fail : ''), fail ? 'warning' : 'success');
+                selectAllCheckbox.checked = false;
+                updateSelectionCount();
+                refreshAfterRemoval();
+            });
+
 
             // ============================================================
-            // EXPORT CSV (filtered data)
+            // EXPORT CSV
             // ============================================================
+
+            function buildCsvFromRows(rows) {
+                const headers = ['Order ID', 'Customer Name', 'Email', 'Phone', 'Date', 'Payment Status', 'Payment Method', 'Amount'];
+                const csvRows = [headers.join(',')];
+
+                rows.forEach(function(row) {
+                    const orderId = row.dataset.orderId;
+                    const name = row.dataset.customerName || '';
+                    const email = row.dataset.customerEmail || '';
+                    const phone = row.dataset.customerPhone || '';
+                    const date = row.dataset.date || '';
+                    const payStatus = row.dataset.paymentStatus || '';
+                    const payMethod = row.dataset.paymentMethod || '';
+                    const amount = parseFloat(row.dataset.amount) || 0;
+
+                    const esc = function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; };
+                    csvRows.push([
+                        'ORD-' + orderId,
+                        esc(name),
+                        esc(email),
+                        esc(phone),
+                        esc(date),
+                        esc(payStatus),
+                        esc(payMethod),
+                        amount
+                    ].join(','));
+                });
+                return csvRows.join('\n');
+            }
+
+            function downloadCsv(csvContent, filename) {
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
 
             document.getElementById('exportCsvBtn').addEventListener('click', function() {
-                var visibleRows = Array.from(orderRows).filter(function(row) { return row.style.display !== 'none'; });
-                
-                if (visibleRows.length === 0) {
-                    showToast('No orders to export', 'warning');
-                    return;
-                }
+                const visibleRows = orderRows.filter(function(row) { return row.style.display !== 'none'; });
+                if (!visibleRows.length) { showToast('No orders to export', 'warning'); return; }
 
-                var headers = ['Order ID', 'Customer Name', 'Email', 'Phone', 'Date', 'Payment Status', 'Payment Method', 'Amount'];
-                var csvRows = [headers.join(',')];
+                const csv = buildCsvFromRows(visibleRows);
+                downloadCsv(csv, 'pending_orders_export_' + new Date().toISOString().slice(0, 10) + '.csv');
+                showToast('Exported ' + visibleRows.length + ' pending order(s) to CSV', 'success');
+            });
 
-                visibleRows.forEach(function(row) {
-                    var nameEl = row.querySelector('td:nth-child(3) .font-medium');
-                    var name = nameEl ? nameEl.textContent : '';
-                    var emailEl = row.querySelector('td:nth-child(3) .text-xs');
-                    var email = emailEl ? emailEl.textContent : '';
-                    var dateEl = row.querySelector('td.hidden.md\\:table-cell div:first-child');
-                    var date = dateEl ? dateEl.textContent.trim() : '';
-                    var statusBadge = row.querySelector('td:nth-child(5) span');
-                    var status = statusBadge ? statusBadge.textContent.trim() : '';
-                    var methodEl = row.querySelector('td:nth-child(6) .text-xs:last-child');
-                    var paymentMethod = methodEl ? methodEl.textContent.trim() : '';
-                    var amountEl = row.querySelector('td:nth-child(6) .font-bold');
-                    var amountText = amountEl ? amountEl.textContent.replace(/[^0-9.-]/g, '') : '0';
+            document.getElementById('bulkExportBtn').addEventListener('click', function() {
+                const ids = new Set(getSelectedIds());
+                const rows = orderRows.filter(function(r) { return ids.has(r.dataset.orderId); });
+                if (!rows.length) { showToast('No orders selected', 'warning'); return; }
 
-                    var csvRow = [
-                        'ORD-' + row.dataset.orderId,
-                        '"' + name + '"',
-                        '"' + email + '"',
-                        '"' + row.dataset.customerPhone + '"',
-                        '"' + date + '"',
-                        status,
-                        paymentMethod,
-                        amountText
-                    ];
-                    csvRows.push(csvRow.join(','));
-                });
-
-                var csvContent = csvRows.join('\n');
-                var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                var url = URL.createObjectURL(blob);
-                var link = document.createElement('a');
-                link.href = url;
-                link.download = 'pending_orders_export_' + new Date().toISOString().slice(0, 10) + '.csv';
-                link.click();
-                URL.revokeObjectURL(url);
-
-                showToast('Exported ' + visibleRows.length + ' pending orders to CSV', 'success');
+                const csv = buildCsvFromRows(rows);
+                downloadCsv(csv, 'selected_orders_export_' + new Date().toISOString().slice(0, 10) + '.csv');
+                showToast('Exported ' + rows.length + ' selected order(s)', 'success');
             });
 
 
             // ============================================================
-            // SIDEBAR ACTIVE STATE LOGIC
+            // SIDEBAR ACTIVE STATE
             // ============================================================
 
-            var activeLink = document.querySelector('.nav-link.active');
+            const activeLink = document.querySelector('.nav-link.active');
             if (activeLink) activeLink.classList.remove('active');
 
-            var navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(function(item) {
-                var link = item.querySelector('.nav-link');
-                if (link) {
-                    var span = link.querySelector('span');
-                    if (span && span.textContent.trim() === 'Orders') {
-                        item.classList.add('expanded');
-                        link.classList.add('active');
-                        link.classList.add('nav-link');
-                    }
+            document.querySelectorAll('.nav-item').forEach(function(item) {
+                const link = item.querySelector('.nav-link');
+                if (!link) return;
+                const span = link.querySelector('span');
+                if (span && span.textContent.trim() === 'Orders') {
+                    item.classList.add('expanded');
+                    link.classList.add('active');
                 }
             });
 
-            var subLinks = document.querySelectorAll('.nav-item .submenu a');
-            subLinks.forEach(function(link) {
+            document.querySelectorAll('.nav-item .submenu a').forEach(function(link) {
                 if (link.textContent.trim() === 'Pending') {
                     link.classList.remove('text-white/60');
                     link.classList.add('text-amber-400', 'border-amber-500', 'border-l-2');
                 }
             });
 
+            // Initial paint of state (so empty-state / count / metric cards reflect current DOM)
+            applyFilters();
         });
 
         // Close modals on backdrop click
@@ -1046,15 +1167,6 @@
             modal.addEventListener('click', function(e) {
                 if (e.target === this) toggleModal(this.id);
             });
-        });
-
-        // Close modals on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('[id$="Modal"]').forEach(function(modal) {
-                    if (!modal.classList.contains('hidden')) toggleModal(modal.id);
-                });
-            }
         });
     </script>
 {% endblock %}
