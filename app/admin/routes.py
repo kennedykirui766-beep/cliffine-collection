@@ -833,20 +833,6 @@ def pending_orders():
         orders=orders
     )
 
-@admin_bp.route("/orders/<int:order_id>/confirm", methods=["POST"])
-def confirm_order(order_id):
-    order = Order.query.get_or_404(order_id)
-
-    if order.status != "pending":
-        flash(f"Order #{order.id} is not pending (current: {order.status}).", "warning")
-        return redirect(url_for("admin.pending_orders"))
-
-    order.status = "processing"
-    order.confirmed_at = datetime.utcnow()  # remove if you don't have this column
-    db.session.commit()
-
-    flash(f"Order #{order.id} confirmed and moved to processing.", "success")
-    return redirect(url_for("admin.pending_orders"))
 
 
 @admin_bp.route("/orders/processing")
