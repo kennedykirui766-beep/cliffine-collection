@@ -941,25 +941,8 @@ def update_order_status(order_id):
 
 from datetime import datetime
 
-@admin_bp.route("/orders/<int:order_id>/cancel", methods=["POST"])
-def cancel_order(order_id):
 
-    order = Order.query.get_or_404(order_id)
 
-    if order.status == "delivered":
-        flash("Delivered orders cannot be cancelled.", "warning")
-        return redirect(url_for("admin.all_orders"))
-
-    order.status = "cancelled"
-
-    # Optional if your model has this field
-    # order.cancelled_at = datetime.utcnow()
-
-    db.session.commit()
-
-    flash(f"Order #{order.id} has been cancelled.", "success")
-
-    return redirect(url_for("admin.cancelled_orders"))
 
 @admin_bp.route("/orders/<int:order_id>/note", methods=["POST"])
 def add_order_note(order_id):
