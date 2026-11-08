@@ -1770,16 +1770,27 @@ def track():
 def _build_track_context(order):
     """
     Convert an Order model instance into the dict shape the template expects.
-    Adjust field names to match YOUR Order / OrderItem models.
+    Fetches products manually since OrderItem has product_id only (no .product relationship).
     """
     items = []
     for it in (order.items or []):
-        product = it.product  # assumes OrderItem.product relationship exists
+        product = Product.query.get(it.product_id) if it.product_id else None
+
+        # Adjust the image attribute to whatever YOUR Product model uses:
+        #   product.image, product.image_url, product.photo, etc.
+        image = None
+        if product:
+            image = (
+                getattr(product, "image", None)
+                or getattr(product, "image_url", None)
+                or getattr(product, "photo", None)
+            )
+
         items.append({
-            "name": product.name if product else "Product",
-            "image": (product.image_url if product else None),
+            "name": product.name if product else f"Product #{it.product_id}",
+            "image": image,
             "quantity": it.quantity,
-            "price": it.price,   # unit price
+            "price": it.price,
         })
 
     total = getattr(order, "total_amount", None)
@@ -1792,8 +1803,10 @@ def _build_track_context(order):
         "status": order.status or "pending",
         "created_at": order.created_at,
         "estimated_delivery": getattr(order, "estimated_delivery", None),
-        "customer_name": order.full_name or (order.user.full_name if order.user else None),
-        "delivery_address": order.shipping_address or order.delivery_location,
+        "customer_name": order.full_name or (
+            order.user.full_name if getattr(order, "user", None) else None
+        ),
+        "delivery_address": order.shipping_address or getattr(order, "delivery_location", None),
         "payment_method": "M-Pesa" if order.mpesa_receipt else getattr(order, "payment_method", None),
         "delivery_fee": order.delivery_fee or 0,
         "total": total,
