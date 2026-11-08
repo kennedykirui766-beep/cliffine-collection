@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+
+{% block title %}Track Your Order | Cliffine Collection{% endblock %}
+
+{% block content %}
+{# Status → step index (0-4). Cancelled is handled separately. #}
+{% set status_steps = {
+    'pending': 0,
+    'confirmed': 1,
+    'paid': 1,
+    'processing': 2,
+    'packed': 2,
+    'shipped': 3,
+    'out_for_delivery': 3,
+    'delivered': 4
+} %}
+{% set steps = [
+    {'key': 'placed',     'title': 'Order Placed',       'desc': 'We have received your order.',            'icon': 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4'},
+    {'key': 'confirmed',  'title': 'Payment Confirmed',  'desc': 'Your payment has been verified.',         'icon': 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'},
+    {'key': 'processing', 'title': 'Packed & Ready',     'desc': 'Your items are being prepared.',          'icon': 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'},
+    {'key': 'shipped',    'title': 'Out for Delivery',   'desc': 'Your order is on its way to you.',        'icon': 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0'},
+    {'key': 'delivered',  'title': 'Delivered',          'desc': 'Enjoy your Cliffine purchase!',           'icon': 'M5 13l4 4L19 7'}
+] %}
+
+{% set has_order = order is defined and order %}
+{% set current_status = (order.status|lower|replace(' ', '_')) if has_order else '' %}
+{% set is_cancelled = current_status == 'cancelled' %}
+{% set current_step = status_steps.get(current_status, 0) if has_order else 0 %}
+{% set progress_pct = (current_step / (steps|length - 1) * 100) if has_order and not is_cancelled else 0 %}
+
+<style>
+    /* ===== Track page ===== */
+    .track-hero {
+        background:
+            radial-gradient(circle at 15% 20%, rgba(212,175,55,0.18), transparent 45%),
+            radial-gradient(circle at 85% 80%, rgba(124,58,237,0.35), transparent 50%),
+            linear-gradient(135deg, #3B0D5D 0%, #581C87 55%, #7C3AED 100%);
+    }
+    .track-card {
+        background: var(--bg);
+        border: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 0 10px 40px -12px rgba(88,28,135,0.18);
+    }
+    .dark .track-card { border-color: rgba(255,255,255,0.08); box-shadow: 0 10px 40px -12px rgba(0,0,0,0.6); }
+
+    .track-input {
+        background: var(--sand);
+        border: 1.5px solid transparent;
+        transition: all .2s ease;
+    }
+    .track-input:focus {
+        outline: none;
+        background: var(--bg);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(212,175,55,0.18);
+    }
+
+    /* Horizontal stepper (md+) */
+    .stepper-line { background: rgba(107,114,128,0.25); }
+    .stepper-fill {
+        background: linear-gradient(90deg, var(--accent), #F5D76E);
+        transition: width 1.2s cubic-bezier(.4,0,.2,1);
+    }
+    .step-dot {
+        transition: all .4s ease;
+        background: var(--bg);
+        border: 2px solid rgba(107,114,128,0.35);
+        color: var(--muted);
+    }
+    .step-dot.done {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .step-dot.current {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #1F2937;
+        animation: ring 2s ease-out infinite;
+    }
+    @keyframes ring {
+        0%   { box-shadow: 0 0 0 0 rgba(212,175,55,0.55); }
+        100% { box-shadow: 0 0 0 16px rgba(212,175,55,0); }
+    }
+
+    /* Vertical stepper (mobile) */
+    .vstep-line { background: rgba(107,114,128,0.25); }
+    .vstep-line.done { background: var(--accent); }
+
+    .fade-up { opacity: 0; transform: translateY(14px); animation: fadeUp .6s ease forwards; }
+    .fade-up.d1 { animation-delay: .1s; }
+    .fade-up.d2 { animation-delay: .25s; }
+    .fade-up.d3 { animation-delay: .4s; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    .truck-bob { animation: bob 2.4s ease-in-out infinite; }
+    @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fade-up, .truck-bob, .step-dot.current { animation: none; opacity: 1; transform: none; }
+        .stepper-fill { transition: none; }
+    }
+</style>
+
+<!-- ================= HERO + SEARCH ================= -->
+<section class="track-hero relative overflow-hidden">
+    <div class="absolute inset-0 opacity-[0.07]" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 22px 22px;"></div>
+
+    <div class="relative max-w-3xl mx-auto px-4 sm:px-6 pt-14 pb-28 text-center">
+        <span class="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-accent text-xs font-semibold tracking-[0.2em] uppercase px-4 py-1.5 rounded-full mb-5 fade-up">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Order Tracking
+        </span>
+        <h1 class="font-display text-4xl sm:text-5xl font-semibold text-white leading-tight fade-up d1">
+            Where is my <span class="text-accent">order</span>?
+        </h1>
+        <p class="mt-4 text-gray-200 text-base sm:text-lg max-w-xl mx-auto fade-up d2">
+            Enter your order number and the phone number used at checkout to see live progress.
+        </p>
+    </div>
+</section>
+
+<!-- Search card overlapping hero -->
+<section class="relative -mt-20 px-4 sm:px-6 pb-6">
+    <div class="max-w-3xl mx-auto">
+        <form method="get" action="" class="track-card rounded-2xl p-5 sm:p-7 fade-up d3" id="track-form" novalidate>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="order_id" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Order Number</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-3.5 flex items-center text-muted">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                        </span>
+                        <input type="text" id="order_id" name="order_id" required
+                               value="{{ request.args.get('order_id', '') }}"
+                               placeholder="e.g. CC-10482"
+                               class="track-input w-full rounded-xl pl-11 pr-4 py-3.5 text-sm font-medium text-charcoal dark:text-white placeholder-gray-400">
+                    </div>
+                </div>
+                <div>
+                    <label for="phone" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Phone Number</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-3.5 flex items-center text-muted">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        </span>
+                        <input type="tel" id="phone" name="phone" required inputmode="tel"
+                               value="{{ request.args.get('phone', '') }}"
+                               placeholder="07XX XXX XXX"
+                               class="track-input w-full rounded-xl pl-11 pr-4 py-3.5 text-sm font-medium text-charcoal dark:text-white placeholder-gray-400">
+                    </div>
+                </div>
+            </div>
+
+            <p id="form-error" class="hidden mt-3 text-sm text-red-500 font-medium"></p>
+
+            <button type="submit" id="track-btn"
+                    class="mt-5 w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-primary/30 hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5">
+                <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <span id="track-btn-text">Track Order</span>
+            </button>
+
+            <p class="mt-4 text-center text-xs text-muted">
+                Can't find your order number? Check your SMS/WhatsApp confirmation or
+                <a href="https://wa.me/254717857049" target="_blank" rel="noopener noreferrer" class="text-primary dark:text-accent font-semibold hover:underline">message us on WhatsApp</a>.
+            </p>
+        </form>
+    </div>
+</section>
+
+<!-- ================= RESULTS ================= -->
+<section class="px-4 sm:px-6 pb-16 sm:pb-24">
+    <div class="max-w-4xl mx-auto space-y-6">
+
+    {% if has_order %}
+
+        <!-- Summary header -->
+        <div class="track-card rounded-2xl p-6 sm:p-8 fade-up">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-[0.15em] text-muted">Order</p>
+                    <h2 class="font-display text-3xl font-semibold text-primary dark:text-white">#{{ order.order_number or order.id }}</h2>
+                    {% if order.created_at %}
+                        <p class="text-sm text-muted mt-1">Placed on {{ order.created_at.strftime('%d %b %Y, %I:%M %p') if order.created_at.strftime is defined else order.created_at }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex flex-col items-start sm:items-end gap-2">
+                    {% if is_cancelled %}
+                        <span class="inline-flex items-center gap-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-semibold px-4 py-2 rounded-full">
+                            <span class="w-2 h-2 rounded-full bg-red-500"></span> Cancelled
+                        </span>
+                    {% elif current_step == 4 %}
+                        <span class="inline-flex items-center gap-2 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-semibold px-4 py-2 rounded-full">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span> Delivered
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center gap-2 bg-accent/15 text-accent-dark dark:text-accent text-sm font-semibold px-4 py-2 rounded-full">
+                            <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span></span>
+                            {{ steps[current_step].title }}
+                        </span>
+                    {% endif %}
+                    {% if order.estimated_delivery and not is_cancelled and current_step < 4 %}
+                        <p class="text-xs text-muted">Estimated delivery: <span class="font-semibold text-charcoal dark:text-white">{{ order.estimated_delivery }}</span></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if is_cancelled %}
+            <div class="track-card rounded-2xl p-8 text-center fade-up d1">
+                <div class="w-16 h-16 mx-auto rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </div>
+                <h3 class="font-display text-2xl font-semibold text-charcoal dark:text-white">This order was cancelled</h3>
+                <p class="text-muted mt-2 max-w-md mx-auto text-sm">If you think this is a mistake or you've already paid, please reach out and we'll sort it out right away.</p>
+                <a href="https://wa.me/254717857049" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 mt-5 bg-primary text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-primary-dark transition-colors">Contact Support</a>
+            </div>
+        {% else %}
+
+        <!-- Progress tracker -->
+        <div class="track-card rounded-2xl p-6 sm:p-8 fade-up d1">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="font-display text-2xl font-semibold text-charcoal dark:text-white">Delivery Progress</h3>
+                {% if current_step == 3 %}
+                    <span class="truck-bob text-accent">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ steps[3].icon }}"/></svg>
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Desktop / tablet: horizontal -->
+            <div class="hidden md:block">
+                <div class="relative px-6">
+                    <div class="absolute top-6 left-12 right-12 h-1 rounded-full stepper-line"></div>
+                    <div class="absolute top-6 left-12 h-1 rounded-full stepper-fill" id="stepper-fill"
+                         data-target="{{ progress_pct }}" style="width:0%; max-width: calc(100% - 6rem);"></div>
+
+                    <ol class="relative grid grid-cols-5">
+                        {% for s in steps %}
+                            {% set state = 'done' if loop.index0 < current_step else ('current' if loop.index0 == current_step else 'todo') %}
+                            {% if current_step == 4 and loop.index0 == 4 %}{% set state = 'done' %}{% endif %}
+                            <li class="flex flex-col items-center text-center">
+                                <div class="step-dot {{ state if state != 'todo' else '' }} w-12 h-12 rounded-full flex items-center justify-center z-10">
+                                    {% if state == 'done' %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    {% else %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ s.icon }}"/></svg>
+                                    {% endif %}
+                                </div>
+                                <p class="mt-3 text-sm font-semibold {% if state == 'todo' %}text-muted{% else %}text-charcoal dark:text-white{% endif %}">{{ s.title }}</p>
+                                <p class="mt-1 text-xs text-muted max-w-[130px]">{{ s.desc }}</p>
+                            </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Mobile: vertical -->
+            <ol class="md:hidden">
+                {% for s in steps %}
+                    {% set state = 'done' if loop.index0 < current_step else ('current' if loop.index0 == current_step else 'todo') %}
+                    {% if current_step == 4 and loop.index0 == 4 %}{% set state = 'done' %}{% endif %}
+                    <li class="flex gap-4">
+                        <div class="flex flex-col items-center">
+                            <div class="step-dot {{ state if state != 'todo' else '' }} w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+                                {% if state == 'done' %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                {% else %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ s.icon }}"/></svg>
+                                {% endif %}
+                            </div>
+                            {% if not loop.last %}
+                                <div class="vstep-line {% if state == 'done' %}done{% endif %} w-0.5 flex-1 min-h-[34px] my-1 rounded"></div>
+                            {% endif %}
+                        </div>
+                        <div class="pb-6">
+                            <p class="text-sm font-semibold {% if state == 'todo' %}text-muted{% else %}text-charcoal dark:text-white{% endif %}">{{ s.title }}</p>
+                            <p class="text-xs text-muted mt-0.5">{{ s.desc }}</p>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ol>
+        </div>
+
+        <!-- Activity log (optional) -->
+        {% if order.timeline %}
+        <div class="track-card rounded-2xl p-6 sm:p-8 fade-up d2">
+            <h3 class="font-display text-2xl font-semibold text-charcoal dark:text-white mb-5">Activity</h3>
+            <ul class="space-y-4">
+                {% for ev in order.timeline %}
+                    <li class="flex gap-3">
+                        <span class="mt-1.5 w-2.5 h-2.5 rounded-full {% if loop.first %}bg-accent{% else %}bg-primary/40{% endif %} flex-shrink-0"></span>
+                        <div>
+                            <p class="text-sm font-medium text-charcoal dark:text-white">{{ ev.title }}</p>
+                            <p class="text-xs text-muted">{{ ev.time }}{% if ev.note %} &middot; {{ ev.note }}{% endif %}</p>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% endif %}{# end not cancelled #}
+
+        <!-- Order details -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-up d2">
+
+            <!-- Items -->
+            <div class="track-card rounded-2xl p-6 sm:p-8 lg:col-span-2">
+                <h3 class="font-display text-2xl font-semibold text-charcoal dark:text-white mb-5">Items in your order</h3>
+                {% if order.items %}
+                <ul class="divide-y divide-gray-100 dark:divide-gray-800">
+                    {% for item in order.items %}
+                        <li class="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+                            <div class="w-16 h-16 rounded-xl overflow-hidden bg-sand flex-shrink-0 border border-gray-100 dark:border-gray-800">
+                                {% if item.image %}
+                                    <img src="{{ item.image }}" alt="{{ item.name }}" class="w-full h-full object-cover" loading="lazy">
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center text-muted">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-charcoal dark:text-white truncate">{{ item.name }}</p>
+                                <p class="text-xs text-muted mt-0.5">Qty: {{ item.quantity }}</p>
+                            </div>
+                            <p class="text-sm font-semibold text-primary dark:text-accent whitespace-nowrap">KSh {{ "{:,.0f}".format(item.price * item.quantity) }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                    <p class="text-sm text-muted">Item details are not available for this order.</p>
+                {% endif %}
+
+                {% if order.total is defined %}
+                <div class="mt-6 pt-5 border-t border-gray-100 dark:border-gray-800 space-y-2 text-sm">
+                    {% if order.delivery_fee is defined and order.delivery_fee %}
+                    <div class="flex justify-between text-muted"><span>Delivery fee</span><span>KSh {{ "{:,.0f}".format(order.delivery_fee) }}</span></div>
+                    {% endif %}
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-charcoal dark:text-white">Total</span>
+                        <span class="font-display text-2xl font-bold text-primary dark:text-accent">KSh {{ "{:,.0f}".format(order.total) }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Delivery + help -->
+            <div class="space-y-6">
+                <div class="track-card rounded-2xl p-6">
+                    <h3 class="font-display text-xl font-semibold text-charcoal dark:text-white mb-4">Delivery Details</h3>
+                    <dl class="space-y-4 text-sm">
+                        {% if order.customer_name %}
+                        <div>
+                            <dt class="text-xs font-bold uppercase tracking-wider text-muted">Recipient</dt>
+                            <dd class="mt-1 font-medium text-charcoal dark:text-white">{{ order.customer_name }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if order.delivery_address %}
+                        <div>
+                            <dt class="text-xs font-bold uppercase tracking-wider text-muted">Address</dt>
+                            <dd class="mt-1 font-medium text-charcoal dark:text-white">{{ order.delivery_address }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if order.payment_method %}
+                        <div>
+                            <dt class="text-xs font-bold uppercase tracking-wider text-muted">Payment</dt>
+                            <dd class="mt-1 font-medium text-charcoal dark:text-white">{{ order.payment_method }}</dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+                </div>
+
+                <div class="rounded-2xl p-6 text-white relative overflow-hidden" style="background: linear-gradient(135deg, #3B0D5D, #581C87);">
+                    <div class="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-accent/20"></div>
+                    <h3 class="font-display text-xl font-semibold relative">Need help?</h3>
+                    <p class="text-sm text-gray-200 mt-1 relative">Questions about your delivery? We reply fast on WhatsApp.</p>
+                    <a href="https://wa.me/254717857049?text={{ ('Hello Cliffine, I need help with order #' ~ (order.order_number or order.id))|urlencode }}"
+                       target="_blank" rel="noopener noreferrer"
+                       class="relative mt-4 inline-flex items-center gap-2 bg-accent text-charcoal font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-accent-light transition-colors">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
+                        Chat on WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    {% elif request.args.get('order_id') %}
+
+        <!-- Not found -->
+        <div class="track-card rounded-2xl p-10 text-center fade-up">
+            <div class="w-20 h-20 mx-auto rounded-full bg-accent/15 flex items-center justify-center mb-5">
+                <svg class="w-10 h-10 text-accent-dark dark:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/></svg>
+            </div>
+            <h3 class="font-display text-2xl font-semibold text-charcoal dark:text-white">We couldn't find that order</h3>
+            <p class="text-muted mt-2 text-sm max-w-md mx-auto">Please double-check the order number and the phone number you used at checkout, then try again.</p>
+            <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="https://wa.me/254717857049" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-primary-dark transition-colors">Contact Support</a>
+                <a href="/orders" class="inline-flex items-center justify-center gap-2 border border-primary text-primary dark:text-accent dark:border-accent px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-primary/5 transition-colors">View My Orders</a>
+            </div>
+        </div>
+
+    {% else %}
+
+        <!-- Idle state: reassurance cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 fade-up">
+            <div class="track-card rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 mx-auto rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-accent flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <h4 class="font-semibold text-charcoal dark:text-white text-sm">Real-time updates</h4>
+                <p class="text-xs text-muted mt-1">See exactly which stage your order is at.</p>
+            </div>
+            <div class="track-card rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 mx-auto rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-accent flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                </div>
+                <h4 class="font-semibold text-charcoal dark:text-white text-sm">Countrywide delivery</h4>
+                <p class="text-xs text-muted mt-1">From Kericho &amp; Bomet to your doorstep.</p>
+            </div>
+            <div class="track-card rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 mx-auto rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-accent flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1"/></svg>
+                </div>
+                <h4 class="font-semibold text-charcoal dark:text-white text-sm">Nairobi pickup</h4>
+                <p class="text-xs text-muted mt-1">Collect your order from our Nairobi point.</p>
+            </div>
+        </div>
+
+    {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Animate the horizontal progress bar
+    (function () {
+        const fill = document.getElementById('stepper-fill');
+        if (!fill) return;
+        const target = parseFloat(fill.dataset.target || '0');
+        requestAnimationFrame(() => setTimeout(() => { fill.style.width = target + '%'; }, 250));
+    })();
+
+    // Lightweight client-side validation + loading state
+    (function () {
+        const form = document.getElementById('track-form');
+        if (!form) return;
+        const err = document.getElementById('form-error');
+        const btn = document.getElementById('track-btn');
+        const btnText = document.getElementById('track-btn-text');
+
+        form.addEventListener('submit', function (e) {
+            const orderId = form.order_id.value.trim();
+            const phone = form.phone.value.replace(/[\s\-()]/g, '');
+
+            let msg = '';
+            if (!orderId) msg = 'Please enter your order number.';
+            else if (!/^(\+?254|0)?[17]\d{8}$/.test(phone)) msg = 'Please enter a valid Kenyan phone number (e.g. 0712 345 678).';
+
+            if (msg) {
+                e.preventDefault();
+                err.textContent = msg;
+                err.classList.remove('hidden');
+                return;
+            }
+            err.classList.add('hidden');
+            btn.disabled = true;
+            btn.classList.add('opacity-80', 'cursor-wait');
+            btnText.textContent = 'Searching...';
+        });
+    })();
+</script>
+{% endblock %}

@@ -1711,6 +1711,96 @@ def orders():
         current_year=datetime.now().year
     )
 
+@main_bp.route("/track", methods=["GET"])
+def track():
+    """
+    Order tracking page.
+
+    Behaviour:
+      - No query params → idle state (reassurance cards)
+      - order_id + phone provided → look up order, verify phone matches
+      - order_id provided but no match → "not found" state
+
+    The template reads:
+      order.order_number / order.id
+      order.status, order.created_at, order.estimated_delivery
+      order.items  → list with .name, .image, .quantity, .price
+      order.total, order.delivery_fee
+      order.customer_name, order.delivery_address, order.payment_method
+      order.timeline (optional list of {title, time, note})
+    """
+    order_id = (request.args.get("order_id") or "").strip()
+    phone = (request.args.get("phone") or "").strip()
+
+    order_ctx = None
+
+    if order_id and phone:
+        # Normalise phone → compare last 9 digits (works for 07XX..., 2547XX..., +2547XX...)
+        def norm(p):
+            digits = "".join(ch for ch in p if ch.isdigit())
+            return digits[-9:] if len(digits) >= 9 else digits
+
+        phone_key = norm(phone)
+
+        # Try order_number first (e.g. "CC-10482" or the 8-char uuid prefix),
+        # then fall back to numeric id if the input is all digits.
+        order = Order.query.filter(
+            db.or_(
+                Order.order_number == order_id,
+                Order.order_number == order_id.upper(),
+            )
+        ).first()
+
+        if not order and order_id.isdigit():
+            order = Order.query.get(int(order_id))
+
+        # Verify the phone matches what was used at checkout
+        if order and phone_key and norm(order.phone or "") == phone_key:
+            order_ctx = _build_track_context(order)
+        else:
+            order = None  # will fall into "not found" branch
+
+    return render_template(
+        "track.html",
+        order=order_ctx,
+        current_year=datetime.now().year,
+    )
+
+
+def _build_track_context(order):
+    """
+    Convert an Order model instance into the dict shape the template expects.
+    Adjust field names to match YOUR Order / OrderItem models.
+    """
+    items = []
+    for it in (order.items or []):
+        product = it.product  # assumes OrderItem.product relationship exists
+        items.append({
+            "name": product.name if product else "Product",
+            "image": (product.image_url if product else None),
+            "quantity": it.quantity,
+            "price": it.price,   # unit price
+        })
+
+    total = getattr(order, "total_amount", None)
+    if total is None:
+        total = sum(i["price"] * i["quantity"] for i in items)
+
+    return {
+        "id": order.id,
+        "order_number": order.order_number or order.id,
+        "status": order.status or "pending",
+        "created_at": order.created_at,
+        "estimated_delivery": getattr(order, "estimated_delivery", None),
+        "customer_name": order.full_name or (order.user.full_name if order.user else None),
+        "delivery_address": order.shipping_address or order.delivery_location,
+        "payment_method": "M-Pesa" if order.mpesa_receipt else getattr(order, "payment_method", None),
+        "delivery_fee": order.delivery_fee or 0,
+        "total": total,
+        "items": items,
+        "timeline": getattr(order, "timeline", None),
+    }
+
 # User dashboard
 @main_bp.route("/dashboard")
 def dashboard():
