@@ -8,9 +8,9 @@
 <div class="bg-sand dark:bg-gray-800 py-4 border-b border-gray-100 dark:border-gray-700">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav class="flex items-center space-x-2 text-sm text-muted dark:text-gray-400">
-            <a href="/" class="hover:text-accent transition-colors">Home</a>
+            <a href="{{ url_for('main.index') }}" class="hover:text-accent transition-colors">Home</a>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <a href="/dashboard" class="hover:text-accent transition-colors">Dashboard</a>
+            <a href="{{ url_for('main.dashboard') }}" class="hover:text-accent transition-colors">Dashboard</a>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             <span class="font-medium text-charcoal dark:text-white">My Orders</span>
         </nav>
@@ -151,8 +151,8 @@
                                     <div>
                                         <h3 class="font-semibold text-charcoal dark:text-white">{{ item.product.name if item.product else 'Product #' ~ item.product_id }}</h3>
                                         <p class="text-sm text-muted">Qty: {{ item.quantity }}</p>
-                                        {% if loop.first and order.delivery_address %}
-                                        <p class="text-xs text-muted mt-1">Delivery: {{ order.delivery_address }}</p>
+                                        {% if loop.first and order.shipping_address %}
+                                        <p class="text-xs text-muted mt-1">Delivery: {{ order.shipping_address }}</p>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -192,11 +192,11 @@
                             </div>
                             <div class="flex gap-2">
                                 {% if order.payment_status == 'pending' %}
-                                <a href="/pay/{{ order.id }}" class="flex-1 py-2 bg-accent text-white text-sm font-bold rounded-lg hover:bg-accent-dark transition-colors text-center">Pay Now</a>
-                                {% elif order.status in ['shipped', 'processing'] %}
-                                <a href="/track/{{ order.id }}" class="flex-1 py-2 bg-primary text-white text-sm font-medium rounded-lg text-center hover:bg-primary-dark transition-colors">Track Order</a>
+                                <a href="{{ url_for('main.checkout') }}" class="flex-1 py-2 bg-accent text-white text-sm font-bold rounded-lg hover:bg-accent-dark transition-colors text-center">Pay Now</a>
+                                {% elif order.status in ['shipped', 'processing', 'confirmed', 'paid', 'packed', 'out_for_delivery'] %}
+                                <a href="{{ url_for('main.track', order_id=order.order_number or order.id, phone=order.phone) }}" class="flex-1 py-2 bg-primary text-white text-sm font-medium rounded-lg text-center hover:bg-primary-dark transition-colors">Track Order</a>
                                 {% endif %}
-                                <a href="/orders/{{ order.id }}" class="flex-1 py-2 border border-gray-200 dark:border-gray-600 text-charcoal dark:text-white text-sm font-medium rounded-lg text-center hover:bg-sand dark:hover:bg-gray-700 transition-colors">Details</a>
+                                <a href="{{ url_for('main.track', order_id=order.order_number or order.id, phone=order.phone) }}" class="flex-1 py-2 border border-gray-200 dark:border-gray-600 text-charcoal dark:text-white text-sm font-medium rounded-lg text-center hover:bg-sand dark:hover:bg-gray-700 transition-colors">Details</a>
                             </div>
                         </div>
                     </div>
@@ -224,7 +224,7 @@
         <svg class="w-24 h-24 mx-auto text-gray-300 dark:text-gray-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
         <h2 class="font-display text-2xl font-bold text-charcoal dark:text-white mb-2">No Orders Yet</h2>
         <p class="text-muted dark:text-gray-400 mb-6">You haven't placed any orders yet. Start shopping to fill this space!</p>
-        <a href="/products" class="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-bold rounded-full shadow-lg hover:bg-accent-dark transition-colors">
+        <a href="{{ url_for('main.products') }}" class="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-bold rounded-full shadow-lg hover:bg-accent-dark transition-colors">
             Shop Now
         </a>
     </div>
@@ -237,10 +237,10 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
         <p class="text-muted dark:text-gray-300 text-sm text-center sm:text-left">Need help with an order?</p>
         <div class="flex gap-3">
-            <a href="/contact" class="px-6 py-2 border border-primary dark:border-white text-primary dark:text-white font-medium rounded-lg hover:bg-primary hover:text-white transition-colors text-sm">
+            <a href="{{ url_for('main.contact') }}" class="px-6 py-2 border border-primary dark:border-white text-primary dark:text-white font-medium rounded-lg hover:bg-primary hover:text-white transition-colors text-sm">
                 Contact Support
             </a>
-            <a href="/products" class="px-6 py-2 bg-accent text-white font-bold rounded-lg shadow hover:bg-accent-dark transition-colors text-sm">
+            <a href="{{ url_for('main.products') }}" class="px-6 py-2 bg-accent text-white font-bold rounded-lg shadow hover:bg-accent-dark transition-colors text-sm">
                 Continue Shopping
             </a>
         </div>
