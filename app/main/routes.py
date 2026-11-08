@@ -1766,18 +1766,12 @@ def track():
         current_year=datetime.now().year,
     )
 
+from types import SimpleNamespace
 
 def _build_track_context(order):
-    """
-    Convert an Order model instance into the dict shape the template expects.
-    Fetches products manually since OrderItem has product_id only (no .product relationship).
-    """
     items = []
     for it in (order.items or []):
         product = Product.query.get(it.product_id) if it.product_id else None
-
-        # Adjust the image attribute to whatever YOUR Product model uses:
-        #   product.image, product.image_url, product.photo, etc.
         image = None
         if product:
             image = (
@@ -1785,34 +1779,33 @@ def _build_track_context(order):
                 or getattr(product, "image_url", None)
                 or getattr(product, "photo", None)
             )
-
-        items.append({
-            "name": product.name if product else f"Product #{it.product_id}",
-            "image": image,
-            "quantity": it.quantity,
-            "price": it.price,
-        })
+        items.append(SimpleNamespace(
+            name=product.name if product else f"Product #{it.product_id}",
+            image=image,
+            quantity=it.quantity,
+            price=it.price,
+        ))
 
     total = getattr(order, "total_amount", None)
     if total is None:
-        total = sum(i["price"] * i["quantity"] for i in items)
+        total = sum(i.price * i.quantity for i in items)
 
-    return {
-        "id": order.id,
-        "order_number": order.order_number or order.id,
-        "status": order.status or "pending",
-        "created_at": order.created_at,
-        "estimated_delivery": getattr(order, "estimated_delivery", None),
-        "customer_name": order.full_name or (
+    return SimpleNamespace(
+        id=order.id,
+        order_number=order.order_number or order.id,
+        status=order.status or "pending",
+        created_at=order.created_at,
+        estimated_delivery=getattr(order, "estimated_delivery", None),
+        customer_name=order.full_name or (
             order.user.full_name if getattr(order, "user", None) else None
         ),
-        "delivery_address": order.shipping_address or getattr(order, "delivery_location", None),
-        "payment_method": "M-Pesa" if order.mpesa_receipt else getattr(order, "payment_method", None),
-        "delivery_fee": order.delivery_fee or 0,
-        "total": total,
-        "items": items,
-        "timeline": getattr(order, "timeline", None),
-    }
+        delivery_address=order.shipping_address or getattr(order, "delivery_location", None),
+        payment_method="M-Pesa" if order.mpesa_receipt else getattr(order, "payment_method", None),
+        delivery_fee=order.delivery_fee or 0,
+        total=total,
+        items=items,
+        timeline=getattr(order, "timeline", None),
+    )
 
 # User dashboard
 @main_bp.route("/dashboard")
