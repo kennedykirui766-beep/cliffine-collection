@@ -1038,9 +1038,234 @@ def user_roles():
     return render_template("admin/customers/roles.html")
 
 
+# ============================================================
+# PAYMENTS & TRANSACTIONS
+# ============================================================
+
+def _transactions_query():
+    """Shared query builder for page / CSV / print report."""
+    from sqlalchemy import or_
+    from datetime import datetime, timedelta
+
+    q       = (request.args.get("q") or "").strip()
+    method  = (request.args.get("method") or "").strip()
+    status  = (request.args.get("status") or "").strip()
+    d_from  = (request.args.get("date_from") or "").strip()
+    d_to    = (request.args.get("date_to") or "").strip()
+
+    query = Order.query
+
+    if q:
+        term = f"%{q}%"
+        query = query.filter(or_(
+            Order.order_number.ilike(term),
+            Order.full_name.ilike(term),
+            Order.email.ilike(term),
+            Order.mpesa_receipt.ilike(term),
+        ))
+
+    if method:
+        query = query.filter(Order.payment_method == method)
+
+    if status:
+        status_map = {
+            "Completed": "delivered",
+            "Pending":   "pending",
+            "Failed":    "cancelled",
+            "Refunded":  "cancelled",
+        }
+        query = query.filter(Order.status == status_map.get(status, status))
+
+    if d_from:
+        try:
+            dt = datetime.strptime(d_from, "%Y-%m-%d")
+            query = query.filter(Order.created_at >= dt)
+        except ValueError:
+            pass
+
+    if d_to:
+        try:
+            dt = datetime.strptime(d_to, "%Y-%m-%d") + timedelta(days=1)
+            query = query.filter(Order.created_at < dt)
+        except ValueError:
+            pass
+
+    return query.order_by(Order.created_at.desc())
+
+
 @admin_bp.route("/payments/transactions")
+@admin_required
 def transactions():
-    return render_template("admin/payments/transactions.html")
+    from datetime import datetime, timedelta
+    from sqlalchemy import func, or_
+
+    page = request.args.get("page", 1, type=int)
+    per_page = 20
+
+    q             = (request.args.get("q") or "").strip()
+    method_filter = (request.args.get("method") or "").strip()
+    status_filter = (request.args.get("status") or "").strip()
+    date_from     = (request.args.get("date_from") or "").strip()
+    date_to       = (request.args.get("date_to") or "").strip()
+    trend_range   = (request.args.get("trend") or "7").strip()
+
+    query = _transactions_query()
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # Build display list
+    transactions_list = []
+    for o in pagination.items:
+        if o.payment_status == "paid":
+            status = "Completed"
+        elif o.payment_status == "pending":
+            status = "Pending"
+        elif o.status == "refunded":
+            status = "Refunded"
+        elif o.status == "cancelled":
+            status = "Failed"
+        else:
+            status = (o.payment_status or "Pending").title()
+
+        transactions_list.append({
+            "txn_id": o.mpesa_receipt or f"ORD-{o.id}",
+            "order_id": o.id,
+            "customer_name": o.full_name or (o.user.full_name if o.user else "Guest"),
+            "payment_method": (o.payment_method or "M-Pesa").title(),
+            "amount": o.total_amount or 0,
+            "status": status,
+            "mpesa_receipt": o.mpesa_receipt,
+            "created_at": o.created_at.strftime("%b %d, %Y") if o.created_at else "",
+        })
+
+    # Metrics
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    total_revenue = db.session.query(func.coalesce(func.sum(Order.total_amount), 0)) \
+        .filter(Order.created_at >= month_start, Order.status != "cancelled").scalar() or 0
+
+    paid_revenue = db.session.query(func.coalesce(func.sum(Order.total_amount), 0)) \
+        .filter(Order.payment_status == "paid").scalar() or 0
+
+    pending_amount = db.session.query(func.coalesce(func.sum(Order.total_amount), 0)) \
+        .filter(Order.payment_status == "pending", Order.status != "cancelled").scalar() or 0
+
+    refunded_amount = db.session.query(func.coalesce(func.sum(Order.total_amount), 0)) \
+        .filter(Order.status == "refunded").scalar() or 0
+
+    # Trend
+    days = 30 if trend_range == "30" else 7
+    trend_start = (now - timedelta(days=days - 1)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    raw = db.session.query(
+        func.date(Order.created_at).label("d"),
+        func.coalesce(func.sum(Order.total_amount), 0).label("v")
+    ).filter(
+        Order.created_at >= trend_start, Order.status != "cancelled"
+    ).group_by(func.date(Order.created_at)).all()
+
+    by_date = {str(r.d): float(r.v) for r in raw}
+    trend_labels, trend_values = [], []
+    for i in range(days):
+        d = (trend_start + timedelta(days=i)).date()
+        trend_labels.append(d.strftime("%b %d"))
+        trend_values.append(by_date.get(str(d), 0))
+
+    # Payment methods
+    method_rows = db.session.query(
+        Order.payment_method,
+        func.count(Order.id)
+    ).filter(
+        Order.status != "cancelled",
+        Order.payment_method.isnot(None),
+        Order.payment_method != "",
+    ).group_by(Order.payment_method).all()
+
+    method_labels = [r[0].title() for r in method_rows] or ["No Data"]
+    method_values = [int(r[1]) for r in method_rows] or [0]
+
+    return render_template(
+        "admin/payments/transactions.html",
+        transactions=transactions_list,
+        pagination=pagination,
+        search=q,
+        method_filter=method_filter,
+        status_filter=status_filter,
+        date_from=date_from,
+        date_to=date_to,
+        trend_range=trend_range,
+        total_revenue=total_revenue,
+        paid_revenue=paid_revenue,
+        pending_amount=pending_amount,
+        refunded_amount=refunded_amount,
+        period_label=now.strftime("%B %Y"),
+        trend_labels=trend_labels,
+        trend_values=trend_values,
+        method_labels=method_labels,
+        method_values=method_values,
+    )
+
+
+@admin_bp.route("/payments/export-csv")
+@admin_required
+def payments_export_csv():
+    from io import StringIO
+    from flask import Response
+
+    orders = _transactions_query().limit(10000).all()
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Transaction ID", "Order ID", "Customer", "Email", "Phone",
+        "Payment Method", "M-Pesa Receipt", "Amount (KES)",
+        "Payment Status", "Order Status", "Date",
+    ])
+
+    for o in orders:
+        writer.writerow([
+            o.mpesa_receipt or f"ORD-{o.id}",
+            f"ORD-{o.id:04d}",
+            o.full_name or "",
+            o.email or "",
+            o.phone or "",
+            (o.payment_method or "").title(),
+            o.mpesa_receipt or "",
+            f"{float(o.total_amount or 0):.2f}",
+            o.payment_status or "pending",
+            o.status or "pending",
+            o.created_at.strftime("%Y-%m-%d %H:%M") if o.created_at else "",
+        ])
+
+    output.seek(0)
+    filename = f"payments_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.csv"
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@admin_bp.route("/payments/print-report")
+@admin_required
+def payments_print_report():
+    orders = _transactions_query().limit(5000).all()
+
+    total = sum(float(o.total_amount or 0) for o in orders)
+    by_method = {}
+    for o in orders:
+        m = (o.payment_method or "Unknown").title()
+        by_method[m] = by_method.get(m, 0) + float(o.total_amount or 0)
+
+    return render_template(
+        "admin/payments/print_report.html",
+        orders=orders,
+        total=total,
+        by_method=by_method,
+        generated_at=datetime.utcnow().strftime("%d %B %Y, %H:%M"),
+        store_name="Cliffine Collection",
+    )
+
 
 
 @admin_bp.route("/payments/methods")
