@@ -2445,61 +2445,49 @@ def media_upload():
     if not file.filename:
         return jsonify(success=False, message="No file selected."), 400
 
-    upload_dir = _get_upload_dir()
-
-    # Generate unique filename to avoid overwrites
-    name, ext = os.path.splitext(file.filename)
-    timestamp = int(datetime.utcnow().timestamp())
-    stored_name = secure_filename(f"{name}_{timestamp}{ext}")
-    stored_path = os.path.join(upload_dir, stored_name)
-
-    # Save file
-    file.save(stored_path)
-
-    # Generate thumbnail for images
-    if _get_file_type(file.mimetype) == "image":
-        _generate_thumbnail(stored_path)
-
     file_type = _get_file_type(file.mimetype)
-    file_size = os.path.getsize(stored_path)
-    width, height = None, None
-    if file_type == "image":
-        try:
-            from PIL import Image as PILImage
-            with PILImage.open(stored_path) as img:
-                width, height = img.size
-        except Exception:
-            pass
+
+    try:
+        upload_result = cloudinary.uploader.upload(
+            file,
+            folder="cliffine/media",
+            resource_type="auto",   # handles image/video/raw
+        )
+    except Exception as e:
+        current_app.logger.error(f"Cloudinary upload failed: {e}", exc_info=True)
+        return jsonify(success=False, message=f"Upload failed: {e}"), 500
+
+    file_url = upload_result.get("secure_url", "")
+    thumbnail_url = file_url
+    if file_type == "image" and file_url:
+        thumbnail_url = file_url.replace("/upload/", "/upload/w_300,h_300,c_fill/", 1)
 
     media = Media(
         filename=file.filename,
-        stored_name=stored_name,
-        file_path=f"uploads/media/{stored_name}",
+        stored_name=upload_result.get("public_id", ""),
+        file_path=file_url,   # store the full Cloudinary URL
         file_type=file_type,
         mime_type=file.mimetype,
-        file_size=file_size,
-        width=width,
-        height=height,
+        file_size=upload_result.get("bytes", 0),
+        width=upload_result.get("width"),
+        height=upload_result.get("height"),
         uploaded_by=current_user.id,
     )
     db.session.add(media)
     db.session.commit()
 
-    return jsonify(
-        success=True,
-        media={
-            "id": media.id,
-            "filename": media.filename,
-            "file_url": media.file_url,
-            "thumbnail_url": media.thumbnail_url,
-            "file_type": media.file_type,
-            "mime_type": media.mime_type or "",
-            "file_size": media.file_size,
-            "width": media.width,
-            "height": media.height,
-            "created_at": media.created_at.isoformat(),
-        },
-    )
+    return jsonify(success=True, media={
+        "id": media.id,
+        "filename": media.filename,
+        "file_url": media.file_url,
+        "thumbnail_url": media.thumbnail_url,
+        "file_type": media.file_type,
+        "mime_type": media.mime_type or "",
+        "file_size": media.file_size,
+        "width": media.width,
+        "height": media.height,
+        "created_at": media.created_at.isoformat(),
+    })
 
 
 @admin_bp.route("/media/<int:media_id>", methods=["DELETE"])

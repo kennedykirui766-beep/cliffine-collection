@@ -838,14 +838,20 @@ class Media(db.Model):
 
     @property
     def file_url(self):
-        return "/" + self.file_path.lstrip("/")
+        p = (self.file_path or "").strip()
+        if p.startswith(("http://", "https://")):
+            return p
+        return "/" + p.lstrip("/")
 
     @property
     def thumbnail_url(self):
         if self.file_type == "image":
+            p = (self.file_path or "").strip()
+            if p.startswith("https://res.cloudinary.com") and "/upload/" in p:
+                return p.replace("/upload/", "/upload/w_300,h_300,c_fill/", 1)
+            # legacy local thumbnail lookup
             thumb_dir = os.path.dirname(self.file_path) + "/thumbnails/"
-            thumb_name = "thumb_" + self.stored_name
-            thumb_path = thumb_dir + thumb_name
+            thumb_path = thumb_dir + "thumb_" + self.stored_name
             if os.path.isfile(os.path.join(current_app.root_path, thumb_path)):
                 return "/" + thumb_path
         return self.file_url
