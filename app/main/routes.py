@@ -1657,7 +1657,8 @@ def checkout_process():
         status="pending",
         payment_status="paid",
         mpesa_receipt=mpesa_receipt,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
+        payment_method="M-Pesa",
     )
     db.session.add(order)
     db.session.commit()

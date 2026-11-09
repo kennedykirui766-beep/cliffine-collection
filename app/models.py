@@ -276,6 +276,7 @@ class Order(db.Model):
     # Status
     status = db.Column(db.String(50), default="pending")
     payment_status = db.Column(db.String(50), default="pending")
+    payment_method = db.Column(db.String(50))
 
     # Delivery
     shipping_address = db.Column(db.Text)
