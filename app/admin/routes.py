@@ -2489,7 +2489,26 @@ def media_upload():
         "height": media.height,
         "created_at": media.created_at.isoformat(),
     })
-    
+
+@admin_bp.route("/media/<int:media_id>", methods=["GET"])
+@admin_required
+def media_detail(media_id):
+    media = Media.query.get_or_404(media_id)
+    return jsonify(
+        success=True,
+        media={
+            "id": media.id,
+            "filename": media.filename,
+            "file_url": media.file_url,
+            "thumbnail_url": media.thumbnail_url,
+            "file_type": media.file_type,
+            "mime_type": media.mime_type or "",
+            "file_size": media.file_size,
+            "width": media.width,
+            "height": media.height,
+            "created_at": media.created_at.isoformat() if media.created_at else "",
+        },
+    )    
 
 @admin_bp.route("/media/<int:media_id>", methods=["DELETE"])
 @admin_required
