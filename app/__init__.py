@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, current_user
 import os
+import secrets                                   # ← NEW
 
 from markupsafe import Markup
 
@@ -12,13 +13,14 @@ login_manager = LoginManager()
 login_manager.login_view = "main.login"
 login_manager.login_message_category = "info"
 
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object("config.Config")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("DATABASE URI:", app.config["SQLALCHEMY_DATABASE_URI"])
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Initialize extensions
     db.init_app(app)
@@ -44,15 +46,10 @@ def create_app():
     # -----------------------------
     # Context processor: cart count
     # -----------------------------
-    from flask_login import current_user
     from app.models import Cart
 
     @app.context_processor
     def inject_cart_count():
-        from flask_login import current_user
-        from flask import session
-        from app.models import Cart
-
         cart_count = 0
 
         if current_user.is_authenticated:
@@ -65,12 +62,12 @@ def create_app():
             cart_count = sum(item.quantity for item in cart.items)
 
         return dict(cart_count=cart_count)
-    
-    from markupsafe import Markup
 
+    # -----------------------------
+    # Utility: status badge
+    # -----------------------------
     @app.context_processor
     def utility_processor():
-
         def status_badge(status):
             status = (status or "").lower()
 
@@ -91,5 +88,16 @@ def create_app():
             )
 
         return dict(status_badge=status_badge)
+
+    # -----------------------------
+    # CSRF token for AJAX endpoints
+    # -----------------------------
+    @app.context_processor
+    def inject_csrf_token():
+        token = session.get("_csrf_token")
+        if not token:
+            token = secrets.token_urlsafe(32)
+            session["_csrf_token"] = token
+        return {"csrf_token": lambda: token}
 
     return app
