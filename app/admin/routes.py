@@ -2419,6 +2419,7 @@ def media():
     type_counts = {}
     for t in ["image", "video", "document", "audio", "other"]:
         type_counts[t] = Media.query.filter_by(file_type=t).count()
+    type_counts["all"] = sum(type_counts.values())
 
     total_size = db.session.query(
         func.coalesce(func.sum(Media.file_size), 0)
@@ -2488,7 +2489,7 @@ def media_upload():
         "height": media.height,
         "created_at": media.created_at.isoformat(),
     })
-
+    
 
 @admin_bp.route("/media/<int:media_id>", methods=["DELETE"])
 @admin_required
