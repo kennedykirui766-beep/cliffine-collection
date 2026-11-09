@@ -2894,7 +2894,6 @@ def admin_profile_photo():
         upload_result = cloudinary_upload(
             file,
             public_id=public_id,
-            folder="admin_profiles",
             overwrite=True,
             width=400,
             height=400,

@@ -5,6 +5,7 @@ import os
 from flask import current_app
 from app import db
 from flask_login import UserMixin
+from flask import url_for
 
 
 # ===============================
@@ -49,9 +50,18 @@ class User(db.Model, UserMixin):
 
     @property
     def profile_image_url(self):
-        if self.profile_image:
-            return "/" + self.profile_image.lstrip("/")
-        return None
+        img = (self.profile_image or "").strip()
+
+        # 1) Already a full URL (Cloudinary, S3, etc.) → return as-is
+        if img.startswith(("http://", "https://")):
+            return img
+
+        # 2) No image → None so templates fall back to their ui-avatars.com default
+        if not img:
+            return None
+
+        # 3) Legacy relative path (e.g. "uploads/avatars/3.jpg") → serve from static
+        return url_for("static", filename=img.lstrip("/"))
 
     def get_preferences(self):
         defaults = {
