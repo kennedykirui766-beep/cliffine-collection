@@ -1682,14 +1682,248 @@ def payments_print_report():
 
 
 @admin_bp.route("/payments/methods")
+@admin_required
 def payment_methods():
-    return render_template("admin/payments/methods.html")
+    """Configure payment methods + show real usage stats from Order/Payment data."""
+    from sqlalchemy import func
+    from datetime import datetime, timedelta
+
+    # ---- Real usage stats per method (from Orders) ----
+    # Group non-cancelled orders by payment_method
+    rows = db.session.query(
+        Order.payment_method,
+        func.count(Order.id).label("cnt"),
+        func.coalesce(func.sum(Order.total_amount), 0).label("rev"),
+    ).filter(
+        Order.status != "cancelled",
+    ).group_by(Order.payment_method).all()
+
+    # Normalize + aggregate (falls back to "Unknown" for NULL)
+    method_stats = {}
+    for r in rows:
+        key = (r.payment_method or "Unknown").strip() or "Unknown"
+        entry = method_stats.setdefault(key, {"count": 0, "revenue": 0.0})
+        entry["count"] += int(r.cnt)
+        entry["revenue"] += float(r.rev)
+
+    total_orders = sum(m["count"] for m in method_stats.values()) or 1
+    total_revenue = sum(m["revenue"] for m in method_stats.values()) or 1
+
+    # Display list — sorted by count desc
+    method_list = []
+    for name, s in sorted(method_stats.items(), key=lambda kv: kv[1]["count"], reverse=True):
+        method_list.append({
+            "name": name,
+            "orders": s["count"],
+            "revenue": s["revenue"],
+            "order_pct": round(s["count"] / total_orders * 100, 1),
+            "revenue_pct": round(s["revenue"] / total_revenue * 100, 1),
+        })
+
+    # ---- Configurable methods (settings-backed) ----
+    # These are the methods an admin can enable/disable on the storefront.
+    # We read from the settings file if it exists, else use safe defaults.
+    import json
+    settings_file = "settings_data.json"
+    saved = {}
+    try:
+        import os
+        if os.path.exists(settings_file):
+            with open(settings_file) as f:
+                saved = json.load(f)
+    except Exception:
+        saved = {}
+
+    payments_cfg = (saved or {}).get("payments", {})
+
+    payment_config = [
+        {
+            "key": "mpesa",
+            "name": "M-Pesa (STK Push)",
+            "description": "Customer receives an STK prompt on their phone to authorise payment.",
+            "icon": "phone",
+            "color": "green",
+            "enabled": bool(payments_cfg.get("mpesa_enabled", True)),
+            "fields": [
+                {"label": "Paybill Number", "value": payments_cfg.get("paybill_number", "174379")},
+                {"label": "Account Number", "value": payments_cfg.get("account_number", "Cliffine")},
+            ],
+        },
+        {
+            "key": "mpesa_manual",
+            "name": "M-Pesa (Manual / Paybill)",
+            "description": "Customer pays via Paybill then submits the M-Pesa receipt for verification.",
+            "icon": "receipt",
+            "color": "blue",
+            "enabled": True,
+            "fields": [
+                {"label": "Paybill Number", "value": payments_cfg.get("paybill_number", "714888")},
+                {"label": "Account Number", "value": payments_cfg.get("account_number", "196856")},
+            ],
+        },
+        {
+            "key": "card",
+            "name": "Card (Coming Soon)",
+            "description": "Visa / Mastercard via a card processor. Not yet configured.",
+            "icon": "card",
+            "color": "purple",
+            "enabled": bool(payments_cfg.get("card_enabled", False)),
+            "fields": [],
+        },
+        {
+            "key": "cod",
+            "name": "Cash on Delivery",
+            "description": "Customer pays cash when the order is delivered. Available in select areas only.",
+            "icon": "cash",
+            "color": "amber",
+            "enabled": bool(payments_cfg.get("cod_enabled", False)),
+            "fields": [],
+        },
+    ]
+
+    # ---- Recent payments (from Payment model) ----
+    from app.models import Payment
+    recent_payments_raw = (
+        Payment.query
+        .order_by(Payment.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    recent_payments = []
+    for p in recent_payments_raw:
+        recent_payments.append({
+            "id": p.id,
+            "receipt": p.mpesa_receipt or "—",
+            "phone": p.phone_number or "—",
+            "amount": p.amount or 0,
+            "status": (p.status or "pending").title(),
+            "order_id": p.order_id,
+            "created_at": p.created_at.strftime("%d %b %Y, %H:%M") if p.created_at else "",
+        })
+
+    return render_template(
+        "admin/payments/methods.html",
+        method_list=method_list,
+        payment_config=payment_config,
+        recent_payments=recent_payments,
+        total_orders=total_orders,
+        total_revenue=total_revenue,
+    )
 
 
 @admin_bp.route("/payments/refunds")
+@admin_required
 def payment_refunds():
-    return render_template("admin/payments/refunds.html")
+    """List refunded/cancelled orders with payment data, plus a refund-request queue."""
+    from sqlalchemy import func, or_
+    from datetime import datetime, timedelta
 
+    # Filters
+    q           = (request.args.get("q") or "").strip()
+    status_filter = (request.args.get("status") or "all").strip()
+    page        = request.args.get("page", 1, type=int)
+    per_page    = 20
+
+    # Base: orders whose status is "refunded" or whose payment_status suggests a refund.
+    # Adjust the list if your app uses different status strings.
+    base_statuses = ["refunded", "refund_requested", "cancelled"]
+
+    query = Order.query.filter(
+        or_(
+            Order.status.in_(base_statuses),
+            Order.payment_status.in_(["refunded", "refund_requested"]),
+        )
+    )
+
+    if q:
+        term = f"%{q}%"
+        query = query.filter(or_(
+            Order.order_number.ilike(term),
+            Order.full_name.ilike(term),
+            Order.email.ilike(term),
+            Order.mpesa_receipt.ilike(term),
+        ))
+
+    if status_filter != "all":
+        if status_filter == "refunded":
+            query = query.filter(or_(
+                Order.status == "refunded",
+                Order.payment_status == "refunded",
+            ))
+        elif status_filter == "requested":
+            query = query.filter(or_(
+                Order.status == "refund_requested",
+                Order.payment_status == "refund_requested",
+            ))
+        elif status_filter == "cancelled":
+            query = query.filter(Order.status == "cancelled")
+
+    query = query.order_by(Order.created_at.desc())
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # ---- Aggregate metrics ----
+    total_refunds_amount = db.session.query(
+        func.coalesce(func.sum(Order.total_amount), 0)
+    ).filter(
+        or_(Order.status == "refunded", Order.payment_status == "refunded")
+    ).scalar() or 0
+
+    refunded_count = Order.query.filter(
+        or_(Order.status == "refunded", Order.payment_status == "refunded")
+    ).count()
+
+    requested_count = Order.query.filter(
+        or_(Order.status == "refund_requested", Order.payment_status == "refund_requested")
+    ).count()
+
+    cancelled_count = Order.query.filter(Order.status == "cancelled").count()
+
+    # This-month refunds (for trend context)
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    month_refunds = db.session.query(
+        func.coalesce(func.sum(Order.total_amount), 0)
+    ).filter(
+        or_(Order.status == "refunded", Order.payment_status == "refunded"),
+        Order.created_at >= month_start,
+    ).scalar() or 0
+
+    # ---- Build display rows ----
+    refunds = []
+    for o in pagination.items:
+        if o.status == "refund_requested" or o.payment_status == "refund_requested":
+            ui_status = "Requested"
+        elif o.status == "refunded" or o.payment_status == "refunded":
+            ui_status = "Refunded"
+        else:
+            ui_status = "Cancelled"
+
+        refunds.append({
+            "id": o.id,
+            "order_number": o.order_number or f"ORD-{o.id:04d}",
+            "customer_name": o.full_name or (o.user.full_name if o.user else "Guest"),
+            "email": o.email or "",
+            "phone": o.phone or "",
+            "amount": o.total_amount or 0,
+            "payment_method": (o.payment_method or "—"),
+            "mpesa_receipt": o.mpesa_receipt or "",
+            "ui_status": ui_status,
+            "created_at": o.created_at.strftime("%d %b %Y") if o.created_at else "",
+        })
+
+    return render_template(
+        "admin/payments/refunds.html",
+        refunds=refunds,
+        pagination=pagination,
+        search=q,
+        status_filter=status_filter,
+        total_refunds_amount=total_refunds_amount,
+        refunded_count=refunded_count,
+        requested_count=requested_count,
+        cancelled_count=cancelled_count,
+        month_refunds=month_refunds,
+    )
 
 
 
