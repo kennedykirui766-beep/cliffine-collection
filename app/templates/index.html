@@ -3,18 +3,34 @@
 {% block title %}Home - Cliffine Collection{% endblock %}
 
 {% block content %}
+
+{# ── Match showcase categories from the real DB list ── #}
+{% set ns = namespace(bags=None, shoes=None, electronics=None, household=None) %}
+{% for cat in categories %}
+    {% set s = (cat.slug or '')|lower %}
+    {% set n = (cat.name or '')|lower %}
+    {% if not ns.bags and ('handbag' in s or 'handbag' in n or 'bag' in s or 'bag' in n) %}
+        {% set ns.bags = cat %}
+    {% endif %}
+    {% if not ns.shoes and ('shoe' in s or 'shoe' in n or 'footwear' in s or 'footwear' in n) %}
+        {% set ns.shoes = cat %}
+    {% endif %}
+    {% if not ns.electronics and ('electronic' in s or 'electronic' in n or 'appliance' in s or 'appliance' in n or 'tv' in s or 'tv' in n) %}
+        {% set ns.electronics = cat %}
+    {% endif %}
+    {% if not ns.household and ('household' in s or 'household' in n or 'home' in s or 'home' in n or 'furniture' in s or 'furniture' in n) %}
+        {% set ns.household = cat %}
+    {% endif %}
+{% endfor %}
+
 <!-- 1. Hero Section -->
 <section class="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
-    <!-- Background Image -->
     <div class="absolute inset-0 z-0">
-        <img src="static/images/hero_section_placeholder.jpg"
+        <img src="{{ url_for('static', filename='images/hero_section_placeholder.jpg') }}"
              alt="Cliffine Collection Store"
              class="w-full h-full object-cover object-center scale-105">
-        <!-- Dark overlay -->
         <div class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/50"></div>
-        <!-- Subtle red glow -->
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_50%,rgba(255,0,0,0.2),transparent_60%)]"></div>
-        <!-- Bottom fade for seamless transition -->
         <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a0a0a] to-transparent"></div>
     </div>
 
@@ -23,24 +39,20 @@
 
             <!-- Left: Text Content -->
             <div class="text-center lg:text-left order-2 lg:order-1">
-                <!-- Tag -->
                 <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-accent/15 border border-accent/30 text-accent rounded-full text-sm font-semibold mb-6 tracking-wide uppercase">
                     <span class="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
                     About Cliffine Collection
                 </span>
 
-                <!-- Heading -->
                 <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] mb-6">
                     A Trusted Shop
                     <span class="block text-accent mt-1">You Can Rely On</span>
                 </h1>
 
-                <!-- Description -->
                 <p class="max-w-xl mx-auto lg:mx-0 text-base sm:text-lg text-gray-300 leading-relaxed mb-8">
                     Offering quality household items, electronics, shoes, and handbags at affordable prices with flexible payment options. Delivery countrywide.
                 </p>
 
-                <!-- Trust Indicators -->
                 <div class="flex flex-wrap items-center justify-center lg:justify-start gap-6 mb-10 text-sm text-gray-400">
                     <span class="flex items-center gap-2">
                         <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -56,9 +68,8 @@
                     </span>
                 </div>
 
-                <!-- CTA Buttons -->
                 <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                    <a href="/products"
+                    <a href="{{ url_for('main.products') }}"
                        class="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-accent text-white font-bold rounded-full shadow-lg shadow-accent/25 hover:bg-accent-dark hover:shadow-accent/40 transform hover:scale-105 transition-all duration-300">
                         Shop Now
                         <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
@@ -70,56 +81,78 @@
                 </div>
             </div>
 
-            <!-- Right: Product Showcase Grid -->
+            <!-- Right: Product Showcase Grid — links to real categories from the DB -->
             <div class="order-1 lg:order-2">
                 <div class="grid grid-cols-2 gap-3 sm:gap-4">
-                    <!-- Handbags (top-left) — larger -->
-                    <div class="col-span-2 sm:col-span-1 row-span-2 group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-[3/4]">
-                        <img src="https://picsum.photos/seed/cliffine-bags/400/530.jpg"
-                             alt="Ladies Handbags"
+
+                    <!-- Handbags (top-left, larger) -->
+                    <a href="{{ url_for('main.category_products', slug=ns.bags.slug) if ns.bags else url_for('main.all_categories') }}"
+                       class="col-span-2 sm:col-span-1 row-span-2 group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-[3/4] block">
+                        <img src="{{ ns.bags.image if ns.bags and ns.bags.image else 'https://picsum.photos/seed/cliffine-bags/400/530.jpg' }}"
+                             alt="{{ ns.bags.name if ns.bags else 'Ladies Handbags' }}"
                              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                         <div class="absolute bottom-0 left-0 right-0 p-4">
-                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Bags</span>
-                            <p class="text-white font-bold text-lg">Ladies Handbags</p>
+                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">
+                                {{ ns.bags.name if ns.bags else 'Bags' }}
+                            </span>
+                            <p class="text-white font-bold text-lg">
+                                {{ ns.bags.name if ns.bags else 'Ladies Handbags' }}
+                            </p>
                         </div>
-                    </div>
+                    </a>
 
                     <!-- Shoes (top-right) -->
-                    <div class="group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-square">
-                        <img src="https://picsum.photos/seed/cliffine-shoes/300/300.jpg"
-                             alt="Men's Shoes"
+                    <a href="{{ url_for('main.category_products', slug=ns.shoes.slug) if ns.shoes else url_for('main.all_categories') }}"
+                       class="group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-square block">
+                        <img src="{{ ns.shoes.image if ns.shoes and ns.shoes.image else 'https://picsum.photos/seed/cliffine-shoes/300/300.jpg' }}"
+                             alt="{{ ns.shoes.name if ns.shoes else "Men's Shoes" }}"
                              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                         <div class="absolute bottom-0 left-0 right-0 p-3">
-                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Shoes</span>
-                            <p class="text-white font-bold text-sm">Men's Shoes</p>
+                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">
+                                {{ ns.shoes.name if ns.shoes else 'Shoes' }}
+                            </span>
+                            <p class="text-white font-bold text-sm">
+                                {{ ns.shoes.name if ns.shoes else "Men's Shoes" }}
+                            </p>
                         </div>
-                    </div>
+                    </a>
 
                     <!-- Electronics (bottom-right) -->
-                    <div class="group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-square">
-                        <img src="https://picsum.photos/seed/cliffine-electronics/300/300.jpg"
-                             alt="Electronics"
+                    <a href="{{ url_for('main.category_products', slug=ns.electronics.slug) if ns.electronics else url_for('main.all_categories') }}"
+                       class="group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-square block">
+                        <img src="{{ ns.electronics.image if ns.electronics and ns.electronics.image else 'https://picsum.photos/seed/cliffine-electronics/300/300.jpg' }}"
+                             alt="{{ ns.electronics.name if ns.electronics else 'Electronics' }}"
                              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                         <div class="absolute bottom-0 left-0 right-0 p-3">
-                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Electronics</span>
-                            <p class="text-white font-bold text-sm">Home Appliances</p>
+                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">
+                                {{ ns.electronics.name if ns.electronics else 'Electronics' }}
+                            </span>
+                            <p class="text-white font-bold text-sm">
+                                {{ ns.electronics.name if ns.electronics else 'Home Appliances' }}
+                            </p>
                         </div>
-                    </div>
+                    </a>
 
-                    <!-- Household (bottom-wide, hidden on small) -->
-                    <div class="col-span-2 hidden sm:block group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-[2.5/1]">
-                        <img src="https://picsum.photos/seed/cliffine-household/600/240.jpg"
-                             alt="Household Items"
+                    <!-- Household (bottom-wide) -->
+                    <a href="{{ url_for('main.category_products', slug=ns.household.slug) if ns.household else url_for('main.all_categories') }}"
+                       class="col-span-2 hidden sm:block group relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-[2.5/1]">
+                        <img src="{{ ns.household.image if ns.household and ns.household.image else 'https://picsum.photos/seed/cliffine-household/600/240.jpg' }}"
+                             alt="{{ ns.household.name if ns.household else 'Household Items' }}"
                              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                         <div class="absolute bottom-0 left-0 right-0 p-4">
-                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Household</span>
-                            <p class="text-white font-bold text-lg">Quality Household Items</p>
+                            <span class="text-xs font-semibold text-accent uppercase tracking-wider">
+                                {{ ns.household.name if ns.household else 'Household' }}
+                            </span>
+                            <p class="text-white font-bold text-lg">
+                                {{ ns.household.name if ns.household else 'Quality Household Items' }}
+                            </p>
                         </div>
-                    </div>
+                    </a>
+
                 </div>
             </div>
 
@@ -133,7 +166,7 @@
     </div>
 </section>
 
-<!-- 2. Quick Business Info Bar -->
+<!-- 2. Quick Business Info Bar (unchanged) -->
 <section class="bg-primary dark:bg-gray-800 py-8 border-t border-b border-accent/20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
@@ -169,7 +202,7 @@
     </div>
 </section>
 
-<!-- 3. Product Categories Section -->
+<!-- 3. Product Categories Section (all links via url_for) -->
 <section class="py-16 lg:py-24 bg-white dark:bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
@@ -180,8 +213,11 @@
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
             {% if categories %}
                 {% for category in categories %}
-                <a href="/categories/{{ category.slug }}" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
-                    <img src="{{ category.image }}">
+                <a href="{{ url_for('main.category_products', slug=category.slug) }}"
+                   class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
+                    <img src="{{ category.image if category.image else 'https://placehold.co/400x400/581C87/FFFFFF?text=' ~ category.name|urlencode }}"
+                         alt="{{ category.name }}"
+                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                     <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
                         <h3 class="text-white font-bold text-lg">{{ category.name }}</h3>
                         <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
@@ -189,42 +225,9 @@
                 </a>
                 {% endfor %}
             {% else %}
-                <!-- Fallback Static Content if no categories found -->
-                <a href="/categories/tv-stands" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
-                    <img src="https://placehold.co/400x400/581C87/FFFFFF?text=TV+Stands" alt="TV Stands" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
-                        <h3 class="text-white font-bold text-lg">TV Stands</h3>
-                        <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
-                    </div>
-                </a>
-                <a href="/categories/electronics" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
-                    <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Electronics" alt="Electronics" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
-                        <h3 class="text-white font-bold text-lg">Electronics</h3>
-                        <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
-                    </div>
-                </a>
-                <a href="/categories/mens-shoes" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
-                    <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Mens+Shoes" alt="Men's Shoes" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
-                        <h3 class="text-white font-bold text-lg">Men's Shoes</h3>
-                        <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
-                    </div>
-                </a>
-                <a href="/categories/handbags" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square">
-                    <img src="https://placehold.co/400x400/3B0D5D/D4AF37?text=Handbags" alt="Handbags" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
-                        <h3 class="text-white font-bold text-lg">Ladies Handbags</h3>
-                        <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
-                    </div>
-                </a>
-                <a href="/categories/household" class="group relative rounded-xl overflow-hidden shadow-lg aspect-square col-span-2 md:col-span-1">
-                    <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Household" alt="Household" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent flex flex-col justify-end p-4">
-                        <h3 class="text-white font-bold text-lg">Household Items</h3>
-                        <span class="text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Products &rarr;</span>
-                    </div>
-                </a>
+                <div class="col-span-full text-center py-12">
+                    <p class="text-slate-500">Categories are being set up. Check back soon.</p>
+                </div>
             {% endif %}
         </div>
     </div>
@@ -238,7 +241,7 @@
                 <h2 class="font-display text-3xl sm:text-4xl font-bold text-primary dark:text-white mb-2">Featured Products</h2>
                 <p class="text-muted dark:text-gray-300">Handpicked items just for you</p>
             </div>
-            <a href="/products" class="hidden sm:flex items-center gap-2 text-accent font-semibold hover:gap-3 transition-all">
+            <a href="{{ url_for('main.products') }}" class="hidden sm:flex items-center gap-2 text-accent font-semibold hover:gap-3 transition-all">
                 View All <span>&rarr;</span>
             </a>
         </div>
@@ -248,11 +251,10 @@
                 {% for product in featured_products %}
                 <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden group product-card" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}" data-product-price="{{ product.price }}">
                     <div class="relative overflow-hidden">
-                       <a href="{{ url_for('main.product_detail', product_id=product.id) }}">
-                            <img 
-                                src="{{ product.images[0].image_url if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
-                                alt="{{ product.name }}"
-                                class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
+                        <a href="{{ url_for('main.product_detail', product_id=product.id) }}">
+                            <img src="{{ product.images[0].image_url if product.images else 'https://placehold.co/400x400/581C87/FFFFFF?text=No+Image' }}"
+                                 alt="{{ product.name }}"
+                                 class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
                         </a>
                         <div class="absolute top-2 right-2">
                             <button class="p-2 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-accent hover:text-white transition-colors wishlist-btn" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}" title="Add to Wishlist">
@@ -278,41 +280,14 @@
                 </div>
                 {% endfor %}
             {% else %}
-                <!-- Fallback Static Content if no products found -->
-                {% for i in range(1, 5) %}
-                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden group product-card" data-product-id="fallback-{{ i }}" data-product-name="Premium Product Item {{i}}" data-product-price="2500">
-                    <div class="relative overflow-hidden">
-                        <a href="/products">
-                            <img src="https://placehold.co/400x400/581C87/FFFFFF?text=Product+{{i}}" alt="Product {{i}}" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">
-                        </a>
-                        <div class="absolute top-2 right-2">
-                            <button class="p-2 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-accent hover:text-white transition-colors wishlist-btn" data-product-id="fallback-{{ i }}" data-product-name="Premium Product Item {{i}}" title="Add to Wishlist">
-                                <svg class="w-5 h-5 heart-outline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                                <svg class="w-5 h-5 heart-filled hidden" fill="currentColor" viewBox="0 0 24 24" style="color:#ef4444"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                            </button>
-                        </div>
-                        <div class="added-indicator absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300">
-                            <span class="bg-accent text-white px-4 py-2 rounded-full font-bold text-sm transform scale-75 transition-transform duration-300">Added!</span>
-                        </div>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-charcoal dark:text-white truncate">Premium Product Item {{i}}</h3>
-                        <p class="text-muted text-sm dark:text-gray-400 mb-3">Category Name</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-lg font-bold text-primary dark:text-accent">KES 2,500</span>
-                            <button class="p-2 bg-primary text-white rounded-lg hover:bg-accent transition-colors cart-btn" data-product-id="fallback-{{ i }}" data-product-name="Premium Product Item {{i}}" data-product-price="2500" title="Add to Cart">
-                                <svg class="w-5 h-5 cart-icon-plus" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                                <svg class="w-5 h-5 cart-icon-check hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            </button>
-                        </div>
-                    </div>
+                <div class="col-span-full text-center py-12">
+                    <p class="text-slate-500">No featured products yet.</p>
                 </div>
-                {% endfor %}
             {% endif %}
         </div>
 
         <div class="mt-8 text-center sm:hidden">
-            <a href="/products" class="inline-block px-6 py-3 border border-accent text-accent rounded-full font-semibold">
+            <a href="{{ url_for('main.products') }}" class="inline-block px-6 py-3 border border-accent text-accent rounded-full font-semibold">
                 View All Products
             </a>
         </div>
@@ -325,7 +300,7 @@
         <div class="absolute top-10 left-10 w-40 h-40 bg-accent rounded-full filter blur-3xl"></div>
         <div class="absolute bottom-10 right-10 w-60 h-60 bg-primary rounded-full filter blur-3xl"></div>
     </div>
-    
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -354,14 +329,14 @@
                         <span class="text-charcoal dark:text-white">Secure & transparent process</span>
                     </li>
                 </ul>
-                <a href="/chamas" class="inline-block px-8 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-colors shadow-lg">
+                <a href="{{ url_for('main.chama') }}" class="inline-block px-8 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-colors shadow-lg">
                     Register for a Chama
                 </a>
             </div>
             <div class="relative">
-                <img src="https://res.cloudinary.com/dvctsb0sm/image/upload/v1774427587/Happy_shoppers_with_household_products_h8k0bl.png" 
-                alt="Happy Customers with Products" 
-                class="rounded-2xl shadow-2xl w-full">
+                <img src="https://res.cloudinary.com/dvctsb0sm/image/upload/v1774427587/Happy_shoppers_with_household_products_h8k0bl.png"
+                     alt="Happy Customers with Products"
+                     class="rounded-2xl shadow-2xl w-full">
             </div>
         </div>
     </div>
@@ -376,19 +351,16 @@
         </div>
 
         <div class="grid md:grid-cols-3 gap-8">
-            <!-- Step 1 -->
             <div class="bg-white/5 backdrop-blur p-6 rounded-xl border border-white/10 text-center">
                 <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary">1</div>
                 <h3 class="text-white font-bold text-xl mb-2">Select Item</h3>
                 <p class="text-gray-400">Choose from our range of electronics or household items available for Lipa Pole Pole.</p>
             </div>
-            <!-- Step 2 -->
             <div class="bg-white/5 backdrop-blur p-6 rounded-xl border border-white/10 text-center">
                 <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary">2</div>
                 <h3 class="text-white font-bold text-xl mb-2">Agree on Terms</h3>
                 <p class="text-gray-400">Set up a comfortable payment plan that works for your budget.</p>
             </div>
-            <!-- Step 3 -->
             <div class="bg-white/5 backdrop-blur p-6 rounded-xl border border-white/10 text-center">
                 <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary">3</div>
                 <h3 class="text-white font-bold text-xl mb-2">Take It Home</h3>
@@ -417,7 +389,6 @@
         </div>
 
         <div class="grid md:grid-cols-3 gap-6">
-            <!-- Shop Payments -->
             <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl shadow-sm border-t-4 border-accent">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-white font-bold">S</div>
@@ -430,7 +401,6 @@
                 </div>
             </div>
 
-            <!-- Chama Payments -->
             <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl shadow-sm border-t-4 border-primary">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-12 h-12 bg-accent rounded-lg flex items-center justify-center text-white font-bold">C</div>
@@ -443,7 +413,6 @@
                 </div>
             </div>
 
-            <!-- Lipa Pole Pole -->
             <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl shadow-sm border-t-4 border-green-500">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold">L</div>
@@ -472,7 +441,7 @@
                 </div>
             </div>
             <a href="{{ url_for('main.delivery_areas') }}"
-            class="px-6 py-2 border border-primary dark:border-accent text-primary dark:text-accent rounded-full font-semibold hover:bg-primary hover:text-white transition-colors">
+               class="px-6 py-2 border border-primary dark:border-accent text-primary dark:text-accent rounded-full font-semibold hover:bg-primary hover:text-white transition-colors">
                 Check Rates
             </a>
         </div>
@@ -481,52 +450,30 @@
 
 <!-- 9. Customer Call-To-Action -->
 <section class="py-20 relative overflow-hidden">
-
-    <!-- Background Image -->
     <div class="absolute inset-0">
-        <img src="static/images/placeholder_1.jpg"
+        <img src="{{ url_for('static', filename='images/placeholder_1.jpg') }}"
              class="w-full h-full object-cover object-center scale-105"
              alt="Shopping Experience">
-
-        <!-- Soft dark overlay (keeps colors visible) -->
-        <div class="absolute inset-0 
-                    bg-gradient-to-r 
-                    from-black/70 
-                    via-black/50 
-                    to-black/40">
-        </div>
-
-        <!-- Subtle color glow (matches neon lights) -->
-        <div class="absolute inset-0 
-                    bg-[radial-gradient(circle_at_top,rgba(255,100,150,0.25),transparent_60%)]">
-        </div>
+        <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/40"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,100,150,0.25),transparent_60%)]"></div>
     </div>
 
-    <!-- Content -->
     <div class="relative z-10 max-w-4xl mx-auto text-center px-4">
-
         <h2 class="font-display text-3xl sm:text-5xl font-bold text-white mb-6 leading-tight">
             Start Shopping Today
         </h2>
-
         <p class="text-gray-200 text-lg mb-8 max-w-2xl mx-auto">
             Browse our collection of quality products. Join a Chama. Buy on Lipa Pole Pole.
             Your journey to quality living starts here.
         </p>
-
-        <a href="/products"
-           class="inline-block px-10 py-4 
-                  bg-gradient-to-r from-red-500 to-pink-500 
-                  text-white font-bold text-lg rounded-full 
-                  shadow-xl hover:scale-105 hover:shadow-2xl 
-                  transition-all duration-300">
+        <a href="{{ url_for('main.products') }}"
+           class="inline-block px-10 py-4 bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold text-lg rounded-full shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300">
             Browse Products
         </a>
-
     </div>
 </section>
 
-<!-- 10. Testimonials -->
+<!-- 10. Testimonials (unchanged) -->
 <section class="py-16 lg:py-24 bg-white dark:bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
@@ -536,35 +483,27 @@
         <div class="grid md:grid-cols-3 gap-6">
             <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl">
                 <div class="flex items-center gap-1 text-accent mb-3">
+                    {% for _ in range(5) %}
                     <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    {% endfor %}
                 </div>
                 <p class="text-muted dark:text-gray-300 mb-4 italic">"Great service and fast delivery. Got my TV stand in perfect condition. Will definitely buy again!"</p>
                 <p class="font-bold text-charcoal dark:text-white">- Mary W.</p>
             </div>
-
             <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl">
                 <div class="flex items-center gap-1 text-accent mb-3">
+                    {% for _ in range(5) %}
                     <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    {% endfor %}
                 </div>
                 <p class="text-muted dark:text-gray-300 mb-4 italic">"I joined a chama and got my handbag after just 3 months. Very transparent and trustworthy."</p>
                 <p class="font-bold text-charcoal dark:text-white">- John K.</p>
             </div>
-
             <div class="bg-sand dark:bg-gray-800 p-6 rounded-xl">
                 <div class="flex items-center gap-1 text-accent mb-3">
+                    {% for _ in range(5) %}
                     <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    {% endfor %}
                 </div>
                 <p class="text-muted dark:text-gray-300 mb-4 italic">"Very good prices for electronics. The Lipa Pole Pole option helped me buy a home theater system easily."</p>
                 <p class="font-bold text-charcoal dark:text-white">- Susan N.</p>
@@ -578,35 +517,37 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="font-display text-3xl sm:text-4xl font-bold text-primary dark:text-white mb-4">Have Questions?</h2>
         <p class="text-muted dark:text-gray-300 mb-8 max-w-xl mx-auto">Contact Cliffine Collection today. We are here to help you find exactly what you need.</p>
-        
+
         <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <a href="https://wa.me/254700000000" class="flex items-center justify-center gap-2 px-8 py-3 bg-green-500 text-white font-bold rounded-full shadow-lg hover:bg-green-600 transition-colors">
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 Chat on WhatsApp
             </a>
-            <a href="/contact" class="px-8 py-3 bg-primary text-white font-bold rounded-full shadow-lg hover:bg-primary-dark transition-colors">
+            <a href="{{ url_for('main.contact') }}" class="px-8 py-3 bg-primary text-white font-bold rounded-full shadow-lg hover:bg-primary-dark transition-colors">
                 Contact Form
             </a>
         </div>
-        
+
         <div class="flex justify-center gap-4">
-             <a href="https://instagram.com/cliffine_collection" class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow hover:text-accent transition-colors text-primary dark:text-white">
-                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-             </a>
-             <a href="https://facebook.com/cliffinecollection" class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow hover:text-accent transition-colors text-primary dark:text-white">
-                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-             </a>
+            <a href="https://instagram.com/cliffine_collection" class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow hover:text-accent transition-colors text-primary dark:text-white">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+            <a href="https://facebook.com/cliffinecollection" class="w-10 h-10 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow hover:text-accent transition-colors text-primary dark:text-white">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
         </div>
     </div>
 </section>
+
 <!-- 12. Newsletter -->
 <section class="py-12 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h3 class="font-display text-2xl font-bold text-primary dark:text-white mb-3">Get Updates & Promotions</h3>
         <p class="text-muted dark:text-gray-300 mb-6">Subscribe to receive updates on new arrivals, Chama openings, and special offers.</p>
-        
-        <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input type="email" name="email" placeholder="Enter your email address" required class="flex-1 px-4 py-3 rounded-full border border-gray-200 dark:border-gray-700 bg-sand dark:bg-gray-800 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+
+        <form action="{{ url_for('main.contact') }}" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <input type="email" name="email" placeholder="Enter your email address" required
+                   class="flex-1 px-4 py-3 rounded-full border border-gray-200 dark:border-gray-700 bg-sand dark:bg-gray-800 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
             <button type="submit" class="px-6 py-3 bg-accent text-white font-bold rounded-full hover:bg-accent-dark transition-colors">
                 Subscribe
             </button>
@@ -625,13 +566,11 @@
 }
 </script>
 
-<!-- Toast Notification Container -->
 <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ── Read initial state from server-rendered JSON ─────
     var serverDataEl = document.getElementById('server-cart-data');
     var serverCartIds = [];
     var serverWishlistIds = [];
@@ -646,7 +585,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ── Pre-fill button states from server data ───────────
     serverWishlistIds.forEach(function(id) {
         var btn = document.querySelector('.wishlist-btn[data-product-id="' + id + '"]');
         if (btn) setWishlistedUI(btn, true);
@@ -657,11 +595,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     updateCartBadge(serverCartIds.length);
 
-    // ── Local cache (kept in sync with server responses) ─
     var localCartIds = serverCartIds.slice();
     var localWishlistIds = serverWishlistIds.slice();
 
-    // ── Attach event listeners ────────────────────────────
     document.querySelectorAll('.cart-btn').forEach(function(btn) {
         btn.addEventListener('click', handleCartClick);
     });
@@ -669,26 +605,19 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', handleWishlistClick);
     });
 
-    // ── CART CLICK HANDLER ────────────────────────────────
     function handleCartClick(event) {
         event.preventDefault();
         event.stopPropagation();
-
         var btn = event.currentTarget;
         var productId = parseInt(btn.getAttribute('data-product-id'), 10);
         var productName = btn.getAttribute('data-product-name');
         var card = btn.closest('.product-card');
-
         var isInCart = localCartIds.indexOf(productId) > -1;
 
         if (isInCart) {
-            // ── Remove: call /api/cart/remove-item ───────
             fetch('/api/cart/remove-item', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 body: JSON.stringify({ product_id: productId })
             })
             .then(function(res) { return res.json(); })
@@ -701,17 +630,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     showToast(productName + ' removed from cart', 'info');
                 }
             })
-            .catch(function() {
-                showToast('Network error. Please try again.', 'error');
-            });
+            .catch(function() { showToast('Network error. Please try again.', 'error'); });
         } else {
-            // ── Add: call existing /add-to-cart ──────────
             fetch('/add-to-cart', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 body: JSON.stringify({ product_id: productId, quantity: 1 })
             })
             .then(function(res) { return res.json(); })
@@ -726,25 +649,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     showToast(data.message || 'Could not add to cart', 'error');
                 }
             })
-            .catch(function() {
-                showToast('Network error. Please try again.', 'error');
-            });
+            .catch(function() { showToast('Network error. Please try again.', 'error'); });
         }
     }
 
-    // ── WISHLIST CLICK HANDLER ────────────────────────────
     function handleWishlistClick(event) {
         event.preventDefault();
         event.stopPropagation();
-
         var btn = event.currentTarget;
         var productId = parseInt(btn.getAttribute('data-product-id'), 10);
         var productName = btn.getAttribute('data-product-name');
-
         var isInWishlist = localWishlistIds.indexOf(productId) > -1;
 
         if (isInWishlist) {
-            // ── Remove: call /api/wishlist/remove-by-product ─
             fetch('/api/wishlist/remove-by-product/' + productId, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -758,11 +675,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     showToast(productName + ' removed from wishlist', 'info');
                 }
             })
-            .catch(function() {
-                showToast('Network error. Please try again.', 'error');
-            });
+            .catch(function() { showToast('Network error. Please try again.', 'error'); });
         } else {
-            // ── Add: call existing /wishlist/add/<id> ────
             fetch('/wishlist/add/' + productId, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -776,21 +690,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     setTimeout(function() { btn.style.transform = 'scale(1)'; }, 200);
                     showToast(productName + ' added to wishlist', 'success');
                 } else if (data.status === 'exists') {
-                    // Already in wishlist — sync UI anyway
-                    if (localWishlistIds.indexOf(productId) === -1) {
-                        localWishlistIds.push(productId);
-                    }
+                    if (localWishlistIds.indexOf(productId) === -1) localWishlistIds.push(productId);
                     setWishlistedUI(btn, true);
                     showToast(data.message || 'Already in wishlist', 'info');
                 }
             })
-            .catch(function() {
-                showToast('Network error. Please try again.', 'error');
-            });
+            .catch(function() { showToast('Network error. Please try again.', 'error'); });
         }
     }
 
-    // ── UI Helpers ─────────────────────────────────────────
     function setCartedUI(btn, isAdded) {
         var plusIcon = btn.querySelector('.cart-icon-plus');
         var checkIcon = btn.querySelector('.cart-icon-check');
@@ -837,14 +745,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateCartBadge(count) {
-        var badgeSelectors = [
-            '#cart-count',
-            '.cart-count',
-            '.cart-badge',
-            '[data-cart-count]',
-            'a[href="/cart"] .badge',
-            'a[href*="cart"] span'
-        ];
+        var badgeSelectors = ['#cart-count', '.cart-count', '.cart-badge', '[data-cart-count]', 'a[href="/cart"] .badge', 'a[href*="cart"] span'];
         var badge = null;
         for (var i = 0; i < badgeSelectors.length; i++) {
             badge = document.querySelector(badgeSelectors[i]);
@@ -856,11 +757,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ── Toast Notification System ──────────────────────────
     function showToast(message, type) {
         var container = document.getElementById('toast-container');
         var toast = document.createElement('div');
-
         var bgClass = 'bg-gray-800 dark:bg-gray-700';
         var iconSvg = '';
         if (type === 'success') {
@@ -873,17 +772,13 @@ document.addEventListener('DOMContentLoaded', function() {
             bgClass = 'bg-red-600';
             iconSvg = '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>';
         }
-
         toast.className = 'pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-2xl transform translate-x-full opacity-0 transition-all duration-300 ' + bgClass;
         toast.innerHTML = iconSvg + '<span>' + message + '</span>';
-
         container.appendChild(toast);
-
         requestAnimationFrame(function() {
             toast.classList.remove('translate-x-full', 'opacity-0');
             toast.classList.add('translate-x-0', 'opacity-100');
         });
-
         setTimeout(function() {
             toast.classList.add('translate-x-full', 'opacity-0');
             toast.classList.remove('translate-x-0', 'opacity-100');
