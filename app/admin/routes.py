@@ -735,8 +735,106 @@ def product_inventory():
 
 
 @admin_bp.route("/products/reviews")
+@admin_required
 def product_reviews():
-    return render_template("admin/products/reviews.html")    
+    """List product reviews with approval workflow."""
+    from sqlalchemy import func
+    from app.models import Review
+
+    # Filters
+    q             = (request.args.get("q") or "").strip()
+    status_filter = (request.args.get("status") or "all").strip()
+    rating_filter = request.args.get("rating", type=int)
+    page          = request.args.get("page", 1, type=int)
+    per_page      = 20
+
+    query = Review.query
+
+    if q:
+        term = f"%{q}%"
+        query = query.join(User, Review.user_id == User.id).join(
+            Product, Review.product_id == Product.id
+        ).filter(
+            db.or_(
+                User.first_name.ilike(term),
+                User.last_name.ilike(term),
+                User.email.ilike(term),
+                Product.name.ilike(term),
+                Review.comment.ilike(term),
+            )
+        )
+
+    if status_filter == "approved":
+        query = query.filter(Review.is_approved == True)   # noqa: E712
+    elif status_filter == "pending":
+        query = query.filter(Review.is_approved == False)  # noqa: E712
+
+    if rating_filter:
+        query = query.filter(Review.rating == rating_filter)
+
+    query = query.order_by(Review.created_at.desc())
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # Metrics
+    total_reviews  = Review.query.count()
+    pending_count  = Review.query.filter(Review.is_approved == False).count()  # noqa: E712
+    approved_count = Review.query.filter(Review.is_approved == True).count()   # noqa: E712
+
+    avg_rating = db.session.query(func.avg(Review.rating)).scalar() or 0
+    avg_rating = round(float(avg_rating), 1)
+
+    rating_counts = {}
+    for r in range(1, 6):
+        rating_counts[r] = Review.query.filter(Review.rating == r).count()
+
+    # Build display rows
+    reviews = []
+    for rev in pagination.items:
+        reviews.append({
+            "id": rev.id,
+            "rating": rev.rating or 0,
+            "comment": rev.comment or "",
+            "is_approved": rev.is_approved,
+            "created_at": rev.created_at.strftime("%d %b %Y") if rev.created_at else "",
+            "user_name": rev.user.full_name if rev.user else "Anonymous",
+            "user_email": rev.user.email if rev.user else "",
+            "user_avatar": rev.user.profile_image_url if rev.user else None,
+            "product_id": rev.product_id,
+            "product_name": rev.product.name if rev.product else f"Product #{rev.product_id}",
+        })
+
+    return render_template(
+        "admin/products/reviews.html",
+        reviews=reviews,
+        pagination=pagination,
+        search=q,
+        status_filter=status_filter,
+        rating_filter=rating_filter,
+        total_reviews=total_reviews,
+        pending_count=pending_count,
+        approved_count=approved_count,
+        avg_rating=avg_rating,
+        rating_counts=rating_counts,
+    )
+
+@admin_bp.route("/products/reviews/<int:review_id>/approve", methods=["POST"])
+@admin_required
+def approve_review(review_id):
+    from app.models import Review
+    review = Review.query.get_or_404(review_id)
+    review.is_approved = True
+    db.session.commit()
+    return jsonify(success=True, message="Review approved.")
+
+
+@admin_bp.route("/products/reviews/<int:review_id>/delete", methods=["POST"])
+@admin_required
+def delete_review(review_id):
+    from app.models import Review
+    review = Review.query.get_or_404(review_id)
+    db.session.delete(review)
+    db.session.commit()
+    return jsonify(success=True, message="Review deleted.")
 
 
 

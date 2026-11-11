@@ -1,0 +1,203 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Product Reviews{% endblock %}
+{% block page_title %}Product Reviews{% endblock %}
+
+{% block content %}
+
+<!-- Metrics -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Reviews</p>
+        <h3 class="text-2xl font-bold text-slate-800 mt-1">{{ total_reviews }}</h3>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 border-l-4 border-l-amber-500">
+        <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Pending Approval</p>
+        <h3 class="text-2xl font-bold text-amber-600 mt-1">{{ pending_count }}</h3>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 border-l-4 border-l-green-500">
+        <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Approved</p>
+        <h3 class="text-2xl font-bold text-green-600 mt-1">{{ approved_count }}</h3>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Average Rating</p>
+        <h3 class="text-2xl font-bold text-slate-800 mt-1">
+            {{ avg_rating }} <span class="text-base text-amber-500">★</span>
+        </h3>
+    </div>
+</div>
+
+<!-- Rating breakdown -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-6">
+    <h3 class="font-bold text-slate-800 mb-4">Rating Breakdown</h3>
+    <div class="space-y-2">
+        {% for stars in [5, 4, 3, 2, 1] %}
+        {% set count = rating_counts.get(stars, 0) %}
+        {% set pct = (count / total_reviews * 100) if total_reviews else 0 %}
+        <div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-slate-600 w-12">{{ stars }} ★</span>
+            <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-amber-400" style="width: {{ pct }}%"></div>
+            </div>
+            <span class="text-sm text-slate-500 w-16 text-right">{{ count }} ({{ pct|round(1) }}%)</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Filters -->
+<form method="get" action="{{ url_for('admin.product_reviews') }}"
+      class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-6">
+    <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1 relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </span>
+            <input type="text" name="q" value="{{ search }}"
+                   placeholder="Search customer, product, or comment..."
+                   class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm">
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <select name="status" class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 bg-white">
+                <option value="all"      {{ 'selected' if status_filter == 'all' }}>All Status</option>
+                <option value="pending"  {{ 'selected' if status_filter == 'pending' }}>Pending</option>
+                <option value="approved" {{ 'selected' if status_filter == 'approved' }}>Approved</option>
+            </select>
+            <select name="rating" class="px-4 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-600 bg-white">
+                <option value="">All Ratings</option>
+                {% for r in [5, 4, 3, 2, 1] %}
+                <option value="{{ r }}" {{ 'selected' if rating_filter == r }}>{{ r }} stars</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors">Filter</button>
+            <a href="{{ url_for('admin.product_reviews') }}"
+               class="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50">Reset</a>
+        </div>
+    </div>
+</form>
+
+<!-- Reviews -->
+<div class="space-y-4">
+    {% for r in reviews %}
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <div class="flex items-start gap-4">
+            <img src="{{ r.user_avatar or ('https://ui-avatars.com/api/?name=' ~ (r.user_name|urlencode) ~ '&background=5423E7&color=fff') }}"
+                 class="w-10 h-10 rounded-full flex-shrink-0" alt="">
+
+            <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-3 flex-wrap">
+                    <div>
+                        <p class="font-semibold text-slate-800">{{ r.user_name }}</p>
+                        <p class="text-xs text-slate-400">{{ r.user_email }} · {{ r.created_at }}</p>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        {% for i in range(1, 6) %}
+                        <svg class="w-4 h-4 {{ 'text-amber-400' if i <= r.rating else 'text-slate-200' }}" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <p class="text-sm text-slate-700 mt-3">{{ r.comment or '(no comment)' }}</p>
+
+                <div class="flex items-center gap-3 mt-4 flex-wrap">
+                    <a href="{{ url_for('admin.view_product', product_id=r.product_id) }}"
+                       class="text-xs text-primary hover:underline">
+                        on <span class="font-medium">{{ r.product_name }}</span>
+                    </a>
+                    {% if r.is_approved %}
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Approved</span>
+                    {% else %}
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                {% if not r.is_approved %}
+                <button onclick="approveReview({{ r.id }}, this)"
+                        class="px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700">
+                    Approve
+                </button>
+                {% endif %}
+                <button onclick="deleteReview({{ r.id }}, this)"
+                        class="px-3 py-1.5 border border-red-200 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-50">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-12 text-center">
+        <svg class="w-12 h-12 mx-auto text-slate-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+        <p class="text-sm text-slate-500">No reviews match your filters.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<div class="mt-6 flex justify-center gap-1">
+    {% for p in pagination.iter_pages() %}
+        {% if p %}
+            {% if p == pagination.page %}
+            <span class="px-3 py-1.5 bg-primary text-white rounded-lg text-sm">{{ p }}</span>
+            {% else %}
+            <a href="{{ url_for('admin.product_reviews', page=p, q=search, status=status_filter, rating=rating_filter) }}"
+               class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 bg-white hover:bg-slate-50">{{ p }}</a>
+            {% endif %}
+        {% else %}
+            <span class="px-2 text-slate-400">…</span>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    async function approveReview(id, btn) {
+        btn.disabled = true;
+        const res = await fetch(`/admin/products/reviews/${id}/approve`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF },
+        });
+        if (res.ok) window.location.reload();
+        else { alert('Failed'); btn.disabled = false; }
+    }
+
+    async function deleteReview(id, btn) {
+        if (!confirm('Delete this review permanently?')) return;
+        btn.disabled = true;
+        const res = await fetch(`/admin/products/reviews/${id}/delete`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF },
+        });
+        if (res.ok) window.location.reload();
+        else { alert('Failed'); btn.disabled = false; }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.nav-group button').forEach(btn => {
+            const span = btn.querySelector('span');
+            if (span && span.textContent.trim() === 'Products') {
+                btn.classList.add('active', 'nav-link');
+            }
+        });
+        const menu = document.getElementById('products-menu');
+        if (menu) {
+            menu.classList.add('open');
+            menu.querySelectorAll('a').forEach(link => {
+                if (link.textContent.trim() === 'Reviews') {
+                    link.classList.remove('text-white/70');
+                    link.classList.add('text-white', 'border-l-2', 'border-accent');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

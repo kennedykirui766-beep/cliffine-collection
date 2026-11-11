@@ -251,7 +251,6 @@
                         <div class="submenu bg-black/15 rounded-md mt-1 ml-4 overflow-hidden">
                             <a href="{{ url_for('admin.all_products') }}" class="block py-2 px-4 text-sm text-white/60 hover:text-white hover:bg-white/5 border-l border-transparent hover:border-amber-500/50 transition-all {{ 'active' if request.endpoint == 'admin.all_products' }}">All Products</a>
                             <a href="{{ url_for('admin.add_product') }}" class="block py-2 px-4 text-sm text-white/60 hover:text-white hover:bg-white/5 border-l border-transparent hover:border-amber-500/50 transition-all {{ 'active' if request.endpoint == 'admin.add_product' }}">Add Product</a>
-                            <a href="{{ url_for('admin.product_inventory') }}" class="block py-2 px-4 text-sm text-white/60 hover:text-white hover:bg-white/5 border-l border-transparent hover:border-amber-500/50 transition-all {{ 'active' if request.endpoint == 'admin.product_inventory' }}">Inventory</a>
                             <a href="{{ url_for('admin.product_reviews') }}" class="block py-2 px-4 text-sm text-white/60 hover:text-white hover:bg-white/5 border-l border-transparent hover:border-amber-500/50 transition-all {{ 'active' if request.endpoint == 'admin.product_reviews' }}">Reviews</a>
                         </div>
                     </div>
