@@ -1028,14 +1028,428 @@ def order_details(order_id):
         order=order
     )
 
+# ============================================================
+# CUSTOMER / USER MANAGEMENT
+# ============================================================
+
+from sqlalchemy import or_, func
+
+def _users_query():
+    """Shared query builder for list + CSV export."""
+    q      = (request.args.get("q") or "").strip()
+    status = (request.args.get("status") or "").strip()
+    role   = (request.args.get("role") or "").strip()
+
+    query = User.query
+
+    if q:
+        term = f"%{q}%"
+        query = query.filter(or_(
+            User.first_name.ilike(term),
+            User.last_name.ilike(term),
+            User.email.ilike(term),
+            User.phone.ilike(term),
+            User.username.ilike(term),
+        ))
+
+    if status == "Active":
+        query = query.filter(User.is_active == True)  # noqa: E712
+    elif status == "Inactive":
+        query = query.filter(User.is_active == False)  # noqa: E712
+    elif status == "Banned":
+        # We treat "Banned" as role='banned' if it exists, otherwise inactive + role='banned'
+        query = query.filter(User.role == "banned")
+
+    if role:
+        query = query.filter(User.role == role.lower())
+
+    return query.order_by(User.created_at.desc())
+
+
 @admin_bp.route("/customers")
+@admin_required
 def all_users():
-    return render_template("admin/customers/all_users.html")
+    page = request.args.get("page", 1, type=int)
+    per_page = 25
+
+    q      = (request.args.get("q") or "").strip()
+    status = (request.args.get("status") or "").strip()
+    role   = (request.args.get("role") or "").strip()
+
+    query = _users_query()
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # ---- Metrics ----
+    total_users   = User.query.count()
+    active_users  = User.query.filter(User.is_active == True).count()   # noqa: E712
+    inactive_users = User.query.filter(User.is_active == False).count() # noqa: E712
+    vip_users     = User.query.filter(User.role == "vip").count()
+    banned_users  = User.query.filter(User.role == "banned").count()
+    admin_users   = User.query.filter(User.role == "admin").count()
+
+    # ---- Per-user aggregate stats (orders + lifetime spend) ----
+    # One query to avoid N+1
+    stats_rows = db.session.query(
+        Order.user_id.label("uid"),
+        func.count(Order.id).label("cnt"),
+        func.coalesce(func.sum(Order.total_amount), 0).label("spend"),
+    ).filter(
+        Order.user_id.isnot(None),
+        Order.status != "cancelled",
+    ).group_by(Order.user_id).all()
+
+    stats_map = {r.uid: {"count": int(r.cnt), "spend": float(r.spend)} for r in stats_rows}
+
+    # ---- Build user display list ----
+    users = []
+    for u in pagination.items:
+        s = stats_map.get(u.id, {"count": 0, "spend": 0.0})
+
+        # Determine display status
+        if not u.is_active:
+            display_status = "Inactive"
+        elif u.role == "banned":
+            display_status = "Suspended"
+        elif u.role == "vip":
+            display_status = "VIP"
+        else:
+            display_status = "Active"
+
+        users.append({
+            "id": u.id,
+            "full_name": u.full_name or u.display_name or u.email.split("@")[0],
+            "email": u.email,
+            "phone": u.phone or "",
+            "role": u.role or "customer",
+            "is_active": u.is_active,
+            "avatar": u.profile_image_url or (
+                "https://ui-avatars.com/api/?name="
+                + (u.full_name or "User").replace(" ", "+")
+                + "&background=5423E7&color=fff&size=80"
+            ),
+            "orders_count": s["count"],
+            "lifetime_spend": s["spend"],
+            "status": display_status,
+            "created_at": u.created_at.strftime("%b %d, %Y") if u.created_at else "",
+        })
+
+    return render_template(
+        "admin/customers/all_users.html",
+        users=users,
+        pagination=pagination,
+        search=q,
+        status_filter=status,
+        role_filter=role,
+        total_users=total_users,
+        active_users=active_users,
+        inactive_users=inactive_users,
+        vip_users=vip_users,
+        banned_users=banned_users,
+        admin_users=admin_users,
+    )
+
+
+@admin_bp.route("/customers/export-csv")
+@admin_required
+def users_export_csv():
+    from io import StringIO
+    from flask import Response
+
+    users_db = _users_query().limit(10000).all()
+
+    # Aggregate per user in one query
+    stats_rows = db.session.query(
+        Order.user_id.label("uid"),
+        func.count(Order.id).label("cnt"),
+        func.coalesce(func.sum(Order.total_amount), 0).label("spend"),
+    ).filter(
+        Order.user_id.isnot(None),
+        Order.status != "cancelled",
+    ).group_by(Order.user_id).all()
+    stats_map = {r.uid: {"count": int(r.cnt), "spend": float(r.spend)} for r in stats_rows}
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "User ID", "Full Name", "Email", "Phone", "Username",
+        "Role", "Status", "Orders", "Lifetime Spend (KES)",
+        "City", "Country", "Joined At",
+    ])
+
+    for u in users_db:
+        s = stats_map.get(u.id, {"count": 0, "spend": 0.0})
+        status = "Active" if u.is_active else "Inactive"
+        if u.role == "banned":
+            status = "Banned"
+        writer.writerow([
+            f"U-{u.id:04d}",
+            u.full_name,
+            u.email,
+            u.phone or "",
+            u.username or "",
+            (u.role or "customer").title(),
+            status,
+            s["count"],
+            f"{s['spend']:.2f}",
+            u.city or "",
+            u.country or "",
+            u.created_at.strftime("%Y-%m-%d %H:%M") if u.created_at else "",
+        ])
+
+    output.seek(0)
+    filename = f"users_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.csv"
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@admin_bp.route("/customers/<int:user_id>/toggle-status", methods=["POST"])
+@admin_required
+def user_toggle_status(user_id):
+    user = User.query.get_or_404(user_id)
+
+    # Don't let admins deactivate themselves
+    if user.id == current_user.id:
+        return jsonify(success=False, message="You cannot deactivate your own account."), 400
+
+    user.is_active = not user.is_active
+    db.session.commit()
+
+    from app.utils.activity import log_activity
+    log_activity(
+        current_user.id,
+        "user_status_change",
+        f"User {user.email} → {'active' if user.is_active else 'inactive'}"
+    )
+
+    return jsonify(
+        success=True,
+        is_active=user.is_active,
+        message=f"{user.full_name or user.email} is now {'Active' if user.is_active else 'Inactive'}.",
+    )
+
+
+@admin_bp.route("/customers/<int:user_id>/set-role", methods=["POST"])
+@admin_required
+def user_set_role(user_id):
+    user = User.query.get_or_404(user_id)
+    data = request.get_json() or {}
+    new_role = (data.get("role") or "").strip().lower()
+
+    allowed = {"customer", "vip", "admin", "banned"}
+    if new_role not in allowed:
+        return jsonify(success=False, message="Invalid role."), 400
+
+    if user.id == current_user.id and new_role != "admin":
+        return jsonify(success=False, message="You can't demote your own admin account."), 400
+
+    user.role = new_role
+    db.session.commit()
+
+    from app.utils.activity import log_activity
+    log_activity(
+        current_user.id, "user_role_change",
+        f"User {user.email} role → {new_role}"
+    )
+
+    return jsonify(success=True, role=new_role, message=f"Role set to {new_role}.")
+
+
+# ============================================================
+# ROLES & PERMISSIONS
+# ============================================================
+
+# Role definitions — the single source of truth for the page
+ROLE_DEFINITIONS = {
+    "admin": {
+        "label": "Administrator",
+        "description": "Full access to the admin panel, settings, and all customer data.",
+        "color": "purple",
+        "icon": "shield",
+        "permissions": [
+            "Manage products & categories",
+            "Manage orders & payments",
+            "Manage customers & roles",
+            "Manage coupons & promotions",
+            "Manage pages & media",
+            "View analytics & reports",
+            "Change site settings",
+        ],
+    },
+    "vip": {
+        "label": "VIP Customer",
+        "description": "Loyal customer with exclusive coupons and priority support.",
+        "color": "amber",
+        "icon": "star",
+        "permissions": [
+            "Place orders",
+            "Access VIP-only coupons",
+            "Early access to offers",
+            "Priority customer support",
+        ],
+    },
+    "customer": {
+        "label": "Customer",
+        "description": "Standard storefront customer. Default role on registration.",
+        "color": "blue",
+        "icon": "user",
+        "permissions": [
+            "Place orders",
+            "Track orders",
+            "Write product reviews",
+            "Manage their own profile",
+        ],
+    },
+    "banned": {
+        "label": "Banned",
+        "description": "Account suspended. Cannot log in or place orders.",
+        "color": "red",
+        "icon": "ban",
+        "permissions": [
+            "No storefront access",
+            "No login allowed",
+            "Data retained for audit",
+        ],
+    },
+}
 
 
 @admin_bp.route("/customers/roles")
+@admin_required
 def user_roles():
-    return render_template("admin/customers/roles.html")
+    # ---- Counts per role ----
+    role_counts = {
+        role: User.query.filter(User.role == role).count()
+        for role in ROLE_DEFINITIONS.keys()
+    }
+
+    # Handle any legacy role values that aren't in our definitions
+    known_roles = set(ROLE_DEFINITIONS.keys())
+    other_count = User.query.filter(
+        or_(User.role.is_(None), ~User.role.in_(known_roles))
+    ).count()
+
+    total_users = User.query.count()
+
+    # ---- Recent role changes from admin activity log ----
+    from app.models import AdminActivity
+    recent_changes = (
+        AdminActivity.query
+        .filter(AdminActivity.action.in_(["user_role_change", "role_change"]))
+        .order_by(AdminActivity.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    recent_changes_data = []
+    for a in recent_changes:
+        admin = User.query.get(a.admin_id) if a.admin_id else None
+        recent_changes_data.append({
+            "admin_name": admin.full_name if admin else "System",
+            "description": a.description or "",
+            "time": a.created_at.strftime("%d %b %Y, %H:%M") if a.created_at else "",
+        })
+
+    # ---- Build cards ----
+    role_cards = []
+    for key, meta in ROLE_DEFINITIONS.items():
+        role_cards.append({
+            "key": key,
+            "label": meta["label"],
+            "description": meta["description"],
+            "color": meta["color"],
+            "icon": meta["icon"],
+            "count": role_counts.get(key, 0),
+            "percent": round((role_counts.get(key, 0) / total_users * 100), 1) if total_users else 0,
+            "permissions": meta["permissions"],
+        })
+
+    # Sort: admin, vip, customer, banned (already ordered in dict)
+    role_cards.sort(key=lambda r: list(ROLE_DEFINITIONS.keys()).index(r["key"]))
+
+    # ---- Quick assignment lists (top users per role) ----
+    assignments = {}
+    for key in ROLE_DEFINITIONS.keys():
+        users_in_role = (
+            User.query
+            .filter(User.role == key)
+            .order_by(User.created_at.desc())
+            .limit(5)
+            .all()
+        )
+        assignments[key] = [
+            {
+                "id": u.id,
+                "name": u.full_name or u.display_name or u.email.split("@")[0],
+                "email": u.email,
+                "avatar": u.profile_image_url or (
+                    "https://ui-avatars.com/api/?name="
+                    + (u.full_name or "User").replace(" ", "+")
+                    + "&background=5423E7&color=fff&size=64"
+                ),
+            }
+            for u in users_in_role
+        ]
+
+    return render_template(
+        "admin/customers/roles.html",
+        role_cards=role_cards,
+        role_counts=role_counts,
+        total_users=total_users,
+        other_count=other_count,
+        assignments=assignments,
+        recent_changes=recent_changes_data,
+        roles_list=list(ROLE_DEFINITIONS.keys()),
+    )
+
+
+@admin_bp.route("/customers/<int:user_id>/role/change", methods=["POST"])
+@admin_required
+def user_role_change(user_id):
+    """Change a single user's role via AJAX."""
+    user = User.query.get_or_404(user_id)
+    data = request.get_json() or {}
+    new_role = (data.get("role") or "").strip().lower()
+
+    if new_role not in ROLE_DEFINITIONS:
+        return jsonify(success=False, message="Invalid role."), 400
+
+    if user.id == current_user.id and new_role != "admin":
+        return jsonify(
+            success=False,
+            message="You cannot demote your own admin account."
+        ), 400
+
+    # Prevent removing the last admin
+    if user.role == "admin" and new_role != "admin":
+        other_admins = User.query.filter(
+            User.role == "admin",
+            User.id != user.id,
+        ).count()
+        if other_admins == 0:
+            return jsonify(
+                success=False,
+                message="Cannot demote the last remaining admin."
+            ), 400
+
+    old_role = user.role
+    user.role = new_role
+    db.session.commit()
+
+    from app.utils.activity import log_activity
+    log_activity(
+        current_user.id,
+        "user_role_change",
+        f"{user.full_name or user.email}: {old_role or '—'} → {new_role}"
+    )
+
+    return jsonify(
+        success=True,
+        role=new_role,
+        message=f"{user.full_name or user.email} is now a {ROLE_DEFINITIONS[new_role]['label']}."
+    )
 
 
 # ============================================================
