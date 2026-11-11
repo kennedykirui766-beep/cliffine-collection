@@ -904,12 +904,11 @@ def cancelled_orders():
     )
 
 @admin_bp.route("/users/<int:user_id>")
+@admin_required
 def user_detail(user_id):
-
     user = User.query.get_or_404(user_id)
-
     return render_template(
-        "admin/users/user_detail.html",
+        "admin/customers/user_detail.html",
         user=user
     )
 

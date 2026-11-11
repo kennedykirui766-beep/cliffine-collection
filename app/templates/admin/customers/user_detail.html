@@ -1,0 +1,341 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}{{ user.full_name }} — Customer Detail{% endblock %}
+{% block page_title %}Customer Detail{% endblock %}
+
+{% block content %}
+
+{# ── Compute quick stats from real model data ── #}
+{% set orders_list = user.orders.all() if user.orders else [] %}
+{% set total_orders = orders_list|length %}
+{% set lifetime_spend = orders_list|selectattr('status', 'ne', 'cancelled')|sum(attribute='total_amount') or 0 %}
+{% set delivered_count = orders_list|selectattr('status', 'equalto', 'delivered')|list|length %}
+{% set pending_count = orders_list|selectattr('status', 'equalto', 'pending')|list|length %}
+
+{% set role_color = {
+    'admin':    'bg-purple-100 text-purple-700 border-purple-200',
+    'vip':      'bg-amber-100 text-amber-700 border-amber-200',
+    'customer': 'bg-blue-100 text-blue-700 border-blue-200',
+    'banned':   'bg-red-100 text-red-700 border-red-200',
+}.get(user.role or 'customer', 'bg-slate-100 text-slate-600 border-slate-200') %}
+
+{% set status_color = 'bg-green-100 text-green-700' if user.is_active else 'bg-slate-100 text-slate-600' %}
+
+<!-- ─── Breadcrumb ─── -->
+<div class="mb-4 flex items-center gap-2 text-sm text-slate-500">
+    <a href="{{ url_for('admin.all_users') }}" class="hover:text-primary">Customers</a>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="font-medium text-slate-700">{{ user.full_name or user.email }}</span>
+</div>
+
+<!-- ─── Profile Header ─── -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mb-6">
+    <div class="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+        <img src="{{ user.profile_image_url or ('https://ui-avatars.com/api/?name=' ~ ((user.full_name or 'User')|replace(' ', '+')) ~ '&background=5423E7&color=fff&size=160') }}"
+             alt="{{ user.full_name }}"
+             class="w-24 h-24 rounded-full ring-4 ring-slate-100 object-cover">
+
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-3 flex-wrap">
+                <h2 class="text-2xl font-bold text-slate-800">{{ user.full_name or user.username or user.email.split('@')[0] }}</h2>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold border {{ role_color }}">
+                    {{ (user.role or 'customer')|title }}
+                </span>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ status_color }}">
+                    {{ 'Active' if user.is_active else 'Inactive' }}
+                </span>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">{{ user.email }}</p>
+            <div class="flex flex-wrap items-center gap-4 mt-3 text-sm text-slate-500">
+                {% if user.phone %}
+                <span class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                    {{ user.phone }}
+                </span>
+                {% endif %}
+                {% if user.city %}
+                <span class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    {{ user.city }}{% if user.country %}, {{ user.country }}{% endif %}
+                </span>
+                {% endif %}
+                <span class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Joined {{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}
+                </span>
+            </div>
+        </div>
+
+        <div class="flex gap-2">
+            <a href="mailto:{{ user.email }}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-dark transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                Email
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Stat Cards ─── -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <div class="flex items-center justify-between mb-2">
+            <p class="text-sm text-slate-500">Total Orders</p>
+            <div class="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </div>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800">{{ total_orders }}</h3>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <div class="flex items-center justify-between mb-2">
+            <p class="text-sm text-slate-500">Lifetime Spend</p>
+            <div class="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800">KES {{ "{:,.0f}".format(lifetime_spend) }}</h3>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <div class="flex items-center justify-between mb-2">
+            <p class="text-sm text-slate-500">Delivered</p>
+            <div class="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800">{{ delivered_count }}</h3>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <div class="flex items-center justify-between mb-2">
+            <p class="text-sm text-slate-500">Pending</p>
+            <div class="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800">{{ pending_count }}</h3>
+    </div>
+</div>
+
+<!-- ─── Main Grid ─── -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left column: orders -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="font-bold text-slate-800">Order History</h3>
+                <span class="text-xs text-slate-500">{{ total_orders }} order(s)</span>
+            </div>
+
+            {% if orders_list %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 border-b border-slate-100">
+                        <tr>
+                            <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Order</th>
+                            <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Payment</th>
+                            <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Amount</th>
+                            <th class="px-6 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for o in orders_list %}
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-3 font-mono text-xs text-slate-600">
+                                {{ o.order_number or ('ORD-' ~ o.id) }}
+                            </td>
+                            <td class="px-6 py-3 text-slate-600">
+                                {{ o.created_at.strftime('%d %b %Y') if o.created_at else '—' }}
+                            </td>
+                            <td class="px-6 py-3">
+                                {{ status_badge(o.status) }}
+                            </td>
+                            <td class="px-6 py-3">
+                                {% if o.payment_status == 'paid' %}
+                                <span class="text-green-600 text-xs font-semibold">Paid</span>
+                                {% elif o.payment_status == 'pending' %}
+                                <span class="text-amber-600 text-xs font-semibold">Pending</span>
+                                {% else %}
+                                <span class="text-slate-500 text-xs">{{ (o.payment_status or '—')|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-3 text-right font-semibold text-slate-800">
+                                KES {{ "{:,.0f}".format(o.total_amount or 0) }}
+                            </td>
+                            <td class="px-6 py-3 text-right">
+                                <a href="{{ url_for('admin.order_details', order_id=o.id) }}"
+                                   class="text-xs text-primary hover:underline font-medium">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="px-6 py-12 text-center">
+                <svg class="w-12 h-12 mx-auto text-slate-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg>
+                <p class="text-sm text-slate-500">No orders yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right column: account info + activity -->
+    <div class="space-y-6">
+
+        <!-- Contact details -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h3 class="font-bold text-slate-800 mb-4">Contact Details</h3>
+            <dl class="space-y-3 text-sm">
+                <div>
+                    <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Full Name</dt>
+                    <dd class="mt-1 font-medium text-slate-800">{{ user.full_name or '—' }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Email</dt>
+                    <dd class="mt-1 text-slate-700 break-all">{{ user.email }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Username</dt>
+                    <dd class="mt-1 text-slate-700">{{ user.username or '—' }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Phone</dt>
+                    <dd class="mt-1 text-slate-700">{{ user.phone or '—' }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Address</dt>
+                    <dd class="mt-1 text-slate-700">
+                        {% if user.address %}{{ user.address }}{% else %}—{% endif %}
+                        {% if user.city or user.country %}
+                        <br>{{ user.city or '' }}{% if user.city and user.country %}, {% endif %}{{ user.country or '' }}
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Chama memberships -->
+        {% if user.id %}
+        {% set chama_memberships = [] %}
+        {% for m in (user.chama_memberships if user.chama_memberships is defined else []) %}
+            {% set _ = chama_memberships.append(m) %}
+        {% endfor %}
+        {% endif %}
+
+        <!-- Activity log (only for admins) -->
+        {% if user.admin_activities and user.admin_activities.count() > 0 %}
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h3 class="font-bold text-slate-800 mb-4">Admin Activity</h3>
+            <ul class="space-y-3 text-sm">
+                {% for a in user.admin_activities.limit(10).all() %}
+                <li class="flex gap-3">
+                    <span class="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0"></span>
+                    <div>
+                        <p class="text-slate-700">{{ a.description or a.action }}</p>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            {{ a.created_at.strftime('%d %b %Y, %H:%M') if a.created_at else '' }}
+                        </p>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Admin actions -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h3 class="font-bold text-slate-800 mb-4">Admin Actions</h3>
+            <div class="space-y-2">
+                <button onclick="toggleStatus()"
+                        class="w-full text-sm font-medium px-4 py-2 rounded-lg border transition-colors
+                            {{ 'border-red-200 text-red-600 hover:bg-red-50' if user.is_active else 'border-green-200 text-green-600 hover:bg-green-50' }}">
+                    {{ 'Deactivate Account' if user.is_active else 'Reactivate Account' }}
+                </button>
+                <button onclick="showRoleDialog()"
+                        class="w-full text-sm font-medium px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">
+                    Change Role
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Role change dialog (hidden by default) -->
+<div id="role-dialog" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+        <h3 class="font-bold text-slate-800 mb-4">Change Role</h3>
+        <select id="role-select" class="w-full border rounded-lg px-3 py-2 mb-4">
+            <option value="customer">Customer</option>
+            <option value="vip">VIP</option>
+            <option value="admin">Admin</option>
+            <option value="banned">Banned</option>
+        </select>
+        <div class="flex gap-2">
+            <button onclick="document.getElementById('role-dialog').classList.add('hidden')"
+                    class="flex-1 px-4 py-2 border rounded-lg text-sm">Cancel</button>
+            <button onclick="applyRole()"
+                    class="flex-1 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg">Save</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const USER_ID = {{ user.id }};
+
+    async function toggleStatus() {
+        const res = await fetch(`/admin/customers/${USER_ID}/toggle-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: '{}',
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Failed');
+        }
+    }
+
+    function showRoleDialog() {
+        const dialog = document.getElementById('role-dialog');
+        document.getElementById('role-select').value = '{{ user.role or "customer" }}';
+        dialog.classList.remove('hidden');
+        dialog.classList.add('flex');
+    }
+
+    async function applyRole() {
+        const role = document.getElementById('role-select').value;
+        const res = await fetch(`/admin/customers/${USER_ID}/role/change`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ role }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Failed');
+        }
+    }
+
+    // Sidebar
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.nav-group button').forEach(btn => {
+            const span = btn.querySelector('span');
+            if (span && span.textContent.trim() === 'Customers') {
+                btn.classList.add('active', 'nav-link');
+            }
+        });
+        const menu = document.getElementById('customers-menu');
+        if (menu) menu.classList.add('open');
+    });
+</script>
+{% endblock %}
