@@ -1896,7 +1896,7 @@ def my_messages():
     threads.sort(key=lambda t: t["last_activity"] or __import__("datetime").datetime.min, reverse=True)
 
     return render_template(
-        "main/my_messages.html",
+        "my_messages.html",
         threads=threads,
         current_year=datetime.now().year,
     )
