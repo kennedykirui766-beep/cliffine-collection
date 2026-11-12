@@ -1921,7 +1921,7 @@ def my_message_thread(msg_id):
     session["inbox_last_seen"] = last_seen
 
     return render_template(
-        "main/my_message_thread.html",
+        "my_message_thread.html",
         msg=msg,
         replies=replies,
         current_year=datetime.now().year,
