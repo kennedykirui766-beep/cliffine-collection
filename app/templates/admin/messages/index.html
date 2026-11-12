@@ -635,6 +635,9 @@
     window.openMessage = function(id, element) {
         currentMessageId = id;
 
+        // ── Reveal the whole right-hand panel ──
+        document.getElementById('detailPanel').classList.add('open');
+
         document.querySelectorAll('.msg-item').forEach(function(el) { el.classList.remove('active'); });
         if (element) element.classList.add('active');
 
@@ -724,6 +727,8 @@
     // ============================================
     window.closeDetail = function() {
         currentMessageId = null;
+        // ── Hide the whole panel ──
+        document.getElementById('detailPanel').classList.remove('open');
         document.getElementById('detailContent').classList.add('hidden');
         document.getElementById('detailContent').classList.remove('flex');
         document.getElementById('detailEmpty').style.display = '';
