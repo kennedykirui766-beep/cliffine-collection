@@ -328,7 +328,7 @@
                             <label class="flex items-center pt-1 cursor-pointer flex-shrink-0" onclick="event.stopPropagation()">
                                 <input type="checkbox" class="msg-check w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/50 cursor-pointer" value="{{ msg.id }}" onchange="updateBulkBar()">
                             </label>
-                            <div class="avatar-circle" style="background-color: {{ ['#5423E7','#22C55E','#F59E0B','#EF4444','#3B82F6','#8B5CF6','#EC4899','#14B8A6','#F97316','#6366F1'][msg.name|lower|first|string|batch(1)|first|map('ord')|first|default(0) % 10] }}">
+                            <div class="avatar-circle" style="background-color: {{ msg.avatar_color|default('#5423E7') }}">
                                 {{ msg.initial }}
                             </div>
                             <div class="flex-1 min-w-0">
@@ -564,7 +564,6 @@
             bar.classList.remove('visible');
         }
 
-        // Update select-all state
         const total = document.querySelectorAll('.msg-check').length;
         const checked = document.querySelectorAll('.msg-check:checked').length;
         selectAll.checked = total > 0 && total === checked;
@@ -602,11 +601,9 @@
                     pending: 'set to pending'
                 };
                 showToast(data.affected + ' message(s) ' + (labels[action] || action), 'success');
-                // If current message was in selection, close detail
                 if (currentMessageId && selectedIds.has(currentMessageId)) {
                     closeDetail();
                 }
-                // Remove items from DOM
                 selectedIds.forEach(function(id) {
                     const el = document.querySelector('.msg-item[data-id="' + id + '"]');
                     if (el) {
@@ -638,11 +635,9 @@
     window.openMessage = function(id, element) {
         currentMessageId = id;
 
-        // Highlight active
         document.querySelectorAll('.msg-item').forEach(function(el) { el.classList.remove('active'); });
         if (element) element.classList.add('active');
 
-        // Show loading
         document.getElementById('detailEmpty').style.display = 'none';
         var dc = document.getElementById('detailContent');
         dc.classList.remove('hidden');
@@ -662,21 +657,18 @@
     };
 
     function renderDetail(data) {
-        // Header
         document.getElementById('detailSubject').textContent = data.subject;
         var badge = document.getElementById('detailBadge');
         badge.textContent = data.status.toUpperCase();
         badge.className = 'text-xs font-semibold px-2 py-0.5 rounded-full ' + statusBadgeClass(data.status);
 
-        // Sender info
-        document.getElementById('detailAvatar').textContent = data.name.charAt(0).toUpperCase();
-        document.getElementById('detailAvatar').style.backgroundColor = avatarColor(data.name);
+        document.getElementById('detailAvatar').textContent = (data.name || '?').charAt(0).toUpperCase();
+        document.getElementById('detailAvatar').style.backgroundColor = avatarColor(data.name || '?');
         document.getElementById('detailName').textContent = data.name;
         document.getElementById('detailDate').textContent = data.created_at;
         document.getElementById('detailEmail').textContent = data.email;
         document.getElementById('detailPhone').textContent = data.phone || '—';
 
-        // Order link
         var orderWrap = document.getElementById('detailOrderWrap');
         if (data.order_id) {
             orderWrap.style.display = 'flex';
@@ -687,24 +679,18 @@
             orderWrap.style.display = 'none';
         }
 
-        // Build thread
         var thread = document.getElementById('threadArea');
         thread.innerHTML = '';
-
-        // Original message
         thread.innerHTML += buildBubble(data.body, 'customer', data.created_at, data.name);
 
-        // Replies
         if (data.replies && data.replies.length > 0) {
             data.replies.forEach(function(r) {
                 thread.innerHTML += buildBubble(r.body, r.sender_type, r.created_at, r.sender_type === 'admin' ? 'You' : data.name);
             });
         }
 
-        // Scroll thread to bottom
         thread.scrollTop = thread.scrollHeight;
 
-        // Update list item status badge if changed
         var listItem = document.querySelector('.msg-item[data-id="' + data.id + '"]');
         if (listItem) {
             listItem.classList.remove('unread');
@@ -715,7 +701,6 @@
             }
         }
 
-        // Focus reply input
         document.getElementById('replyInput').value = '';
     }
 
@@ -724,9 +709,7 @@
         var bubbleClass = isAdmin ? 'reply-bubble-admin' : 'reply-bubble-customer';
         var alignClass = isAdmin ? 'justify-end' : 'justify-start';
         var label = isAdmin ? 'You' : senderName;
-
-        // Convert newlines to <br>
-        var safeBody = body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+        var safeBody = (body || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
 
         return '<div class="flex ' + alignClass + '">' +
             '<div class="max-w-[85%] sm:max-w-[70%]">' +
@@ -737,7 +720,7 @@
     }
 
     // ============================================
-    // CLOSE DETAIL (mobile back)
+    // CLOSE DETAIL
     // ============================================
     window.closeDetail = function() {
         currentMessageId = null;
@@ -774,17 +757,14 @@
         })
         .then(function(data) {
             if (data.success) {
-                // Append reply to thread
                 var thread = document.getElementById('threadArea');
                 thread.innerHTML += buildBubble(data.reply.body, 'admin', data.reply.created_at, 'You');
                 thread.scrollTop = thread.scrollHeight;
 
-                // Update badge
                 var badge = document.getElementById('detailBadge');
                 badge.textContent = 'REPLIED';
                 badge.className = 'text-xs font-semibold px-2 py-0.5 rounded-full ' + statusBadgeClass('replied');
 
-                // Update list item
                 var listItem = document.querySelector('.msg-item[data-id="' + currentMessageId + '"]');
                 if (listItem) {
                     var oldBadge = listItem.querySelector('[class*="badge-"]');
@@ -806,7 +786,6 @@
         });
     };
 
-    // Send on Ctrl+Enter
     document.getElementById('replyInput').addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
@@ -902,7 +881,6 @@
         .catch(function() { showToast('Failed to delete', 'error'); });
     };
 
-    // Close modal on overlay click or Escape
     document.getElementById('deleteModal').addEventListener('click', function(e) {
         if (e.target === this) closeDeleteModal();
     });
@@ -922,7 +900,6 @@
         var span = link.querySelector('span');
         if (span && span.textContent.trim() === 'Messages') {
             link.classList.add('active');
-            // Add badge if new_count > 0
             {% if new_count > 0 %}
             var badge = document.createElement('span');
             badge.className = 'ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none';

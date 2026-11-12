@@ -2279,13 +2279,12 @@ def messages():
     search = request.args.get("q", "").strip()
 
     # ─────────────────────────────────────────────
-    # 1. Pull new ContactMessages into the Message table
+    # 1. Import ContactMessages → Message (idempotent)
     # ─────────────────────────────────────────────
-    # Match by email+subject+body so re-imports don't duplicate
     contact_items = ContactMessage.query.order_by(ContactMessage.created_at.asc()).all()
 
+    imported = 0
     for cm in contact_items:
-        # Skip if already imported (match on email + subject + created_at ±2s)
         already = Message.query.filter(
             Message.email == cm.email,
             Message.subject == (cm.subject or "(No subject)"),
@@ -2294,7 +2293,6 @@ def messages():
         if already:
             continue
 
-        # Look up a matching user (so the message links to their account)
         customer = None
         if cm.email:
             customer = User.query.filter(User.email == cm.email).first()
@@ -2312,14 +2310,18 @@ def messages():
             updated_at=cm.created_at,
         )
         db.session.add(new_msg)
+        imported += 1
 
-    try:
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
+    if imported > 0:
+        try:
+            db.session.commit()
+            current_app.logger.info(f"Imported {imported} contact message(s) into Message table.")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Failed to import contact messages: {e}", exc_info=True)
 
     # ─────────────────────────────────────────────
-    # 2. Build the filtered list (same logic as before)
+    # 2. Filtered message query
     # ─────────────────────────────────────────────
     if status_filter == "archived":
         query = Message.query.filter(Message.status == "archived")
@@ -2343,33 +2345,54 @@ def messages():
     msgs = query.order_by(Message.created_at.desc()).all()
 
     # ─────────────────────────────────────────────
-    # 3. Counters
+    # 3. Summary counters
     # ─────────────────────────────────────────────
-    total_count = Message.query.filter(Message.status != "archived").count()
-    new_count = Message.query.filter(Message.status == "new").count()
-    pending_count = Message.query.filter(Message.status == "pending").count()
+    total_count    = Message.query.filter(Message.status != "archived").count()
+    new_count      = Message.query.filter(Message.status == "new").count()
+    pending_count  = Message.query.filter(Message.status == "pending").count()
     resolved_count = Message.query.filter(Message.status == "resolved").count()
-    contact_total = ContactMessage.query.count()
+    contact_total  = ContactMessage.query.count()
 
     # ─────────────────────────────────────────────
-    # 4. Build serialised list for the template
+    # 4. Build display list — with avatar_color computed server-side
     # ─────────────────────────────────────────────
+    AVATAR_PALETTE = [
+        "#5423E7",  # primary purple
+        "#22C55E",  # green
+        "#F59E0B",  # amber
+        "#EF4444",  # red
+        "#3B82F6",  # blue
+        "#8B5CF6",  # violet
+        "#EC4899",  # pink
+        "#14B8A6",  # teal
+        "#F97316",  # orange
+        "#6366F1",  # indigo
+    ]
+
+    def _avatar_color(name: str) -> str:
+        # Deterministic colour per name (same seed logic as JS avatarColor)
+        if not name:
+            return AVATAR_PALETTE[0]
+        seed = sum(ord(c) for c in name)
+        return AVATAR_PALETTE[seed % len(AVATAR_PALETTE)]
+
     message_list = []
     for m in msgs:
         message_list.append({
             "id": m.id,
-            "name": m.name,
+            "name": m.name or "Unknown",
             "email": m.email,
             "phone": m.phone or "",
-            "subject": m.subject,
-            "preview": m.body[:120] + ("..." if len(m.body) > 120 else ""),
-            "status": m.status,
+            "subject": m.subject or "(No subject)",
+            "preview": (m.body or "")[:120] + ("..." if m.body and len(m.body) > 120 else ""),
+            "status": m.status or "new",
             "time_ago": _time_ago(m.created_at),
             "created_at": m.created_at.strftime("%d %b %Y, %H:%M") if m.created_at else "",
-            "initial": m.name[0].upper() if m.name else "?",
+            "initial": (m.name[0].upper() if m.name else "?"),
             "order_id": m.order_id,
             "is_guest": m.is_guest,
             "reply_count": m.replies.filter_by(sender_type="admin").count(),
+            "avatar_color": _avatar_color(m.name or ""),     # ← NEW
         })
 
     return render_template(
