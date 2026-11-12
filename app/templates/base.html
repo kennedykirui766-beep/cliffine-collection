@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Cliffine Collection{% endblock %}</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -34,7 +34,7 @@
             }
         }
     </script>
-    
+
     <style>
         :root {
             --bg: #FFFFFF;
@@ -44,7 +44,7 @@
             --sand: #F3F4F6;
             --muted: #6B7280;
         }
-        
+
         .dark {
             --bg: #0F0715;
             --fg: #F9FAFB;
@@ -53,14 +53,14 @@
             --sand: #1F2937;
             --muted: #9CA3AF;
         }
-        
+
         body {
             font-family: 'DM Sans', sans-serif;
             background-color: var(--bg);
             color: var(--fg);
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-        
+
         .font-display { font-family: 'Cormorant Garamond', serif; }
 
         /* Sidebar Sliding Animation */
@@ -100,7 +100,7 @@
             animation: slideLoop 20s linear infinite;
         }
         .announcement-wrapper:hover .announcement-slide { animation-play-state: paused; }
-        
+
         @media (prefers-reduced-motion: reduce) {
             .announcement-slide { animation: none; }
         }
@@ -127,10 +127,29 @@
         /* Footer Link Hover */
         .footer-link { transition: all 0.2s ease; }
         .footer-link:hover { color: var(--accent); padding-left: 8px; }
+
+        /* ✨ Message badge — only takes space when visible */
+        #msg-count {
+            display: none;
+            min-width: 18px;
+            height: 18px;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            line-height: 1;
+            padding: 0 4px;
+            transition: transform 0.2s ease;
+        }
+        #msg-count.show {
+            display: inline-flex;
+        }
+        #msg-count.bump {
+            transform: scale(1.25);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
-    
+
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -151,7 +170,7 @@
 
     <!-- Sidebar Menu (Left) -->
     <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white dark:bg-gray-900 z-50 shadow-2xl flex flex-col">
-        
+
         <!-- Sidebar Header -->
         <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800 bg-sand/50 dark:bg-gray-800/50">
             <div class="flex items-center gap-3">
@@ -172,7 +191,7 @@
 
         <!-- Sidebar Navigation Links -->
         <nav class="flex-1 overflow-y-auto py-4 scrollbar-thin">
-            
+
             <!-- Group 1: Shopping -->
             <div class="px-6 pt-2 pb-3">
                 <span class="text-[11px] font-bold uppercase tracking-[0.15em] text-muted">Shopping</span>
@@ -244,6 +263,14 @@
                         <span class="font-medium text-sm">Wishlist</span>
                     </a>
                 </li>
+                {# ✨ My Messages link with its own sidebar badge #}
+                <li>
+                    <a href="{{ url_for('main.my_messages') }}" class="sidebar-link flex items-center gap-3.5 px-4 py-2.5 rounded-r-lg text-charcoal dark:text-gray-300 hover:text-primary dark:hover:text-accent">
+                        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <span class="font-medium text-sm">My Messages</span>
+                        <span id="sidebar-msg-count" class="ml-auto bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none" style="display:none;">0</span>
+                    </a>
+                </li>
             </ul>
 
             <!-- Group 4: Company -->
@@ -296,7 +323,7 @@
             </a>
         </div>
     </aside>
-    
+
     <!-- Announcement Bar -->
     <div class="announcement-wrapper bg-primary text-white py-2.5 overflow-hidden relative">
         <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary-dark to-primary"></div>
@@ -331,7 +358,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Navigation Header -->
     <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-700 shadow-sm">
         <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -343,7 +370,7 @@
                         <span class="block w-5 h-0.5 rounded-full"></span>
                     </button>
                 </div>
-                
+
                 <a href="/" class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full overflow-hidden border border-accent/30 shadow-sm flex-shrink-0">
                         <img src="https://z-cdn-media.chatglm.cn/files/dfc81dd3-3f24-40d7-a2c7-5be5e32709cd.png?auth_key=1873993718-04b59f0f58214cd999032b8ffc4fe7d7-0-afbaf455d9cdea0565b8dd7a0325efe0" alt="Cliffine Collection" class="w-full h-full object-cover">
@@ -353,12 +380,21 @@
                         <p class="text-xs text-muted tracking-wider uppercase text-center">Quality Living</p>
                     </div>
                 </a>
-                
+
                 <div class="flex items-center gap-2">
                     <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-charcoal dark:text-white" aria-label="Toggle dark mode">
                         <svg class="w-5 h-5 hidden dark:block text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                         <svg class="w-5 h-5 block dark:hidden text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
                     </button>
+
+                    {# Messages icon in top nav #}
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('main.my_messages') }}" class="relative p-2 text-charcoal dark:text-white hover:text-primary dark:hover:text-accent transition-colors" aria-label="My Messages">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <span id="msg-count" class="absolute -top-2 -right-2 bg-primary text-white text-xs font-bold rounded-full">0</span>
+                    </a>
+                    {% endif %}
+
                     <a href="{{ url_for('main.cart') }}" class="relative p-2 text-charcoal dark:text-white hover:text-primary dark:hover:text-accent transition-colors" aria-label="Shopping Cart">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                         <span id="cart-count" class="cart-badge absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full px-2">{{ cart_count if cart_count else 0 }}</span>
@@ -370,12 +406,12 @@
             </div>
         </nav>
     </header>
-    
+
     <!-- Main Content -->
     <main class="flex-grow">
         {% block content %}{% endblock %}
     </main>
-    
+
     <!-- Footer -->
     <footer class="bg-primary text-white mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
@@ -404,7 +440,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div>
                     <h4 class="font-display text-xl font-semibold mb-6 text-accent">Our Products</h4>
                     <ul class="space-y-2.5">
@@ -415,7 +451,7 @@
                         <li><a href="/categories/household" class="footer-link text-gray-200 hover:text-accent">Household Items</a></li>
                     </ul>
                 </div>
-                
+
                 <div>
                     <h4 class="font-display text-xl font-semibold mb-6 text-accent">Payment Information</h4>
                     <div class="space-y-4">
@@ -440,7 +476,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div>
                     <h4 class="font-display text-xl font-semibold mb-6 text-accent">Connect With Us</h4>
                     <div class="flex gap-4 mb-6">
@@ -479,7 +515,7 @@
             </div>
         </div>
     </footer>
-    
+
     <!-- JavaScript -->
     <script>
         const sidebar = document.getElementById('sidebar');
@@ -532,7 +568,7 @@
                 setTimeout(() => flashContainer.remove(), 500);
             }, 10000);
         }
-        
+
         function updateCartCount(count) {
             const cartCountEl = document.getElementById('cart-count');
             if (cartCountEl) {
@@ -578,8 +614,72 @@
                 buttonElement.disabled = false;
             });
         }
+
+        // ══════════════════════════════════════════════════════════════
+        //  ✨ UNREAD MESSAGE COUNT — polls the API every 60s
+        // ══════════════════════════════════════════════════════════════
+        (function msgBadgePolling() {
+            // Only run for logged-in users (the envelope icon isn't rendered otherwise)
+            const headerBadge  = document.getElementById('msg-count');
+            const sidebarBadge = document.getElementById('sidebar-msg-count');
+            if (!headerBadge && !sidebarBadge) return;
+
+            function paintBadges(count) {
+                if (headerBadge) {
+                    if (count > 0) {
+                        headerBadge.textContent = count > 9 ? '9+' : count;
+                        headerBadge.classList.add('show');
+                    } else {
+                        headerBadge.classList.remove('show');
+                    }
+                }
+                if (sidebarBadge) {
+                    if (count > 0) {
+                        sidebarBadge.textContent = count > 9 ? '9+' : count;
+                        sidebarBadge.style.display = 'inline-block';
+                    } else {
+                        sidebarBadge.style.display = 'none';
+                    }
+                }
+            }
+
+            let lastCount = 0;
+
+            async function refresh() {
+                try {
+                    const res = await fetch('/my-messages/unread-count', {
+                        credentials: 'same-origin',
+                    });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const count = Number(data.count) || 0;
+
+                    paintBadges(count);
+
+                    // Small "bump" animation if the count went UP
+                    if (count > lastCount && headerBadge) {
+                        headerBadge.classList.add('bump');
+                        setTimeout(() => headerBadge.classList.remove('bump'), 250);
+                    }
+
+                    lastCount = count;
+                } catch (e) {
+                    // Silent fail — badge keeps last known value
+                }
+            }
+
+            // First fetch after 1s (let page settle)
+            setTimeout(refresh, 1000);
+            // Then every 60s
+            setInterval(refresh, 60000);
+
+            // Also refresh when the tab becomes visible again
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) refresh();
+            });
+        })();
     </script>
-    
+
     {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -8,7 +8,7 @@ from app.forms import ContactForm, LoginForm, RegistrationForm, ProfileForm
 from flask_login import current_user, login_required, login_user, logout_user
 from app.models import FAQ, BlogPost, Cart, CartItem, Category, Chama, ChamaMember, ContactMessage, Order, OrderItem, Product, DeliveryArea, User, Wishlist, WishlistItem,  Payment
 from app import db
-from flask_login import login_required, current_user
+from app.models import Message, MessageReply
 
 from app.models import Product
 
@@ -1845,4 +1845,144 @@ def delivery_areas():
         areas=areas
     )
 
-    # Group areas
+
+# ══════════════════════════════════════════════════════════════
+# CUSTOMER INBOX — see & reply to messages from /contact
+# ══════════════════════════════════════════════════════════════
+
+@main_bp.route("/my-messages")
+@login_required
+def my_messages():
+    """List all conversations belonging to the logged-in customer."""
+    # Match by customer_id first, then by email (for imported contact messages)
+    messages = (
+        Message.query
+        .filter(
+            db.or_(
+                Message.customer_id == current_user.id,
+                Message.email == current_user.email,
+            )
+        )
+        .order_by(Message.created_at.desc())
+        .all()
+    )
+
+    # Count unread admin replies (any reply newer than the last time
+    # the customer opened the thread). We store that on the Message row:
+    # msg.updated_at is the last activity, but we want "unread admin replies"
+    # → count admin replies with id > last_seen_reply_id (stored in session)
+    last_seen = session.get("inbox_last_seen", {})
+    threads = []
+    for m in messages:
+        admin_reply_count = m.replies.filter_by(sender_type="admin").count()
+        seen_count = int(last_seen.get(str(m.id), 0))
+        unread = max(0, admin_reply_count - seen_count)
+
+        last_reply = m.replies.order_by(MessageReply.created_at.desc()).first()
+
+        threads.append({
+            "id": m.id,
+            "subject": m.subject or "(No subject)",
+            "status": m.status,
+            "created_at": m.created_at.strftime("%d %b %Y, %H:%M") if m.created_at else "",
+            "preview": (m.body or "")[:100] + ("..." if m.body and len(m.body) > 100 else ""),
+            "reply_count": admin_reply_count,
+            "unread": unread,
+            "last_activity": (
+                last_reply.created_at if last_reply else m.created_at
+            ),
+        })
+
+    threads.sort(key=lambda t: t["last_activity"] or __import__("datetime").datetime.min, reverse=True)
+
+    return render_template(
+        "main/my_messages.html",
+        threads=threads,
+        current_year=datetime.now().year,
+    )
+
+
+@main_bp.route("/my-messages/<int:msg_id>")
+@login_required
+def my_message_thread(msg_id):
+    """Show a single conversation + reply box."""
+    msg = Message.query.get_or_404(msg_id)
+
+    # Ownership check
+    if msg.customer_id != current_user.id and msg.email != current_user.email:
+        abort(403)
+
+    replies = msg.replies.order_by(MessageReply.created_at.asc()).all()
+
+    # Mark all admin replies as seen for this user
+    admin_reply_count = msg.replies.filter_by(sender_type="admin").count()
+    last_seen = session.get("inbox_last_seen", {})
+    last_seen[str(msg.id)] = admin_reply_count
+    session["inbox_last_seen"] = last_seen
+
+    return render_template(
+        "main/my_message_thread.html",
+        msg=msg,
+        replies=replies,
+        current_year=datetime.now().year,
+    )
+
+
+@main_bp.route("/my-messages/<int:msg_id>/reply", methods=["POST"])
+@login_required
+def my_message_reply(msg_id):
+    """Customer sends a reply. Saves to MessageReply, bumps status to 'pending'."""
+    msg = Message.query.get_or_404(msg_id)
+
+    if msg.customer_id != current_user.id and msg.email != current_user.email:
+        return jsonify(success=False, error="Not authorized"), 403
+
+    data = request.get_json(silent=True) or {}
+    body = (data.get("body") or "").strip()
+
+    if not body:
+        return jsonify(success=False, error="Reply cannot be empty"), 400
+
+    reply = MessageReply(
+        message_id=msg.id,
+        sender_type="customer",
+        body=body,
+    )
+    db.session.add(reply)
+
+    # Update status: admin will see it in the "pending" filter
+    msg.status = "pending"
+    msg.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "reply": {
+            "id": reply.id,
+            "sender_type": "customer",
+            "body": reply.body,
+            "created_at": reply.created_at.strftime("%d %b %Y, %H:%M"),
+        },
+        "new_status": "pending",
+    })
+
+
+@main_bp.route("/my-messages/unread-count")
+@login_required
+def my_messages_unread_count():
+    """Return the number of unseen admin replies for the current customer."""
+    last_seen = session.get("inbox_last_seen", {})
+    messages = Message.query.filter(
+        db.or_(
+            Message.customer_id == current_user.id,
+            Message.email == current_user.email,
+        )
+    ).all()
+
+    total = 0
+    for m in messages:
+        admin_count = m.replies.filter_by(sender_type="admin").count()
+        seen = int(last_seen.get(str(m.id), 0))
+        total += max(0, admin_count - seen)
+
+    return jsonify(count=total)

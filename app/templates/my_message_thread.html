@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}{{ msg.subject or 'Message' }} — Cliffine Collection{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="bg-sand dark:bg-gray-800 py-4 border-b border-gray-100 dark:border-gray-700">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex items-center space-x-2 text-sm text-muted dark:text-gray-400">
+            <a href="{{ url_for('main.index') }}" class="hover:text-accent">Home</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <a href="{{ url_for('main.my_messages') }}" class="hover:text-accent">My Messages</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="font-medium text-charcoal dark:text-white truncate">{{ msg.subject or 'Conversation' }}</span>
+        </nav>
+    </div>
+</div>
+
+<section class="py-8 lg:py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 rounded-t-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h1 class="font-display text-2xl font-bold text-charcoal dark:text-white">{{ msg.subject or '(No subject)' }}</h1>
+                    <p class="text-sm text-muted mt-1">
+                        Started {{ msg.created_at.strftime('%d %b %Y, %H:%M') if msg.created_at else '' }}
+                    </p>
+                </div>
+                <a href="{{ url_for('main.my_messages') }}"
+                   class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Back
+                </a>
+            </div>
+        </div>
+
+        <!-- Conversation Thread -->
+        <div class="bg-white dark:bg-gray-800 border-x border-gray-100 dark:border-gray-700 px-5 py-6 space-y-5 max-h-[60vh] overflow-y-auto" id="threadBox">
+
+            {# Original customer message #}
+            <div class="flex justify-end">
+                <div class="max-w-[85%]">
+                    <p class="text-xs text-muted mb-1 text-right">You · {{ msg.created_at.strftime('%d %b %Y, %H:%M') if msg.created_at else '' }}</p>
+                    <div class="bg-accent text-white rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed whitespace-pre-line">
+                        {{ msg.body }}
+                    </div>
+                </div>
+            </div>
+
+            {# Replies #}
+            {% for r in replies %}
+                {% if r.sender_type == 'admin' %}
+                <div class="flex justify-start">
+                    <div class="max-w-[85%]">
+                        <p class="text-xs text-muted mb-1">
+                            Cliffine Support · {{ r.created_at.strftime('%d %b %Y, %H:%M') if r.created_at else '' }}
+                        </p>
+                        <div class="bg-slate-100 dark:bg-gray-700 text-charcoal dark:text-white rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed whitespace-pre-line">
+                            {{ r.body }}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="flex justify-end">
+                    <div class="max-w-[85%]">
+                        <p class="text-xs text-muted mb-1 text-right">You · {{ r.created_at.strftime('%d %b %Y, %H:%M') if r.created_at else '' }}</p>
+                        <div class="bg-accent text-white rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed whitespace-pre-line">
+                            {{ r.body }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+
+        </div>
+
+        <!-- Reply Form -->
+        <div class="bg-white dark:bg-gray-800 rounded-b-xl shadow-sm border border-gray-100 dark:border-gray-700 border-t px-5 py-4">
+            <div class="flex gap-2">
+                <textarea id="replyInput" rows="3"
+                          placeholder="Type your reply..."
+                          class="flex-1 px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                <button onclick="sendReply()" id="replyBtn"
+                        class="self-end px-5 py-2.5 bg-accent text-white font-bold rounded-lg hover:bg-accent-dark transition-colors text-sm flex items-center gap-1.5 flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    <span>Send</span>
+                </button>
+            </div>
+            <p class="text-xs text-muted mt-2">
+                We usually reply within 24 hours.
+                <kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-[10px]">Ctrl</kbd>+<kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-[10px]">Enter</kbd> to send
+            </p>
+        </div>
+
+    </div>
+</section>
+
+<!-- Toast -->
+<div id="toast" class="hidden fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-2xl"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MSG_ID = {{ msg.id }};
+
+function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-2xl ' +
+        (type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-800');
+    t.classList.remove('hidden');
+    setTimeout(() => t.classList.add('hidden'), 3000);
+}
+
+function escapeHtml(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function sendReply() {
+    const input = document.getElementById('replyInput');
+    const body = input.value.trim();
+    if (!body) { input.focus(); return; }
+
+    const btn = document.getElementById('replyBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg><span>Sending</span>';
+
+    try {
+        const res = await fetch('/my-messages/' + MSG_ID + '/reply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ body: body }),
+        });
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); }
+        catch {
+            throw new Error('Server error. Please refresh and try again.');
+        }
+
+        if (!res.ok || !data.success) {
+            throw new Error(data.error || 'Failed to send reply');
+        }
+
+        // Append the reply bubble instantly
+        const thread = document.getElementById('threadBox');
+        const wrap = document.createElement('div');
+        wrap.className = 'flex justify-end';
+        wrap.innerHTML =
+            '<div class="max-w-[85%]">' +
+                '<p class="text-xs text-muted mb-1 text-right">You · ' + escapeHtml(data.reply.created_at) + '</p>' +
+                '<div class="bg-accent text-white rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed whitespace-pre-line">' +
+                    escapeHtml(body).replace(/\n/g, '<br>') +
+                '</div>' +
+            '</div>';
+        thread.appendChild(wrap);
+        thread.scrollTop = thread.scrollHeight;
+
+        input.value = '';
+        input.focus();
+        showToast('Reply sent', 'success');
+    } catch (e) {
+        showToast(e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg><span>Send</span>';
+    }
+}
+
+document.getElementById('replyInput').addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        sendReply();
+    }
+});
+
+// Scroll to bottom of thread on load
+document.addEventListener('DOMContentLoaded', function() {
+    const box = document.getElementById('threadBox');
+    if (box) box.scrollTop = box.scrollHeight;
+});
+</script>
+{% endblock %}
