@@ -5,7 +5,7 @@ from flask import Blueprint, render_template
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import func
 from app import db
-from app.models import AdminActivity, Media, OrderItem, User, Product, Order, Coupon, CouponUsage, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
+from app.models import AdminActivity, Media, OrderItem, User, Product, Order, Coupon, CouponUsage, MessageReply, Message, Category, ProductImage, Chama, ChamaMember, DeliveryArea
 from flask import render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import os
