@@ -18,6 +18,8 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object("config.Config")
 
+    app.config["WTF_CSRF_HEADERS"] = ["X-CSRFToken", "X-CSRF-Token"]
+
     print("\n" + "=" * 60)
     print("DATABASE URI:", app.config["SQLALCHEMY_DATABASE_URI"])
     print("=" * 60 + "\n")

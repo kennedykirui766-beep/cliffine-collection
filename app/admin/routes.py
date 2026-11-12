@@ -2454,12 +2454,26 @@ def get_message(message_id):
 @admin_bp.route("/messages/<int:message_id>/reply", methods=["POST"])
 @login_required
 def reply_message(message_id):
+    from flask import session as flask_session, current_app
+    
     msg = Message.query.get_or_404(message_id)
-    data = request.get_json()
-    body = data.get("body", "").strip()
+
+    # ── CSRF validation (manual, matches your media routes) ──
+    sent = (
+        request.form.get("csrf_token")
+        or request.headers.get("X-CSRFToken")
+        or request.headers.get("X-CSRF-Token")
+    )
+    expected = flask_session.get("_csrf_token")
+    if expected and (not sent or sent != expected):
+        return jsonify(success=False, error="Session expired. Refresh and try again."), 400
+    # (If expected is None, CSRF is not configured — allow through so you're not blocked)
+
+    data = request.get_json(silent=True) or {}
+    body = (data.get("body") or "").strip()
 
     if not body:
-        return jsonify({"error": "Reply cannot be empty"}), 400
+        return jsonify(success=False, error="Reply cannot be empty"), 400
 
     reply = MessageReply(message_id=msg.id, sender_type="admin", body=body)
     db.session.add(reply)
@@ -2467,21 +2481,17 @@ def reply_message(message_id):
     msg.updated_at = datetime.utcnow()
     db.session.commit()
 
-    # TODO: send email to msg.email here if SMTP is configured
-
-    return jsonify(
-        {
-            "success": True,
-            "reply": {
-                "id": reply.id,
-                "sender_type": "admin",
-                "body": reply.body,
-                "time_ago": "Just now",
-                "created_at": reply.created_at.strftime("%d %b %Y, %H:%M"),
-            },
-            "new_status": "replied",
-        }
-    )
+    return jsonify({
+        "success": True,
+        "reply": {
+            "id": reply.id,
+            "sender_type": "admin",
+            "body": reply.body,
+            "time_ago": "Just now",
+            "created_at": reply.created_at.strftime("%d %b %Y, %H:%M"),
+        },
+        "new_status": "replied",
+    })
 
 
 @admin_bp.route("/messages/<int:message_id>/status", methods=["POST"])
